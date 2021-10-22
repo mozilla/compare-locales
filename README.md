@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Pike/compare-locales.svg?branch=master)](https://travis-ci.org/Pike/compare-locales)
+![Build tests](https://github.com/mozilla/compare-locales/workflows/test/badge.svg)
 # compare-locales
 Lint Mozilla localizations
 
