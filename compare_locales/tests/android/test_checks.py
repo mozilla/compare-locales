@@ -245,6 +245,25 @@ class PrintfSTest(BaseHelper):
                     "Formatter %2$s not found in reference",
                     "android"
                 ),
+                (
+                    "warning",
+                    0,
+                    "Formatter %1$s not found in translation",
+                    "android"
+                ),
+            )
+        )
+
+    def test_missing_placeholder(self):
+        self._test(
+            ANDROID_WRAPPER % b'"% 1 $ s"',
+            (
+                (
+                    "warning",
+                    0,
+                    "Formatter %1$s not found in translation",
+                    "android"
+                ),
             )
         )
 
@@ -338,6 +357,25 @@ class PrintfDTest(BaseHelper):
                     "error",
                     0,
                     "Formatter %2$d not found in reference",
+                    "android"
+                ),
+                (
+                    "warning",
+                    0,
+                    "Formatter %1$d not found in translation",
+                    "android"
+                ),
+            )
+        )
+
+    def test_missing_placeholder(self):
+        self._test(
+            ANDROID_WRAPPER % b'"% 1 $ d"',
+            (
+                (
+                    "warning",
+                    0,
+                    "Formatter %1$d not found in translation",
                     "android"
                 ),
             )
