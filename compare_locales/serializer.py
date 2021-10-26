@@ -22,7 +22,7 @@ we also prune whitespace once more.`
 '''
 
 from codecs import encode
-import six
+from functools import reduce
 
 from compare_locales.merge import merge_resources, serialize_legacy_resource
 from compare_locales.parser import getParser
@@ -134,4 +134,4 @@ def prune_placeholders(entries):
         acc.append(entity)
         return acc
 
-    return six.moves.reduce(prune_whitespace, pruned, [])
+    return reduce(prune_whitespace, pruned, [])

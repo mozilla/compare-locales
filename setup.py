@@ -50,7 +50,6 @@ setup(name="compare-locales",
       install_requires=[
           'fluent.syntax >=0.18.0, <0.19',
           'pytoml',
-          'six',
       ],
       tests_require=[
           'mock<4.0',

@@ -2,9 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from io import BytesIO
 import re
 from xml import sax
-import six
 
 from compare_locales.parser import DTDParser
 from .base import Checker, CSSCheckMixin
@@ -85,14 +85,14 @@ class DTDChecker(Checker, CSSCheckMixin):
         parser.setContentHandler(self.defaulthandler)
         try:
             parser.parse(
-                six.BytesIO(self.tmpl %
-                            (entities.encode('utf-8'),
-                             refValue.encode('utf-8'))))
+                BytesIO(self.tmpl %
+                        (entities.encode('utf-8'),
+                         refValue.encode('utf-8'))))
             # also catch stray %
             parser.parse(
-                six.BytesIO(self.tmpl %
-                            ((refEnt.all + entities).encode('utf-8'),
-                             b'&%s;' % refEnt.key.encode('utf-8'))))
+                BytesIO(self.tmpl %
+                        ((refEnt.all + entities).encode('utf-8'),
+                         b'&%s;' % refEnt.key.encode('utf-8'))))
         except sax.SAXParseException as e:
             e  # noqa
             yield ('warning',
@@ -108,15 +108,15 @@ class DTDChecker(Checker, CSSCheckMixin):
             self.texthandler.textcontent = ''
             parser.setContentHandler(self.texthandler)
         try:
-            parser.parse(six.BytesIO(self.tmpl % (_entities.encode('utf-8'),
+            parser.parse(BytesIO(self.tmpl % (_entities.encode('utf-8'),
                          l10nValue.encode('utf-8'))))
             # also catch stray %
             # if this fails, we need to substract the entity definition
             parser.setContentHandler(self.defaulthandler)
             parser.parse(
-                six.BytesIO(self.tmpl %
-                            ((l10nEnt.all + _entities).encode('utf-8'),
-                             b'&%s;' % l10nEnt.key.encode('utf-8'))))
+                BytesIO(self.tmpl %
+                        ((l10nEnt.all + _entities).encode('utf-8'),
+                         b'&%s;' % l10nEnt.key.encode('utf-8'))))
         except sax.SAXParseException as e:
             # xml parse error, yield error
             # sometimes, the error is reported on our fake closing

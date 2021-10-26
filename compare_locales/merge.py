@@ -17,7 +17,7 @@ to newest instead.
 
 from collections import OrderedDict, defaultdict
 from codecs import encode
-import six
+from functools import reduce
 
 
 from compare_locales import parser as cl
@@ -74,7 +74,7 @@ def merge_resources(parser, resources, keep_newest=True):
 
         return (entity.key, entity)
 
-    entities = six.moves.reduce(
+    entities = reduce(
         lambda x, y: merge_two(x, y, keep_newer=keep_newest),
         map(parse_resource, resources))
     return entities.values()
@@ -114,7 +114,7 @@ def merge_two(newer, older, keep_newer=True):
         acc.append(cur)
         return acc
 
-    pruned = six.moves.reduce(prune, contents, [])
+    pruned = reduce(prune, contents, [])
     return OrderedDict(pruned)
 
 

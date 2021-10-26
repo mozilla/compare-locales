@@ -6,13 +6,13 @@
 '''
 
 
+from itertools import zip_longest
 from pkg_resources import resource_string
 import re
 import unittest
 
 from compare_locales import parser
 from compare_locales.checks import getChecker
-from six.moves import zip_longest
 
 
 class ParserTestMixin():

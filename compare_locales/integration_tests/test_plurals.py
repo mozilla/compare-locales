@@ -4,8 +4,8 @@
 
 import json
 import unittest
-from six.moves.urllib.error import URLError
-from six.moves.urllib.request import urlopen
+from urllib.error import URLError
+from urllib.request import urlopen
 
 from compare_locales import plurals
 
