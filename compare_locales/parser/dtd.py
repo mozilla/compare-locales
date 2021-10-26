@@ -27,11 +27,10 @@ class DTDEntityMixin(object):
         Named (&amp;), decimal (&#38;), and hex (&#x26; and &#x0026;) formats
         are supported. Unknown entities are left intact.
 
-        As of Python 2.7 and Python 3.6 the following 252 named entities are
+        As of Python 3.7 the following 252 named entities are
         recognized and unescaped:
 
-            https://github.com/python/cpython/blob/2.7/Lib/htmlentitydefs.py
-            https://github.com/python/cpython/blob/3.6/Lib/html/entities.py
+            https://github.com/python/cpython/blob/3.7/Lib/html/entities.py
         '''
         return html_unescape(self.raw_val)
 

@@ -18,11 +18,7 @@ Intended Audience :: Developers
 License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)
 Operating System :: OS Independent
 Programming Language :: Python
-Programming Language :: Python :: 2
-Programming Language :: Python :: 2.7
 Programming Language :: Python :: 3
-Programming Language :: Python :: 3.5
-Programming Language :: Python :: 3.6
 Programming Language :: Python :: 3.7
 Programming Language :: Python :: 3.8
 Programming Language :: Python :: 3.9
@@ -41,7 +37,7 @@ setup(name="compare-locales",
       license="MPL 2.0",
       classifiers=CLASSIFIERS.split("\n"),
       platforms=["any"],
-      python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4',
+      python_requires='>=3.7, <4',
       entry_points={
         'console_scripts':
         [
