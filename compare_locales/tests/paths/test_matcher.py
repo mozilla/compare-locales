@@ -433,7 +433,7 @@ class TestAndroid(unittest.TestCase):
         one = Matcher('values-{android_locale}/strings.xml')
         for legacy, standard in ANDROID_STANDARD_MAP.items():
             self.assertDictEqual(
-                one.match('values-{}/strings.xml'.format(legacy)),
+                one.match(f'values-{legacy}/strings.xml'),
                 {
                     'android_locale': legacy,
                     'locale': standard
@@ -441,7 +441,7 @@ class TestAndroid(unittest.TestCase):
             )
             self.assertEqual(
                 one.with_env({'locale': standard}).prefix,
-                'values-{}/strings.xml'.format(legacy)
+                f'values-{legacy}/strings.xml'
             )
 
 

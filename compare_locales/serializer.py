@@ -52,7 +52,7 @@ def serialize(filename, reference, old_l10n, new_data):
         parser = getParser(filename)
     except UserWarning:
         raise SerializationNotSupportedError(
-            'Unsupported file format ({}).'.format(filename))
+            f'Unsupported file format ({filename}).')
     # create template, whitespace and all
     placeholders = [
         placeholder(entry)

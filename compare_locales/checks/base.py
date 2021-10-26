@@ -42,7 +42,7 @@ class Checker:
             yield (
                 "warning",
                 EntityPos(m.start()),
-                "\ufffd in: {}".format(l10nEnt.key),
+                f"\ufffd in: {l10nEnt.key}",
                 "encodings"
             )
 

@@ -440,4 +440,4 @@ class Parser:
         found = Counter(entity.key for entity in entities)
         for entity_id, cnt in found.items():
             if cnt > 1:
-                yield '{} occurs {} times'.format(entity_id, cnt)
+                yield f'{entity_id} occurs {cnt} times'

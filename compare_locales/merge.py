@@ -34,7 +34,7 @@ def merge_channels(name, resources):
         parser = cl.getParser(name)
     except UserWarning:
         raise MergeNotSupportedError(
-            'Unsupported file format ({}).'.format(name))
+            f'Unsupported file format ({name}).')
 
     entities = merge_resources(parser, resources)
     return encode(serialize_legacy_resource(entities), parser.encoding)

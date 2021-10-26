@@ -21,7 +21,7 @@ class CSSParserTest(unittest.TestCase):
             'min-width', 'width', 'max-width',
             'min-height', 'height', 'max-height',
         ):
-            refMap, errors = self.mixin.parse_css_spec('{}:1px;'.format(prop))
+            refMap, errors = self.mixin.parse_css_spec(f'{prop}:1px;')
             self.assertDictEqual(
                 refMap, {prop: 'px'}
             )

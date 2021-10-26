@@ -366,7 +366,7 @@ basepath = "."
         vendor = parser.parse(self.path('/vendor.toml'))
         pc = ProjectFiles(locale, [pontoon, vendor])
         mock_files = [
-            '{}/{}/{}'.format(locale, dir, f)
+            f'{locale}/{dir}/{f}'
             for locale in ('de', 'en', 'gd', 'it')
             for dir, files in (
                 ('firefox', ('home.ftl', 'feature.ftl')),

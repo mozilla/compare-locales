@@ -204,7 +204,7 @@ class AndroidParser(Parser):
             for attr_name, attr_value in docElement.attributes.items():
                 yield DocumentWrapper(
                     attr_name,
-                    ' {}="{}"'.format(attr_name, attr_value)
+                    f' {attr_name}="{attr_value}"'
                 )
             yield DocumentWrapper('>', '>')
         child_num = 0

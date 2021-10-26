@@ -269,8 +269,8 @@ class Variable(Node):
 
     def regex_pattern(self, env):
         if self.repeat:
-            return '(?P={})'.format(self.name)
-        return '(?P<{}>{})'.format(self.name, self._pattern_from_env(env))
+            return f'(?P={self.name})'
+        return f'(?P<{self.name}>{self._pattern_from_env(env)})'
 
     def _pattern_from_env(self, env):
         if self.name in env:
@@ -303,7 +303,7 @@ class Variable(Node):
         return env
 
     def __repr__(self):
-        return 'Variable(name="{}")'.format(self.name)
+        return f'Variable(name="{self.name}")'
 
     def __ne__(self, other):
         return not (self == other)
@@ -368,7 +368,7 @@ class Star(Node):
         self.number = number
 
     def regex_pattern(self, env):
-        return '(?P<s{}>[^/]*)'.format(self.number)
+        return f'(?P<s{self.number}>[^/]*)'
 
     def expand(self, env, raise_missing=False):
         return env['s%d' % self.number]
@@ -391,7 +391,7 @@ class Starstar(Star):
         self.suffix = suffix
 
     def regex_pattern(self, env):
-        return '(?P<s{}>.+{})?'.format(self.number, self.suffix)
+        return f'(?P<s{self.number}>.+{self.suffix})?'
 
     def __ne__(self, other):
         return not (self == other)

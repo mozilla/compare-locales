@@ -184,7 +184,7 @@ class ObserverList(Observer):
             'keys',
         )
         leads = [
-            '{:12}'.format(k) for k in keys
+            f'{k:12}' for k in keys
         ]
         out = []
         for locale, summaries in sorted(summaries.items()):
