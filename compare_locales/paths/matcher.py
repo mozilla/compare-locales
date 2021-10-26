@@ -2,12 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
 import os
 import re
 import itertools
 from compare_locales import mozpath
-import six
 
 
 # Android uses non-standard locale codes, these are the mappings
@@ -19,11 +17,11 @@ ANDROID_LEGACY_MAP = {
 }
 ANDROID_STANDARD_MAP = {
     legacy: standard
-    for standard, legacy in six.iteritems(ANDROID_LEGACY_MAP)
+    for standard, legacy in ANDROID_LEGACY_MAP.items()
 }
 
 
-class Matcher(object):
+class Matcher:
     '''Path pattern matcher
     Supports path matching similar to mozpath.match(), but does
     not match trailing file paths without trailing wildcards.
@@ -194,7 +192,7 @@ class MissingEnvironment(Exception):
     pass
 
 
-class Node(object):
+class Node:
     '''Abstract base class for all nodes in parsed patterns.'''
     def regex_pattern(self, env):
         '''Create a regular expression fragment for this Node.'''
@@ -245,7 +243,7 @@ class Pattern(list, Node):
         return not (self == other)
 
     def __eq__(self, other):
-        if not super(Pattern, self).__eq__(other):
+        if not super().__eq__(other):
             return False
         if other.__class__ == list:
             # good for tests and debugging
@@ -256,7 +254,7 @@ class Pattern(list, Node):
         )
 
 
-class Literal(six.text_type, Node):
+class Literal(str, Node):
     def regex_pattern(self, env):
         return re.escape(self)
 
@@ -399,7 +397,7 @@ class Starstar(Star):
         return not (self == other)
 
     def __eq__(self, other):
-        if not super(Starstar, self).__eq__(other):
+        if not super().__eq__(other):
             return False
         return self.suffix == other.suffix
 
@@ -413,7 +411,7 @@ PATH_SPECIAL = re.compile(
 )
 
 
-class PatternParser(object):
+class PatternParser:
     def __init__(self):
         # Not really initializing anything, just making room for our
         # result and state members.

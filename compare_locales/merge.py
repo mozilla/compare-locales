@@ -140,4 +140,4 @@ def get_older_entity(newer, older, key):
 
 
 def serialize_legacy_resource(entities):
-    return "".join((entity.all for entity in entities))
+    return "".join(entity.all for entity in entities)

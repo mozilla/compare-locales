@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
 import unittest
 
-from six.moves import zip
 from compare_locales.tests import ParserTestMixin
 from compare_locales.parser import (
     Comment,
@@ -31,9 +27,9 @@ and still has another line coming
 ''', (
             ('one_line', 'This is one line'),
             (Whitespace, '\n'),
-            ('two_line', u'This is the first of two lines'),
+            ('two_line', 'This is the first of two lines'),
             (Whitespace, '\n'),
-            ('one_line_trailing', u'This line ends in \\'),
+            ('one_line_trailing', 'This line ends in \\'),
             (Whitespace, '\n'),
             (Junk, 'and has junk\n'),
             ('two_lines_triple', 'This line is one of two and ends in \\'
@@ -54,11 +50,11 @@ and still has another line coming
     def test_bug121341(self):
         # port of xpcom/tests/unit/test_bug121341.js
         self.parser.readContents(self.resource('bug121341.properties'))
-        ref = ['abc', 'xy', u"\u1234\t\r\n\u00AB\u0001\n",
+        ref = ['abc', 'xy', "\u1234\t\r\n\u00AB\u0001\n",
                "this is multiline property",
-               "this is another multiline property", u"test\u0036",
-               "yet another multiline propery", u"\ttest5\u0020", " test6\t",
-               u"c\uCDEFd", u"\uABCD"]
+               "this is another multiline property", "test\u0036",
+               "yet another multiline propery", "\ttest5\u0020", " test6\t",
+               "c\uCDEFd", "\uABCD"]
         i = iter(self.parser)
         for r, e in zip(ref, i):
             self.assertEqual(e.val, r)

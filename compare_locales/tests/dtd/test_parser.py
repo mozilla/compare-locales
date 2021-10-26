@@ -5,8 +5,6 @@
 '''Tests for the DTD parser.
 '''
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
 import unittest
 import re
 
@@ -133,7 +131,7 @@ class TestDTD(ParserTestMixin, unittest.TestCase):
         self.assertEqual(len(entities), 4)
 
     def testBOM(self):
-        self._test(u'\ufeff<!ENTITY foo.label "stuff">',
+        self._test('\ufeff<!ENTITY foo.label "stuff">',
                    (('foo.label', 'stuff'),))
 
     def test_trailing_whitespace(self):
@@ -142,7 +140,7 @@ class TestDTD(ParserTestMixin, unittest.TestCase):
 
     def test_unicode_comment(self):
         self._test(b'<!-- \xe5\x8f\x96 -->'.decode('utf-8'),
-                   ((Comment, u'\u53d6'),))
+                   ((Comment, '\u53d6'),))
 
     def test_empty_file(self):
         self._test('', tuple())

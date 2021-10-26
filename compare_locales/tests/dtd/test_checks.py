@@ -1,18 +1,13 @@
-# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
 import unittest
 
 from compare_locales.checks import getChecker
 from compare_locales.parser import getParser, Parser, DTDEntity
 from compare_locales.paths import File
 from compare_locales.tests import BaseHelper
-import six
-from six.moves import range
 
 
 class TestDTDs(BaseHelper):
@@ -33,7 +28,7 @@ class TestDTDs(BaseHelper):
                      'xmlparse'),))
         # make sure we only handle translated entity references
         self._test('''<!ENTITY foo "This is &ƞǿŧ; good">
-'''.encode('utf-8'),
+'''.encode(),
             (('warning', (0, 0), 'Referencing unknown entity `ƞǿŧ`',
               'xmlparse'),))
 
@@ -173,7 +168,7 @@ class TestAndroid(unittest.TestCase):
             ctx, None, None, (0, len(v)), (), (0, len(v)))
 
     def getDTDEntity(self, v):
-        if isinstance(v, six.binary_type):
+        if isinstance(v, bytes):
             v = v.decode('utf-8')
         v = v.replace('"', '&quot;')
         ctx = Parser.Context('<!ENTITY foo "%s">' % v)
@@ -249,7 +244,7 @@ class TestAndroid(unittest.TestCase):
                          (('error', 2, self.quot_msg, 'android'),))
 
         # broken unicode escape
-        l10n = self.getDTDEntity(b"Some broken \u098 unicode")
+        l10n = self.getDTDEntity(br"Some broken \u098 unicode")
         self.assertEqual(tuple(checker.check(ref, l10n)),
                          (('error', 12, 'truncated \\uXXXX escape',
                            'android'),))

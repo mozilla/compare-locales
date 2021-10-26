@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
 import unittest
 import filecmp
 import os
@@ -16,7 +15,7 @@ from compare_locales.compare.observer import Observer
 from compare_locales import mozpath
 
 
-class ContentMixin(object):
+class ContentMixin:
     extension = None  # OVERLOAD
 
     @property
@@ -303,8 +302,8 @@ eff = effVal""")
                 }},
              'details': {
                  'l10n.properties': [
-                     {'missingEntity': u'foo'},
-                     {'missingEntity': u'eff'}]
+                     {'missingEntity': 'foo'},
+                     {'missingEntity': 'eff'}]
                 }
              })
         mergefile = mozpath.join(self.tmp, "merge", "l10n.properties")
@@ -380,9 +379,9 @@ eff = leffVal
                 }},
              'details': {
                  'l10n.properties': [
-                     {'missingEntity': u'foo'},
-                     {'error': u'argument 1 `S` should be `d` '
-                               u'at line 1, column 7 for bar'}]
+                     {'missingEntity': 'foo'},
+                     {'error': 'argument 1 `S` should be `d` '
+                               'at line 1, column 7 for bar'}]
                 }
              })
         mergefile = mozpath.join(self.tmp, "merge", "l10n.properties")
@@ -424,7 +423,7 @@ eff = leffVal
                 }},
              'details': {
                  'l10n.properties': [
-                     {'obsoleteEntity': u'other'}]
+                     {'obsoleteEntity': 'other'}]
                 }
              })
         mergefile = mozpath.join(self.tmp, "merge", "l10n.properties")
@@ -446,7 +445,7 @@ eff = leffVal
                 {},
              'details': {
                  'l10n.properties': [
-                     {'obsoleteFile': u'error'}]
+                     {'obsoleteFile': 'error'}]
                 }
              })
         mergefile = mozpath.join(self.tmp, "merge", "l10n.properties")
@@ -486,8 +485,8 @@ bar = duplicated bar
                 }},
              'details': {
                  'l10n.properties': [
-                     {'warning': u'foo occurs 2 times'},
-                     {'error': u'bar occurs 2 times'}]
+                     {'warning': 'foo occurs 2 times'},
+                     {'error': 'bar occurs 2 times'}]
                 }
              })
         mergefile = mozpath.join(self.tmp, "merge", "l10n.properties")
@@ -574,8 +573,8 @@ class TestDTD(unittest.TestCase, ContentMixin):
                 }},
              'details': {
                  'l10n.dtd': [
-                     {'missingEntity': u'foo'},
-                     {'missingEntity': u'eff'}]
+                     {'missingEntity': 'foo'},
+                     {'missingEntity': 'eff'}]
                 }
              })
         mergefile = mozpath.join(self.tmp, "merge", "l10n.dtd")
@@ -617,11 +616,11 @@ class TestDTD(unittest.TestCase, ContentMixin):
                 }},
              'details': {
                  'l10n.dtd': [
-                     {'error': u'Unparsed content "<!ENTY bar '
-                               u'\'gimmick\'>\n" '
-                               u'from line 2 column 1 to '
-                               u'line 3 column 1'},
-                     {'missingEntity': u'bar'}]
+                     {'error': 'Unparsed content "<!ENTY bar '
+                               '\'gimmick\'>\n" '
+                               'from line 2 column 1 to '
+                               'line 3 column 1'},
+                     {'missingEntity': 'bar'}]
                 }
              })
         mergefile = mozpath.join(self.tmp, "merge", "l10n.dtd")
@@ -700,8 +699,8 @@ class TestDTD(unittest.TestCase, ContentMixin):
                 }},
              'details': {
                  'l10n.dtd': [
-                     {'warning': u"can't parse en-US value at line 1, "
-                                 u"column 0 for bar"}]
+                     {'warning': "can't parse en-US value at line 1, "
+                                 "column 0 for bar"}]
                 }
              })
         mergefile = mozpath.join(self.tmp, "merge", "l10n.dtd")
@@ -795,8 +794,8 @@ eff = lEff
             {
                 'details': {
                     'l10n.ftl': [
-                        {'missingEntity': u'bar'},
-                        {'missingEntity': u'-baz'},
+                        {'missingEntity': 'bar'},
+                        {'missingEntity': '-baz'},
                     ],
                 },
                 'summary': {
@@ -844,17 +843,17 @@ eff = lEff {
             {
                 'details': {
                     'l10n.ftl': [
-                        {'error': u'Unparsed content "-- Invalid Comment" '
-                                  u'from line 1 column 1 '
-                                  u'to line 1 column 19'},
-                        {'error': u'Unparsed content "bar lBar" '
-                                  u'from line 3 column 1 '
-                                  u'to line 3 column 9'},
-                        {'error': u'Unparsed content "eff = lEff {" '
-                                  u'from line 4 column 1 '
-                                  u'to line 4 column 13'},
-                        {'missingEntity': u'bar'},
-                        {'missingEntity': u'eff'},
+                        {'error': 'Unparsed content "-- Invalid Comment" '
+                                  'from line 1 column 1 '
+                                  'to line 1 column 19'},
+                        {'error': 'Unparsed content "bar lBar" '
+                                  'from line 3 column 1 '
+                                  'to line 3 column 9'},
+                        {'error': 'Unparsed content "eff = lEff {" '
+                                  'from line 4 column 1 '
+                                  'to line 4 column 13'},
+                        {'missingEntity': 'bar'},
+                        {'missingEntity': 'eff'},
                     ],
                 },
                 'summary': {
@@ -954,23 +953,23 @@ baz = Localized { qux }
                     'l10n.ftl': [
                             {
                                 'warning':
-                                    u'Missing message reference: bar '
-                                    u'at line 1, column 1 for foo'
+                                    'Missing message reference: bar '
+                                    'at line 1, column 1 for foo'
                             },
                             {
                                 'warning':
-                                    u'Obsolete message reference: qux '
-                                    u'at line 1, column 19 for foo'
+                                    'Obsolete message reference: qux '
+                                    'at line 1, column 19 for foo'
                             },
                             {
                                 'warning':
-                                    u'Missing message reference: baz '
-                                    u'at line 2, column 1 for bar'
+                                    'Missing message reference: baz '
+                                    'at line 2, column 1 for bar'
                             },
                             {
                                 'warning':
-                                    u'Obsolete message reference: qux '
-                                    u'at line 3, column 19 for baz'
+                                    'Obsolete message reference: qux '
+                                    'at line 3, column 19 for baz'
                             },
                     ],
                 },
@@ -1022,12 +1021,12 @@ eff = lEff
                     'l10n.ftl': [
                             {
                                 'error':
-                                    u'Obsolete attribute: '
+                                    'Obsolete attribute: '
                                     'obsolete at line 2, column 3 for foo'
                             },
                             {
                                 'error':
-                                    u'Missing attribute: tender at line 3,'
+                                    'Missing attribute: tender at line 3,'
                                     ' column 1 for bar',
                             },
                     ],
@@ -1096,7 +1095,7 @@ eff = lEff
             {
                 'details': {
                     'l10n.ftl': [
-                        {'missingEntity': u'-missing'},
+                        {'missingEntity': '-missing'},
                     ],
                 },
                 'summary': {
@@ -1147,11 +1146,11 @@ bar = lBar
                     'l10n.ftl': [
                         {
                             'error':
-                                u'Missing value at line 1, column 1 for foo'
+                                'Missing value at line 1, column 1 for foo'
                         },
                         {
                             'error':
-                                u'Obsolete value at line 3, column 7 for bar',
+                                'Obsolete value at line 3, column 7 for bar',
                         },
                     ]
                 },
@@ -1346,8 +1345,8 @@ bar = duplicated bar
                 }},
              'details': {
                  'l10n.ftl': [
-                     {'warning': u'foo occurs 2 times'},
-                     {'error': u'bar occurs 2 times'}]
+                     {'warning': 'foo occurs 2 times'},
+                     {'error': 'bar occurs 2 times'}]
                 }
              })
         mergefile = mozpath.join(self.tmp, "merge", "l10n.ftl")
@@ -1386,16 +1385,16 @@ bar = duplicated bar
              'details': {
                  'l10n.ftl': [
                      {'warning':
-                      u'Attribute "attr" is duplicated '
-                      u'at line 2, column 5 for foo'
+                      'Attribute "attr" is duplicated '
+                      'at line 2, column 5 for foo'
                       },
                      {'warning':
-                      u'Attribute "attr" is duplicated '
-                      u'at line 3, column 5 for foo'
+                      'Attribute "attr" is duplicated '
+                      'at line 3, column 5 for foo'
                       },
                      {'warning':
-                      u'Attribute "attr" is duplicated '
-                      u'at line 4, column 5 for foo'
+                      'Attribute "attr" is duplicated '
+                      'at line 4, column 5 for foo'
                       },
                   ]
                 }

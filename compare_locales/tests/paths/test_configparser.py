@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, unicode_literals
 import unittest
-import six
 
 from . import MockTOMLParser
 from compare_locales.paths.matcher import Matcher
@@ -82,9 +79,9 @@ basepath = "."
                 mozpath.abspath("other-exclude.toml"),
             ]
         )
-        with six.assertRaisesRegex(self, ExcludeError, 'Included configs'):
+        with self.assertRaisesRegex(ExcludeError, 'Included configs'):
             parser.parse("grandparent.toml")
-        with six.assertRaisesRegex(self, ExcludeError, 'Excluded configs'):
+        with self.assertRaisesRegex(ExcludeError, 'Excluded configs'):
             parser.parse("wrapped.toml")
 
     def test_paths(self):

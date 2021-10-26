@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
 import re
 
 try:
@@ -19,7 +17,7 @@ from .base import (
 )
 
 
-class DTDEntityMixin(object):
+class DTDEntityMixin:
     @property
     def val(self):
         '''Unescape HTML entities into corresponding Unicode characters.
@@ -38,7 +36,7 @@ class DTDEntityMixin(object):
         # DTDChecker already returns tuples of (line, col) positions
         if isinstance(offset, tuple):
             line_pos, col_pos = offset
-            line, col = super(DTDEntityMixin, self).value_position()
+            line, col = super().value_position()
             if line_pos == 1:
                 col = col + col_pos
             else:
@@ -46,7 +44,7 @@ class DTDEntityMixin(object):
                 line += line_pos - 1
             return line, col
         else:
-            return super(DTDEntityMixin, self).value_position(offset)
+            return super().value_position(offset)
 
 
 class DTDEntity(DTDEntityMixin, Entity):
@@ -82,7 +80,7 @@ class DTDParser(Parser):
                       '[ \t\r\n]+SYSTEM[ \t\r\n]+'
                       '(?P<val>\"[^\"]*\"|\'[^\']*\')[ \t\r\n]*>[ \t\r\n]*'
                       '%' + Name + ';'
-                      '(?:[ \t]*(?:' + XmlComment + u'[ \t\r\n]*)*\n?)?')
+                      '(?:[ \t]*(?:' + XmlComment + '[ \t\r\n]*)*\n?)?')
 
     class Comment(Comment):
         @property

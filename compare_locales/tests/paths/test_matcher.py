@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-import six
 import unittest
 
 from compare_locales.paths.matcher import Matcher, ANDROID_STANDARD_MAP
@@ -434,7 +431,7 @@ class TestAndroid(unittest.TestCase):
         # test legacy locale code mapping
         # he <-> iw, id <-> in, yi <-> ji
         one = Matcher('values-{android_locale}/strings.xml')
-        for legacy, standard in six.iteritems(ANDROID_STANDARD_MAP):
+        for legacy, standard in ANDROID_STANDARD_MAP.items():
             self.assertDictEqual(
                 one.match('values-{}/strings.xml'.format(legacy)),
                 {

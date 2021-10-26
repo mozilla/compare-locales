@@ -1,7 +1,6 @@
 """
 Parser for the .lang translation format.
 """
-from __future__ import absolute_import
 
 import re
 
@@ -33,7 +32,7 @@ class LangComment(Comment):
 
 class LangEntity(LiteralEntity):
     def __init__(self, source_string, translation_string, all, tags):
-        super(LangEntity, self).__init__(
+        super().__init__(
             key=source_string,  # .lang files use the source as the key.
             val=translation_string,
             all=all,
@@ -135,7 +134,7 @@ def node_text(node):
     actually be a list of nodes due to repetition.
     """
     if node is None:
-        return u''
+        return ''
     elif isinstance(node, list):
         return ''.join([n.text for n in node])
     else:

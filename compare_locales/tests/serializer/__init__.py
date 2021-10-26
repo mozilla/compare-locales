@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -7,7 +6,7 @@ from compare_locales.parser import getParser
 from compare_locales.serializer import serialize
 
 
-class Helper(object):
+class Helper:
     """Mixin to test serializers.
 
     Reads the reference_content into self.reference, and uses
