@@ -1,5 +1,3 @@
-# coding=utf8
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -25,18 +23,18 @@ foo = Foo 1
 """)
 
     def test_encoding(self):
-        channels = (encode(u"""
+        channels = (encode("""
 foo = Foo 1…
-""", "utf8"), encode(u"""
+""", "utf8"), encode("""
 foo = Foo 2…
 """, "utf8"))
         output = merge_channels(self.name, channels)
-        self.assertEqual(output, encode(u"""
+        self.assertEqual(output, encode("""
 foo = Foo 1…
 """, "utf8"))
 
         u_output = decode(output, "utf8")
-        self.assertEqual(u_output, u"""
+        self.assertEqual(u_output, """
 foo = Foo 1…
 """)
 

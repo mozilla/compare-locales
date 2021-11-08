@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
 import os
 from compare_locales import mozpath
 
@@ -20,7 +19,7 @@ class ConfigList(list):
             self.append(config)
 
 
-class ProjectFiles(object):
+class ProjectFiles:
     '''Iterable object to get all files and tests for a locale and a
     list of ProjectConfigs.
 
@@ -110,8 +109,7 @@ class ProjectFiles(object):
         # a localization vs over the reference. We do that latter
         # when running in validation mode.
         inner = self.iter_locale() if self.locale else self.iter_reference()
-        for t in inner:
-            yield t
+        yield from inner
 
     def iter_locale(self):
         '''Iterate over locale files.'''
@@ -189,8 +187,7 @@ class ProjectFiles(object):
         return os.path.isfile(path)
 
     def _walk(self, base):
-        for d, dirs, files in os.walk(base):
-            yield d, dirs, files
+        yield from os.walk(base)
 
     def match(self, path):
         '''Return the tuple of l10n_path, reference, mergepath, tests

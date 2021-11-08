@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
 import textwrap
 import unittest
 
@@ -246,8 +243,8 @@ class TestTermReference(BaseHelper):
             b'''simple = localized with { -term }''',
             (
                (
-                    u'warning', 26,
-                    u'Obsolete term reference: -term', u'fluent'
+                    'warning', 26,
+                    'Obsolete term reference: -term', 'fluent'
                 ),
             )
         )
@@ -262,8 +259,8 @@ class TestTermReference(BaseHelper):
             '''),
             (
                 (
-                    u'warning', 0,
-                    u'Missing term reference: -term', u'fluent'
+                    'warning', 0,
+                    'Missing term reference: -term', 'fluent'
                 ),
             )
         )

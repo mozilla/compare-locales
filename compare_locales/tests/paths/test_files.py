@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
 import unittest
-import mock
+from unittest import mock
 
 from compare_locales.paths import (
     File,
@@ -368,7 +366,7 @@ basepath = "."
         vendor = parser.parse(self.path('/vendor.toml'))
         pc = ProjectFiles(locale, [pontoon, vendor])
         mock_files = [
-            '{}/{}/{}'.format(locale, dir, f)
+            f'{locale}/{dir}/{f}'
             for locale in ('de', 'en', 'gd', 'it')
             for dir, files in (
                 ('firefox', ('home.ftl', 'feature.ftl')),

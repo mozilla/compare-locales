@@ -1,12 +1,8 @@
-# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 from collections import defaultdict
-import six
 import tempfile
 from compare_locales.paths import (
     ProjectConfig, File, ProjectFiles, TOMLParser
@@ -15,7 +11,7 @@ from compare_locales import mozpath
 import pytoml as toml
 
 
-class Rooted(object):
+class Rooted:
     def setUp(self):
         # Use tempdir as self.root, that's absolute on all platforms
         self.root = mozpath.normpath(tempfile.gettempdir())
@@ -27,7 +23,7 @@ class Rooted(object):
         return mozpath.relpath(path, self.root)
 
 
-class SetupMixin(object):
+class SetupMixin:
     def setUp(self):
         self.cfg = ProjectConfig(None)
         self.file = File(
@@ -41,7 +37,7 @@ class SetupMixin(object):
         self.cfg.set_locales(['de'])
 
 
-class MockOS(object):
+class MockOS:
     '''Mock `os.path.isfile` and `os.walk` based on a list of files.
     '''
     def __init__(self, root, paths):
@@ -50,7 +46,7 @@ class MockOS(object):
         self.dirs = {}
         if not paths:
             return
-        if isinstance(paths[0], six.string_types):
+        if isinstance(paths[0], str):
             paths = [
                 mozpath.split(path)
                 for path in sorted(paths)
@@ -99,13 +95,12 @@ class MockOS(object):
             yield node.root, subdirs, node.files
         for subdir in subdirs:
             child = node.dirs[subdir]
-            for tpl in child.walk():
-                yield tpl
+            yield from child.walk()
 
 
 class MockProjectFiles(ProjectFiles):
     def __init__(self, mocks, locale, projects, mergebase=None):
-        (super(MockProjectFiles, self)
+        (super()
             .__init__(locale, projects, mergebase=mergebase))
         root = mozpath.commonprefix(mocks)
         files = [mozpath.relpath(f, root) for f in mocks]
@@ -119,8 +114,7 @@ class MockProjectFiles(ProjectFiles):
         root = self.mocks.find(base)
         if not root:
             return
-        for tpl in root.walk():
-            yield tpl
+        yield from root.walk()
 
 
 class MockTOMLParser(TOMLParser):
