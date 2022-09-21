@@ -19,8 +19,10 @@ MSGS = {
     'obsolete-msg-ref': 'Obsolete message reference: {ref}',
     'obsolete-term-ref': 'Obsolete term reference: {ref}',
     'duplicate-attribute': 'Attribute "{name}" is duplicated',
+    'empty-value': 'Empty value',
     'missing-value': 'Missing value',
     'obsolete-value': 'Obsolete value',
+    'empty-attribute': 'Empty attribute: {name}',
     'missing-attribute': 'Missing attribute: {name}',
     'obsolete-attribute': 'Obsolete attribute: {name}',
     'duplicate-variant': 'Variant key "{name}" is duplicated',
@@ -55,6 +57,9 @@ class ReferenceMessageVisitor(Visitor, CSSCheckMixin):
         self.entry_refs[None] = self.refs
         # If we're a messsage, store if there was a value
         self.message_has_value = False
+        # Track empty value and attribute patterns
+        self.message_is_empty = True
+        self.empty_attributes = set()
         # Map attribute names to positions
         self.attribute_positions = {}
         # Map of CSS style attribute properties and units
@@ -69,18 +74,26 @@ class ReferenceMessageVisitor(Visitor, CSSCheckMixin):
             return
         super().generic_visit(node)
 
-    def visit_Message(self, node):
+    def visit_Message(self, node: ftl.Message):
         if node.value is not None:
             self.message_has_value = True
-        super().generic_visit(node)
+        self.__pattern_is_empty = True
+        super().visit(node.value)
+        self.message_is_empty = self.__pattern_is_empty
+        for attr in node.attributes:
+            super().visit(attr)
 
-    def visit_Attribute(self, node):
-        self.attribute_positions[node.id.name] = node.span.start
+    def visit_Attribute(self, node: ftl.Attribute):
+        attrname = node.id.name
+        self.attribute_positions[attrname] = node.span.start
         old_refs = self.refs
-        self.refs = self.entry_refs[node.id.name]
+        self.refs = self.entry_refs[attrname]
+        self.__pattern_is_empty = True
         super().generic_visit(node)
         self.refs = old_refs
-        if node.id.name != 'style':
+        if self.__pattern_is_empty:
+            self.empty_attributes.add(attrname)
+        if attrname != 'style':
             return
         text_values = pattern_variants(node.value)
         if not text_values:
@@ -88,6 +101,19 @@ class ReferenceMessageVisitor(Visitor, CSSCheckMixin):
             return
         # right now, there's just one possible text value
         self.css_styles, self.css_errors = self.parse_css_spec(text_values[0])
+
+    def visit_TextElement(self, node: ftl.TextElement):
+        if node.value != '':
+            self.__pattern_is_empty = False
+
+    def visit_Placeable(self, node: ftl.Placeable):
+        exp = node.expression
+        if isinstance(exp, ftl.StringLiteral):
+            if exp.value != '':
+                self.__pattern_is_empty = False
+        elif not isinstance(exp, ftl.SelectExpression):
+            self.__pattern_is_empty = False
+        self.visit(exp)
 
     def visit_SelectExpression(self, node):
         # optimize select expressions to only go through the variants
@@ -108,6 +134,7 @@ class ReferenceMessageVisitor(Visitor, CSSCheckMixin):
 
 class GenericL10nChecks:
     '''Helper Mixin for checks shared between Terms and Messages.'''
+
     def check_duplicate_attributes(self, node):
         warned = set()
         for left in range(len(node.attributes) - 1):
@@ -190,7 +217,7 @@ class GenericL10nChecks:
 
 
 class L10nMessageVisitor(GenericL10nChecks, ReferenceMessageVisitor):
-    def __init__(self, locale, reference):
+    def __init__(self, locale, reference: ReferenceMessageVisitor):
         super().__init__()
         self.locale = locale
         # Overload refs to map to sets, just store what we found
@@ -208,15 +235,23 @@ class L10nMessageVisitor(GenericL10nChecks, ReferenceMessageVisitor):
     def visit_Message(self, node):
         self.check_duplicate_attributes(node)
         super().visit_Message(node)
-        if self.message_has_value and not self.reference.message_has_value:
-            self.messages.append(
-                ('error', node.value.span.start, MSGS['obsolete-value'])
-            )
-        if not self.message_has_value and self.reference.message_has_value:
+        ref = self.reference
+        if self.message_has_value:
+            if ref.message_has_value:
+                if self.message_is_empty and not ref.message_is_empty:
+                    self.messages.append(
+                        ('warning', node.value.span.start,
+                         MSGS['empty-value'])
+                    )
+            else:
+                self.messages.append(
+                    ('error', node.value.span.start, MSGS['obsolete-value'])
+                )
+        elif ref.message_has_value:
             self.messages.append(
                 ('error', 0, MSGS['missing-value'])
             )
-        ref_attrs = set(self.reference.attribute_positions)
+        ref_attrs = set(ref.attribute_positions)
         l10n_attrs = set(self.attribute_positions)
         for missing_attr in ref_attrs - l10n_attrs:
             self.messages.append(
@@ -232,6 +267,14 @@ class L10nMessageVisitor(GenericL10nChecks, ReferenceMessageVisitor):
                     MSGS['obsolete-attribute'].format(name=obs_attr)
                 )
             )
+        for empty_attr in self.empty_attributes - ref.empty_attributes:
+            if empty_attr in ref_attrs:
+                self.messages.append(
+                    (
+                        'warning', self.attribute_positions[empty_attr],
+                        MSGS['empty-attribute'].format(name=empty_attr)
+                    )
+                )
 
     def visit_Term(self, node):
         raise RuntimeError("Should not use L10nMessageVisitor for Terms")

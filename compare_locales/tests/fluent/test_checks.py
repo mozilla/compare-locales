@@ -109,6 +109,41 @@ class TestMessage(BaseHelper):
             )
         )
 
+    def test_empty_value(self):
+        self._test(
+            dedent_ftl('''\
+            mixed-attr = {""}{""}
+                .and = attribute exists
+            '''),
+            (
+                ('warning', 13, 'Empty value', 'fluent'),
+            )
+        )
+
+    def test_empty_selector(self):
+        self._test(
+            dedent_ftl('''\
+            simple = { $val ->
+             *[one] {""}
+              [other] {""}
+              }
+            '''),
+            (
+                ('warning', 9, 'Empty value', 'fluent'),
+            )
+        )
+
+    def test_empty_attribute(self):
+        self._test(
+            dedent_ftl('''\
+            mixed-attr = value
+                .and = {""}
+            '''),
+            (
+                ('warning', 23, 'Empty attribute: and', 'fluent'),
+            )
+        )
+
     def test_bad_encoding(self):
         self._test(
             'simple = touché'.encode('latin-1'),
@@ -242,7 +277,7 @@ class TestTermReference(BaseHelper):
         self._test(
             b'''simple = localized with { -term }''',
             (
-               (
+                (
                     'warning', 26,
                     'Obsolete term reference: -term', 'fluent'
                 ),
@@ -433,7 +468,7 @@ broken =
                     'warning', 0,
                     'width only in reference, max-width only in l10n', 'fluent'
                 ),
-            ))
+        ))
         self._test(dedent_ftl(
             '''\
             simple =
@@ -444,7 +479,7 @@ broken =
                     'error', 0,
                     'reference is a CSS spec', 'fluent'
                 ),
-            ))
+        ))
         # Cover the current limitations of only plain strings
         self._test(dedent_ftl(
             '''\
@@ -464,7 +499,7 @@ broken =
                     'warning', 0,
                     'width only in l10n', 'fluent'
                 ),
-            ))
+        ))
         self._test(dedent_ftl(
             '''\
             select =
@@ -475,7 +510,7 @@ broken =
                     'warning', 0,
                     'max-width only in l10n', 'fluent'
                 ),
-            ))
+        ))
         self._test(dedent_ftl(
             '''\
             select =
@@ -486,7 +521,7 @@ broken =
                     'error', 0,
                     'reference is a CSS spec', 'fluent'
                 ),
-            ))
+        ))
         # Cover the current limitations of only plain strings
         self._test(dedent_ftl(
             '''\
@@ -510,7 +545,7 @@ broken =
                     'warning', 0,
                     'Missing message reference: simple.style', 'fluent'
                 ),
-            ))
+        ))
         self._test(dedent_ftl(
             '''\
             ref =
@@ -525,7 +560,7 @@ broken =
                     'warning', 0,
                     'Missing message reference: simple.style', 'fluent'
                 ),
-            ))
+        ))
         self._test(dedent_ftl(
             '''\
             ref =
@@ -540,7 +575,7 @@ broken =
                     'warning', 0,
                     'Missing message reference: simple.style', 'fluent'
                 ),
-            ))
+        ))
         # Cover the current limitations of only plain strings
         self._test(dedent_ftl(
             '''\
@@ -552,7 +587,7 @@ broken =
                     'warning', 0,
                     'Missing message reference: simple.style', 'fluent'
                 ),
-            ))
+        ))
 
     def test_broken(self):
         self._test(dedent_ftl(
@@ -571,7 +606,7 @@ broken =
                     'warning', 0,
                     'width only in l10n', 'fluent'
                 ),
-            ))
+        ))
 
 
 if __name__ == '__main__':
