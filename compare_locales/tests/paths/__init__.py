@@ -8,7 +8,7 @@ from compare_locales.paths import (
     ProjectConfig, File, ProjectFiles, TOMLParser
 )
 from compare_locales import mozpath
-import pytoml as toml
+import toml
 
 
 class Rooted:

@@ -7,7 +7,7 @@ import logging
 from compare_locales import mozpath
 from .project import ProjectConfig
 from .matcher import expand
-import pytoml as toml
+import toml
 
 
 class ConfigNotFound(EnvironmentError):
@@ -53,7 +53,7 @@ class TOMLParser:
         try:
             with open(ctx.path, 'rb') as fin:
                 ctx.data = toml.load(fin)
-        except (toml.TomlError, OSError):
+        except (toml.TomlDecodeError, OSError):
             raise ConfigNotFound(ctx.path)
 
     def processBasePath(self, ctx):

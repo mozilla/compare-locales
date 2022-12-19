@@ -49,7 +49,8 @@ setup(name="compare-locales",
       },
       install_requires=[
           'fluent.syntax >=0.18.0, <0.19',
-          'pytoml',
+          'six',  # undeclared dependency of fluent-syntax 0.18.1
+          'toml',
       ],
       tests_require=[
           'mock<4.0',
