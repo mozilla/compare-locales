@@ -539,7 +539,25 @@ locales = [
 [[paths]]
     reference = "reference/*"
     l10n = "{l}*"
-'''})
+''',
+            "wildcard.toml":
+            '''\
+basepath = "."
+
+locales = [
+    "de",
+]
+[env]
+    l = "{l10n_base}/{locale}/"
+
+[[paths]]
+    reference = "reference/*foo.ftl"
+    l10n = "{l}*foo.ftl"
+[[paths]]
+    reference = "reference/*bar.ftl"
+    l10n = "{l}*bar.ftl"
+''',
+})
         cfg = parser.parse(
             self.path('/base.toml'),
             env={'l10n_base': self.path('/l10n')}
@@ -566,5 +584,30 @@ locales = [
                 (self.path('/l10n/de/ref.ftl'),
                  self.path('/reference/ref.ftl'),
                  self.path('/mergers/de/ref.ftl'),
+                 set()),
+            ])
+
+        cfg = parser.parse(
+            self.path('/wildcard.toml'),
+            env={'l10n_base': self.path('/l10n')}
+        )
+        mocks = [
+            self.path(leaf)
+            for leaf in [
+                '/l10n/de/foofoo.ftl',
+                '/l10n/de/barbar.ftl',
+            ]
+        ]
+        files = MockProjectFiles(mocks, 'de', [cfg], self.path('/mergers'))
+        self.assertListEqual(
+            list(files),
+            [
+                (self.path('/l10n/de/barbar.ftl'),
+                 self.path('/reference/barbar.ftl'),
+                 self.path('/mergers/de/barbar.ftl'),
+                 set()),
+                (self.path('/l10n/de/foofoo.ftl'),
+                 self.path('/reference/foofoo.ftl'),
+                 self.path('/mergers/de/foofoo.ftl'),
                  set()),
             ])
