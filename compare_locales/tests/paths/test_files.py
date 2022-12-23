@@ -557,7 +557,7 @@ locales = [
     reference = "reference/*bar.ftl"
     l10n = "{l}*bar.ftl"
 ''',
-})
+            })
         cfg = parser.parse(
             self.path('/base.toml'),
             env={'l10n_base': self.path('/l10n')}
