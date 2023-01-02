@@ -92,6 +92,10 @@ class ProjectFiles:
                         mozpath.realpath(m_['l10n'].prefix)):
                     # ok, not the same thing, continue
                     continue
+                if m['l10n'].pattern != m_['l10n'].pattern:
+                    # We cannot guess whether same entry until the pattern is
+                    # resolved, continue
+                    continue
                 # check that we're comparing the same thing
                 if 'reference' in m:
                     if (mozpath.realpath(m['reference'].prefix) !=
