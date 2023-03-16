@@ -1,9 +1,7 @@
+.*
 *.orig
 *.pyc
 build/
 dist/
 compare_locales.egg-info/
-.eggs/
-.tox/
-.coverage
 htmlcov/
