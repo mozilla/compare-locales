@@ -2,10 +2,10 @@ from setuptools import setup, find_packages
 
 import sys
 import os
-sys.path.insert(0, os.path.dirname(__file__))
 
 from compare_locales import version
 
+sys.path.insert(0, os.path.dirname(__file__))
 this_directory = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(this_directory, 'README.md'), 'rb') as f:
     long_description = f.read().decode('utf-8')
@@ -43,7 +43,7 @@ setup(name="compare-locales",
             'moz-l10n-lint = compare_locales.lint.cli:main',
         ],
       },
-      packages=find_packages(),
+      packages=find_packages(exclude=['*.tests', '*.tests.*']),
       package_data={
           'compare_locales.tests': ['data/*.properties', 'data/*.dtd']
       },
