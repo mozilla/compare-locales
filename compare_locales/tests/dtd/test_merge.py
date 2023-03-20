@@ -11,27 +11,38 @@ class TestMergeDTD(unittest.TestCase):
     maxDiff = None
 
     def test_no_changes(self):
-        channels = (b"""
+        channels = (
+            b"""
 <!ENTITY foo "Foo 1">
-""", b"""
+""",
+            b"""
 <!ENTITY foo "Foo 2">
-""")
+""",
+        )
         self.assertEqual(
-            merge_channels(self.name, channels), b"""
+            merge_channels(self.name, channels),
+            b"""
 <!ENTITY foo "Foo 1">
-""")
+""",
+        )
 
     def test_trailing_whitespace(self):
-        channels = (b"""
+        channels = (
+            b"""
 <!ENTITY foo "Foo 1">
-""", b"""
-<!ENTITY foo "Foo 2"> \n""")
+""",
+            b"""
+<!ENTITY foo "Foo 2"> \n""",
+        )
         self.assertEqual(
-            merge_channels(self.name, channels), b"""
-<!ENTITY foo "Foo 1"> \n""")
+            merge_channels(self.name, channels),
+            b"""
+<!ENTITY foo "Foo 1"> \n""",
+        )
 
     def test_browser_dtd(self):
-        channels = (b"""\
+        channels = (
+            b"""\
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
@@ -46,7 +57,8 @@ class TestMergeDTD(unittest.TestCase):
 <!-- LOCALIZATION NOTE (mainWindow.privatebrowsing2): This will be appended ...
                                                       inside the ... -->
 <!ENTITY mainWindow.privatebrowsing2 "(Private Browsing)">
-""", b"""\
+""",
+            b"""\
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
@@ -61,10 +73,12 @@ class TestMergeDTD(unittest.TestCase):
 <!-- LOCALIZATION NOTE (mainWindow.privatebrowsing): This will be appended ...
                                                      inside the ... -->
 <!ENTITY mainWindow.privatebrowsing "(Private Browsing)">
-""")
+""",
+        )
 
         self.assertMultiLineEqual(
-            merge_channels(self.name, channels).decode("utf-8"), """\
+            merge_channels(self.name, channels).decode("utf-8"),
+            """\
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
@@ -85,10 +99,12 @@ class TestMergeDTD(unittest.TestCase):
 <!-- LOCALIZATION NOTE (mainWindow.privatebrowsing2): This will be appended ...
                                                       inside the ... -->
 <!ENTITY mainWindow.privatebrowsing2 "(Private Browsing)">
-""")
+""",
+        )
 
     def test_aboutServiceWorkers_dtd(self):
-        channels = (b"""\
+        channels = (
+            b"""\
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
@@ -101,7 +117,8 @@ class TestMergeDTD(unittest.TestCase):
 <!ENTITY warning_not_enabled       "Service Workers are not enabled.">
 <!-- LOCALIZATION NOTE the term "Service Workers" should not be translated. -->
 <!ENTITY warning_no_serviceworkers "No Service Workers registered.">
-""", b"""\
+""",
+            b"""\
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
@@ -114,10 +131,12 @@ class TestMergeDTD(unittest.TestCase):
 <!ENTITY warning_not_enabled       "Service Workers are not enabled.">
 <!-- LOCALIZATION NOTE the term "Service Workers" should not be translated. -->
 <!ENTITY warning_no_serviceworkers "No Service Workers registered.">
-""")
+""",
+        )
 
         self.assertEqual(
-            merge_channels(self.name, channels), b"""\
+            merge_channels(self.name, channels),
+            b"""\
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
@@ -130,4 +149,5 @@ class TestMergeDTD(unittest.TestCase):
 <!ENTITY warning_not_enabled       "Service Workers are not enabled.">
 <!-- LOCALIZATION NOTE the term "Service Workers" should not be translated. -->
 <!ENTITY warning_no_serviceworkers "No Service Workers registered.">
-""")
+""",
+        )

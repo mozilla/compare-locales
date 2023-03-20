@@ -8,7 +8,7 @@ from . import Helper
 
 
 class TestAndroidSerializer(Helper, unittest.TestCase):
-    name = 'strings.xml'
+    name = "strings.xml"
     reference_content = """\
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
@@ -37,22 +37,20 @@ class TestAndroidSerializer(Helper, unittest.TestCase):
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     </resources>
-"""
+""",
         )
 
     def test_new_string(self):
         self._test(
             "",
-            {
-                "title": "Cannot connect"
-            },
+            {"title": "Cannot connect"},
             """\
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- The page html title (i.e. the <title> tag content) -->
     <string name="title">Cannot connect</string>
     </resources>
-"""
+""",
         )
 
     def test_new_cdata(self):
@@ -74,7 +72,7 @@ class TestAndroidSerializer(Helper, unittest.TestCase):
 </ul>
 ]]></string>
     </resources>
-"""
+""",
         )
 
     def test_new_cdata_wrapped(self):
@@ -98,7 +96,7 @@ class TestAndroidSerializer(Helper, unittest.TestCase):
 ]]>
     </string>
 </resources>
-"""
+""",
         )
 
     def test_remove_string(self):
@@ -117,7 +115,7 @@ class TestAndroidSerializer(Helper, unittest.TestCase):
 <resources>
     <string name="title">Unable to connect</string>
     </resources>
-"""
+""",
         )
 
     def test_same_string(self):
@@ -128,21 +126,19 @@ class TestAndroidSerializer(Helper, unittest.TestCase):
     <string name="title">Unable to connect</string>
 </resources>
 """,
-            {
-                "title": "Unable to connect"
-            },
+            {"title": "Unable to connect"},
             """\
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- The page html title (i.e. the <title> tag content) -->
     <string name="title">Unable to connect</string>
     </resources>
-"""
+""",
         )
 
 
 class TestAndroidDuplicateComment(Helper, unittest.TestCase):
-    name = 'strings.xml'
+    name = "strings.xml"
     reference_content = """\
 <?xml version="1.0" encoding="utf-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
@@ -167,9 +163,7 @@ class TestAndroidDuplicateComment(Helper, unittest.TestCase):
     <string name="contextmenu_link_share"/>
   </resources>
 """,
-            {
-                "contextmenu_link_share": "translation"
-            },
+            {"contextmenu_link_share": "translation"},
             """\
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
@@ -177,12 +171,12 @@ class TestAndroidDuplicateComment(Helper, unittest.TestCase):
     <!-- Label used in the contextmenu shown when long-pressing on a link -->
     <string name="contextmenu_link_share">translation</string>
   </resources>
-"""
+""",
         )
 
 
 class TestAndroidTools(Helper, unittest.TestCase):
-    name = 'strings.xml'
+    name = "strings.xml"
     reference_content = (
         """\
 <resources xmlns:tools="http://schemas.android.com/tools">
@@ -191,7 +185,8 @@ class TestAndroidTools(Helper, unittest.TestCase):
         "search your entries"
         """</string>
 </resources>
-""")
+"""
+    )
 
     def test_namespaced_document(self):
         self._test(
@@ -201,9 +196,7 @@ class TestAndroidTools(Helper, unittest.TestCase):
     <string name="app_tagline">Localized tag line</string>
   </resources>
 """,
-            {
-                "search_your_entries": "Looking for Entries"
-            },
+            {"search_your_entries": "Looking for Entries"},
             (
                 """\
 <?xml version="1.0" encoding="utf-8"?>
@@ -213,5 +206,6 @@ class TestAndroidTools(Helper, unittest.TestCase):
                 "Looking for Entries"
                 """</string>
 </resources>
-""")
+"""
+            ),
         )

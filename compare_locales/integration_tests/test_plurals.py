@@ -11,19 +11,20 @@ from compare_locales import plurals
 
 
 TRANSVISION_URL = (
-    'https://transvision.mozfr.org/'
-    'api/v1/entity/gecko_strings/'
-    '?id=toolkit/chrome/global/intl.properties:pluralRule'
+    "https://transvision.mozfr.org/"
+    "api/v1/entity/gecko_strings/"
+    "?id=toolkit/chrome/global/intl.properties:pluralRule"
 )
 
 
 class TestPlural(unittest.TestCase):
-    '''Integration test for plural forms and l10n-central.
+    """Integration test for plural forms and l10n-central.
 
     Having more plural forms than in l10n-central is OK, missing or
     mismatching ones isn't.
     Depends on Transvision.
-    '''
+    """
+
     maxDiff = None
 
     def test_valid_forms(self):
@@ -40,10 +41,10 @@ class TestPlural(unittest.TestCase):
         self.assertDictEqual(reference_form_map, cl_form_map)
 
     def _load_transvision(self):
-        '''Use the Transvision API to load all values of pluralRule
+        """Use the Transvision API to load all values of pluralRule
         in intl.properties.
         Skip test on load failure.
-        '''
+        """
         try:
             data = urlopen(TRANSVISION_URL).read()
         except URLError:

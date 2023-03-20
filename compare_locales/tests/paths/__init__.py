@@ -4,9 +4,7 @@
 
 from collections import defaultdict
 import tempfile
-from compare_locales.paths import (
-    ProjectConfig, File, ProjectFiles, TOMLParser
-)
+from compare_locales.paths import ProjectConfig, File, ProjectFiles, TOMLParser
 from compare_locales import mozpath
 import toml
 
@@ -16,7 +14,7 @@ class Rooted:
         # Use tempdir as self.root, that's absolute on all platforms
         self.root = mozpath.normpath(tempfile.gettempdir())
 
-    def path(self, leaf=''):
+    def path(self, leaf=""):
         return self.root + leaf
 
     def leaf(self, path):
@@ -27,19 +25,23 @@ class SetupMixin:
     def setUp(self):
         self.cfg = ProjectConfig(None)
         self.file = File(
-            '/tmp/somedir/de/browser/one/two/file.ftl',
-            'file.ftl',
-            module='browser', locale='de')
+            "/tmp/somedir/de/browser/one/two/file.ftl",
+            "file.ftl",
+            module="browser",
+            locale="de",
+        )
         self.other_file = File(
-            '/tmp/somedir/de/toolkit/two/one/file.ftl',
-            'file.ftl',
-            module='toolkit', locale='de')
-        self.cfg.set_locales(['de'])
+            "/tmp/somedir/de/toolkit/two/one/file.ftl",
+            "file.ftl",
+            module="toolkit",
+            locale="de",
+        )
+        self.cfg.set_locales(["de"])
 
 
 class MockOS:
-    '''Mock `os.path.isfile` and `os.walk` based on a list of files.
-    '''
+    """Mock `os.path.isfile` and `os.walk` based on a list of files."""
+
     def __init__(self, root, paths):
         self.root = root
         self.files = []
@@ -47,10 +49,7 @@ class MockOS:
         if not paths:
             return
         if isinstance(paths[0], str):
-            paths = [
-                mozpath.split(path)
-                for path in sorted(paths)
-            ]
+            paths = [mozpath.split(path) for path in sorted(paths)]
         child_paths = defaultdict(list)
         for segs in paths:
             if len(segs) == 1:
@@ -62,9 +61,9 @@ class MockOS:
 
     def find(self, dir_path):
         relpath = mozpath.relpath(dir_path, self.root)
-        if relpath.startswith('..'):
+        if relpath.startswith(".."):
             return None
-        if relpath in ('', '.'):
+        if relpath in ("", "."):
             return self
         segs = mozpath.split(relpath)
         node = self
@@ -100,8 +99,7 @@ class MockOS:
 
 class MockProjectFiles(ProjectFiles):
     def __init__(self, mocks, locale, projects, mergebase=None):
-        (super()
-            .__init__(locale, projects, mergebase=mergebase))
+        (super().__init__(locale, projects, mergebase=mergebase))
         root = mozpath.commonprefix(mocks)
         files = [mozpath.relpath(f, root) for f in mocks]
         self.mocks = MockOS(root, files)

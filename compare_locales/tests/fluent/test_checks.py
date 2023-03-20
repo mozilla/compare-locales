@@ -13,7 +13,7 @@ def dedent_ftl(text):
     return textwrap.dedent(text.rstrip() + "\n").encode("utf-8")
 
 
-REFERENCE = b'''\
+REFERENCE = b"""\
 simple = value
 term_ref = some { -term }
   .attr = is simple
@@ -24,318 +24,250 @@ only-attr =
   .one = exists
 -term = value need
   .attrs = can differ
-'''
+"""
 
 
 class TestFluent(BaseHelper):
-    file = File('foo.ftl', 'foo.ftl')
+    file = File("foo.ftl", "foo.ftl")
     refContent = REFERENCE
 
     def test_simple(self):
-        self._test(b'''simple = localized''',
-                   tuple())
+        self._test(b"""simple = localized""", tuple())
 
 
 class TestMessage(BaseHelper):
-    file = File('foo.ftl', 'foo.ftl')
+    file = File("foo.ftl", "foo.ftl")
     refContent = REFERENCE
 
     def test_excess_attribute(self):
         self._test(
-            dedent_ftl('''\
+            dedent_ftl(
+                """\
             simple = value with
                 .obsolete = attribute
-            '''),
-            (
-                (
-                    'error', 24,
-                    'Obsolete attribute: obsolete', 'fluent'
-                ),
-            )
+            """
+            ),
+            (("error", 24, "Obsolete attribute: obsolete", "fluent"),),
         )
 
     def test_duplicate_attribute(self):
         self._test(
-            dedent_ftl('''\
+            dedent_ftl(
+                """\
             only-attr =
                 .one = attribute
                 .one = again
                 .one = three times
-            '''),
+            """
+            ),
             (
-                (
-                    'warning', 16,
-                    'Attribute "one" is duplicated', 'fluent'
-                ),
-                (
-                    'warning', 37,
-                    'Attribute "one" is duplicated', 'fluent'
-                ),
-                (
-                    'warning', 54,
-                    'Attribute "one" is duplicated', 'fluent'
-                ),
-            )
+                ("warning", 16, 'Attribute "one" is duplicated', "fluent"),
+                ("warning", 37, 'Attribute "one" is duplicated', "fluent"),
+                ("warning", 54, 'Attribute "one" is duplicated', "fluent"),
+            ),
         )
 
     def test_only_attributes(self):
         self._test(
-            dedent_ftl('''\
+            dedent_ftl(
+                """\
             only-attr = obsolete value
-            '''),
+            """
+            ),
             (
-                (
-                    'error', 0,
-                    'Missing attribute: one', 'fluent'
-                ),
-                (
-                    'error', 12,
-                    'Obsolete value', 'fluent'
-                ),
-            )
+                ("error", 0, "Missing attribute: one", "fluent"),
+                ("error", 12, "Obsolete value", "fluent"),
+            ),
         )
 
     def test_missing_value(self):
         self._test(
-            dedent_ftl('''\
+            dedent_ftl(
+                """\
             mixed-attr =
                 .and = attribute exists
-            '''),
-            (
-                (
-                    'error', 0,
-                    'Missing value', 'fluent'
-                ),
-            )
+            """
+            ),
+            (("error", 0, "Missing value", "fluent"),),
         )
 
     def test_bad_encoding(self):
         self._test(
-            'simple = touché'.encode('latin-1'),
-            (
-                (
-                    "warning",
-                    14,
-                    "\ufffd in: simple",
-                    "encodings"
-                ),
-            )
+            "simple = touché".encode("latin-1"),
+            (("warning", 14, "\ufffd in: simple", "encodings"),),
         )
 
 
 class TestTerm(BaseHelper):
-    file = File('foo.ftl', 'foo.ftl')
+    file = File("foo.ftl", "foo.ftl")
     refContent = REFERENCE
 
     def test_mismatching_attribute(self):
         self._test(
-            dedent_ftl('''\
+            dedent_ftl(
+                """\
             -term = value with
                 .different = attribute
-            '''),
-            tuple()
+            """
+            ),
+            tuple(),
         )
 
     def test_duplicate_attribute(self):
         self._test(
-            dedent_ftl('''\
+            dedent_ftl(
+                """\
             -term = need value
                 .one = attribute
                 .one = again
                 .one = three times
-            '''),
+            """
+            ),
             (
-                (
-                    'warning', 23,
-                    'Attribute "one" is duplicated', 'fluent'
-                ),
-                (
-                    'warning', 44,
-                    'Attribute "one" is duplicated', 'fluent'
-                ),
-                (
-                    'warning', 61,
-                    'Attribute "one" is duplicated', 'fluent'
-                ),
-            )
+                ("warning", 23, 'Attribute "one" is duplicated', "fluent"),
+                ("warning", 44, 'Attribute "one" is duplicated', "fluent"),
+                ("warning", 61, 'Attribute "one" is duplicated', "fluent"),
+            ),
         )
 
 
 class TestMessageReference(BaseHelper):
-    file = File('foo.ftl', 'foo.ftl')
+    file = File("foo.ftl", "foo.ftl")
     refContent = REFERENCE
 
     def test_msg_attr(self):
+        self._test(b"""msg-attr-ref = Nice {button.label}""", tuple())
         self._test(
-            b'''msg-attr-ref = Nice {button.label}''',
-            tuple()
+            b"""msg-attr-ref = not at all""",
+            (("warning", 0, "Missing message reference: button.label", "fluent"),),
         )
         self._test(
-            b'''msg-attr-ref = not at all''',
+            b"""msg-attr-ref = {button} is not a label""",
             (
-                (
-                    'warning', 0,
-                    'Missing message reference: button.label', 'fluent'
-                ),
-            )
+                ("warning", 0, "Missing message reference: button.label", "fluent"),
+                ("warning", 16, "Obsolete message reference: button", "fluent"),
+            ),
         )
         self._test(
-            b'''msg-attr-ref = {button} is not a label''',
+            b"""msg-attr-ref = {button.tooltip} is not a label""",
             (
-                (
-                    'warning', 0,
-                    'Missing message reference: button.label', 'fluent'
-                ),
-                (
-                    'warning', 16,
-                    'Obsolete message reference: button', 'fluent'
-                ),
-            )
-        )
-        self._test(
-            b'''msg-attr-ref = {button.tooltip} is not a label''',
-            (
-                (
-                    'warning', 0,
-                    'Missing message reference: button.label', 'fluent'
-                ),
-                (
-                    'warning', 16,
-                    'Obsolete message reference: button.tooltip', 'fluent'
-                ),
-            )
+                ("warning", 0, "Missing message reference: button.label", "fluent"),
+                ("warning", 16, "Obsolete message reference: button.tooltip", "fluent"),
+            ),
         )
 
 
 class TestTermReference(BaseHelper):
-    file = File('foo.ftl', 'foo.ftl')
+    file = File("foo.ftl", "foo.ftl")
     refContent = REFERENCE
 
     def test_good_term_ref(self):
         self._test(
-            dedent_ftl('''\
+            dedent_ftl(
+                """\
             term_ref = localized to {-term}
                 .attr = is plain
-            '''),
-            tuple()
+            """
+            ),
+            tuple(),
         )
 
     def test_missing_term_ref(self):
         self._test(
-            dedent_ftl('''\
+            dedent_ftl(
+                """\
             term_ref = localized
                 .attr = should not refer to {-term}
-            '''),
+            """
+            ),
             (
-                (
-                    'warning', 0,
-                    'Missing term reference: -term', 'fluent'
-                ),
-                (
-                    'warning', 54,
-                    'Obsolete term reference: -term', 'fluent'
-                ),
-            )
+                ("warning", 0, "Missing term reference: -term", "fluent"),
+                ("warning", 54, "Obsolete term reference: -term", "fluent"),
+            ),
         )
 
     def test_l10n_only_term_ref(self):
         self._test(
-            b'''simple = localized with { -term }''',
-            (
-               (
-                    'warning', 26,
-                    'Obsolete term reference: -term', 'fluent'
-                ),
-            )
+            b"""simple = localized with { -term }""",
+            (("warning", 26, "Obsolete term reference: -term", "fluent"),),
         )
 
     def test_term_attr(self):
         self._test(
-            dedent_ftl('''\
+            dedent_ftl(
+                """\
             term_ref = Depends on { -term.prop ->
                 *[some] Term prop, doesn't reference the term value, though.
               }
               .attr = still simple
-            '''),
-            (
-                (
-                    'warning', 0,
-                    'Missing term reference: -term', 'fluent'
-                ),
-            )
+            """
+            ),
+            (("warning", 0, "Missing term reference: -term", "fluent"),),
         )
 
 
 class SelectExpressionTest(BaseHelper):
-    file = File('foo.ftl', 'foo.ftl')
-    refContent = b'''\
+    file = File("foo.ftl", "foo.ftl")
+    refContent = b"""\
 msg = { $val ->
  *[other] Show something
   }
 -term = Foopy
-'''
+"""
 
     def test_no_select(self):
-        self._test(
-            b'''msg = Something''',
-            tuple()
-        )
+        self._test(b"""msg = Something""", tuple())
 
     def test_good(self):
         self._test(
-            dedent_ftl('''\
+            dedent_ftl(
+                """\
             msg = { $val ->
              *[one] one
               [other] other
               }
-            '''),
-            tuple()
+            """
+            ),
+            tuple(),
         )
 
     def test_duplicate_variant(self):
         self._test(
-            dedent_ftl('''\
+            dedent_ftl(
+                """\
             msg = { $val ->
              *[one] one
               [one] other
               }
-            '''),
+            """
+            ),
             (
-                (
-                    'warning', 19,
-                    'Variant key "one" is duplicated', 'fluent'
-                ),
-                (
-                    'warning', 31,
-                    'Variant key "one" is duplicated', 'fluent'
-                ),
-            )
+                ("warning", 19, 'Variant key "one" is duplicated', "fluent"),
+                ("warning", 31, 'Variant key "one" is duplicated', "fluent"),
+            ),
         )
 
     def test_term_value(self):
         self._test(
-            dedent_ftl('''\
+            dedent_ftl(
+                """\
             -term = { PLATFORM() ->
              *[one] one
               [two] two
               [two] duplicate
               }
-            '''),
+            """
+            ),
             (
-                (
-                    'warning', 39,
-                    'Variant key "two" is duplicated', 'fluent'
-                ),
-                (
-                    'warning', 51,
-                    'Variant key "two" is duplicated', 'fluent'
-                ),
-            )
+                ("warning", 39, 'Variant key "two" is duplicated', "fluent"),
+                ("warning", 51, 'Variant key "two" is duplicated', "fluent"),
+            ),
         )
 
     def test_term_attribute(self):
         self._test(
-            dedent_ftl('''\
+            dedent_ftl(
+                """\
             -term = boring value
               .attr = { PLATFORM() ->
                *[one] one
@@ -343,66 +275,57 @@ msg = { $val ->
                 [two] duplicate
                 [two] three
                 }
-            '''),
+            """
+            ),
             (
-                (
-                    'warning', 66,
-                    'Variant key "two" is duplicated', 'fluent'
-                ),
-                (
-                    'warning', 80,
-                    'Variant key "two" is duplicated', 'fluent'
-                ),
-                (
-                    'warning', 100,
-                    'Variant key "two" is duplicated', 'fluent'
-                ),
-            )
+                ("warning", 66, 'Variant key "two" is duplicated', "fluent"),
+                ("warning", 80, 'Variant key "two" is duplicated', "fluent"),
+                ("warning", 100, 'Variant key "two" is duplicated', "fluent"),
+            ),
         )
 
 
 class PluralTest(BaseHelper):
-    file = File('foo.ftl', 'foo.ftl')
-    refContent = b'''\
+    file = File("foo.ftl", "foo.ftl")
+    refContent = b"""\
 msg = { $val ->
  *[other] Show something
   }
-'''
+"""
 
     def test_missing_plural(self):
-        self.file.locale = 'ru'
+        self.file.locale = "ru"
         self._test(
-            dedent_ftl('''\
+            dedent_ftl(
+                """\
             msg = { $val ->
               [one] thing
               [3] is ok
              *[many] stuff
              }
-            '''),
-            (
-                (
-                    'warning', 19,
-                    'Plural categories missing: few', 'fluent'
-                ),
-            )
+            """
+            ),
+            (("warning", 19, "Plural categories missing: few", "fluent"),),
         )
 
     def test_ignoring_other(self):
-        self.file.locale = 'de'
+        self.file.locale = "de"
         self._test(
-            dedent_ftl('''\
+            dedent_ftl(
+                """\
             msg = { $val ->
               [1] thing
              *[other] stuff
              }
-            '''),
-            tuple()
+            """
+            ),
+            tuple(),
         )
 
 
 class CSSStyleTest(BaseHelper):
-    file = File('foo.ftl', 'foo.ftl')
-    refContent = b'''\
+    file = File("foo.ftl", "foo.ftl")
+    refContent = b"""\
 simple =
     .style = width:1px
 select =
@@ -414,165 +337,161 @@ ref =
     .style = {simple.style}
 broken =
     .style = 28em
-'''
+"""
 
     def test_simple(self):
-        self._test(dedent_ftl(
-            '''\
+        self._test(
+            dedent_ftl(
+                """\
             simple =
                 .style = width:2px
-            '''),
-            tuple())
-        self._test(dedent_ftl(
-            '''\
+            """
+            ),
+            tuple(),
+        )
+        self._test(
+            dedent_ftl(
+                """\
             simple =
                 .style = max-width:2px
-            '''),
+            """
+            ),
             (
                 (
-                    'warning', 0,
-                    'width only in reference, max-width only in l10n', 'fluent'
+                    "warning",
+                    0,
+                    "width only in reference, max-width only in l10n",
+                    "fluent",
                 ),
-            ))
-        self._test(dedent_ftl(
-            '''\
+            ),
+        )
+        self._test(
+            dedent_ftl(
+                """\
             simple =
                 .style = stuff
-            '''),
-            (
-                (
-                    'error', 0,
-                    'reference is a CSS spec', 'fluent'
-                ),
-            ))
+            """
+            ),
+            (("error", 0, "reference is a CSS spec", "fluent"),),
+        )
         # Cover the current limitations of only plain strings
-        self._test(dedent_ftl(
-            '''\
+        self._test(
+            dedent_ftl(
+                """\
             simple =
                 .style = {"width:3px"}
-            '''),
-            tuple())
+            """
+            ),
+            tuple(),
+        )
 
     def test_select(self):
-        self._test(dedent_ftl(
-            '''\
+        self._test(
+            dedent_ftl(
+                """\
             select =
                 .style = width:2px
-            '''),
-            (
-                (
-                    'warning', 0,
-                    'width only in l10n', 'fluent'
-                ),
-            ))
-        self._test(dedent_ftl(
-            '''\
+            """
+            ),
+            (("warning", 0, "width only in l10n", "fluent"),),
+        )
+        self._test(
+            dedent_ftl(
+                """\
             select =
                 .style = max-width:2px
-            '''),
-            (
-                (
-                    'warning', 0,
-                    'max-width only in l10n', 'fluent'
-                ),
-            ))
-        self._test(dedent_ftl(
-            '''\
+            """
+            ),
+            (("warning", 0, "max-width only in l10n", "fluent"),),
+        )
+        self._test(
+            dedent_ftl(
+                """\
             select =
                 .style = stuff
-            '''),
-            (
-                (
-                    'error', 0,
-                    'reference is a CSS spec', 'fluent'
-                ),
-            ))
+            """
+            ),
+            (("error", 0, "reference is a CSS spec", "fluent"),),
+        )
         # Cover the current limitations of only plain strings
-        self._test(dedent_ftl(
-            '''\
+        self._test(
+            dedent_ftl(
+                """\
             select =
                 .style = {"width:1px"}
-            '''),
-            tuple())
+            """
+            ),
+            tuple(),
+        )
 
     def test_ref(self):
-        self._test(dedent_ftl(
-            '''\
+        self._test(
+            dedent_ftl(
+                """\
             ref =
                 .style = width:2px
-            '''),
+            """
+            ),
             (
-                (
-                    'warning', 0,
-                    'width only in l10n', 'fluent'
-                ),
-                (
-                    'warning', 0,
-                    'Missing message reference: simple.style', 'fluent'
-                ),
-            ))
-        self._test(dedent_ftl(
-            '''\
+                ("warning", 0, "width only in l10n", "fluent"),
+                ("warning", 0, "Missing message reference: simple.style", "fluent"),
+            ),
+        )
+        self._test(
+            dedent_ftl(
+                """\
             ref =
                 .style = max-width:2px
-            '''),
+            """
+            ),
             (
-                (
-                    'warning', 0,
-                    'max-width only in l10n', 'fluent'
-                ),
-                (
-                    'warning', 0,
-                    'Missing message reference: simple.style', 'fluent'
-                ),
-            ))
-        self._test(dedent_ftl(
-            '''\
+                ("warning", 0, "max-width only in l10n", "fluent"),
+                ("warning", 0, "Missing message reference: simple.style", "fluent"),
+            ),
+        )
+        self._test(
+            dedent_ftl(
+                """\
             ref =
                 .style = stuff
-            '''),
+            """
+            ),
             (
-                (
-                    'error', 0,
-                    'reference is a CSS spec', 'fluent'
-                ),
-                (
-                    'warning', 0,
-                    'Missing message reference: simple.style', 'fluent'
-                ),
-            ))
+                ("error", 0, "reference is a CSS spec", "fluent"),
+                ("warning", 0, "Missing message reference: simple.style", "fluent"),
+            ),
+        )
         # Cover the current limitations of only plain strings
-        self._test(dedent_ftl(
-            '''\
+        self._test(
+            dedent_ftl(
+                """\
             ref =
                 .style = {"width:1px"}
-            '''),
-            (
-                (
-                    'warning', 0,
-                    'Missing message reference: simple.style', 'fluent'
-                ),
-            ))
+            """
+            ),
+            (("warning", 0, "Missing message reference: simple.style", "fluent"),),
+        )
 
     def test_broken(self):
-        self._test(dedent_ftl(
-            '''\
+        self._test(
+            dedent_ftl(
+                """\
             broken =
                 .style = 27em
-            '''),
-            (('error', 0, 'reference is a CSS spec', 'fluent'),))
-        self._test(dedent_ftl(
-            '''\
+            """
+            ),
+            (("error", 0, "reference is a CSS spec", "fluent"),),
+        )
+        self._test(
+            dedent_ftl(
+                """\
             broken =
                 .style = width: 27em
-            '''),
-            (
-                (
-                    'warning', 0,
-                    'width only in l10n', 'fluent'
-                ),
-            ))
+            """
+            ),
+            (("warning", 0, "width only in l10n", "fluent"),),
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

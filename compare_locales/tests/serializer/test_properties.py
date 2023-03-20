@@ -9,7 +9,7 @@ from . import Helper
 
 
 class TestPropertiesSerializer(Helper, unittest.TestCase):
-    name = 'foo.properties'
+    name = "foo.properties"
     reference_content = """\
 this = is English
 
@@ -19,7 +19,7 @@ another = message
 
     def test_nothing_new_or_old(self):
         output = serialize(self.name, self.reference, [], {})
-        self.assertMultiLineEqual(output.decode(self.parser.encoding), '\n\n')
+        self.assertMultiLineEqual(output.decode(self.parser.encoding), "\n\n")
 
     def test_obsolete_old_string(self):
         self._test(
@@ -31,20 +31,19 @@ old = stuff with comment
             """\
 
 
-""")
+""",
+        )
 
     def test_nothing_old_new_translation(self):
         self._test(
             "",
-            {
-                "another": "localized message"
-            },
+            {"another": "localized message"},
             """\
 
 
 # another one bites
 another = localized message
-"""
+""",
         )
 
     def test_old_message_new_other_translation(self):
@@ -52,15 +51,13 @@ another = localized message
             """\
 this = is localized
 """,
-            {
-                "another": "localized message"
-            },
+            {"another": "localized message"},
             """\
 this = is localized
 
 # another one bites
 another = localized message
-"""
+""",
         )
 
     def test_old_message_new_same_translation(self):
@@ -68,18 +65,16 @@ another = localized message
             """\
 this = is localized
 """,
-            {
-                "this": "has a better message"
-            },
+            {"this": "has a better message"},
             """\
 this = has a better message
 
-"""
+""",
         )
 
 
 class TestPropertiesDuplicateComment(Helper, unittest.TestCase):
-    name = 'foo.properties'
+    name = "foo.properties"
     reference_content = """\
 # repetitive
 one = one
@@ -101,5 +96,5 @@ two = two
 
 # repetitive
 two = two
-"""
+""",
         )

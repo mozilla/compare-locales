@@ -15,8 +15,9 @@ from compare_locales import mozpath
 
 class TestConfigParser(unittest.TestCase):
     def test_includes(self):
-        parser = MockTOMLParser({
-            "root.toml": """
+        parser = MockTOMLParser(
+            {
+                "root.toml": """
 basepath = "."
 [env]
   o = "toolkit"
@@ -25,13 +26,14 @@ basepath = "."
 [[includes]]
   path = "dom/more.toml"
 """,
-            "other.toml": """
+                "other.toml": """
 basepath = "."
 """,
-            "more.toml": """
+                "more.toml": """
 basepath = "."
-"""
-        })
+""",
+            }
+        )
         config = parser.parse("root.toml")
         self.assertIsInstance(config, ProjectConfig)
         configs = list(config.configs)
@@ -42,35 +44,37 @@ basepath = "."
                 "root.toml",
                 mozpath.abspath("toolkit/other.toml"),
                 mozpath.abspath("dom/more.toml"),
-            ]
+            ],
         )
 
     def test_excludes(self):
-        parser = MockTOMLParser({
-            "root.toml": """
+        parser = MockTOMLParser(
+            {
+                "root.toml": """
 basepath = "."
 [[excludes]]
   path = "exclude.toml"
 [[excludes]]
   path = "other-exclude.toml"
   """,
-            "exclude.toml": """
+                "exclude.toml": """
 basepath = "."
 """,
-            "other-exclude.toml": """
+                "other-exclude.toml": """
 basepath = "."
 """,
-            "grandparent.toml": """
+                "grandparent.toml": """
 basepath = "."
 [[includes]]
   path = "root.toml"
 """,
-            "wrapped.toml": """
+                "wrapped.toml": """
 basepath = "."
 [[excludes]]
   path = "root.toml"
- """
-        })
+ """,
+            }
+        )
         config = parser.parse("root.toml")
         self.assertIsInstance(config, ProjectConfig)
         configs = list(config.configs)
@@ -80,32 +84,34 @@ basepath = "."
             [
                 mozpath.abspath("exclude.toml"),
                 mozpath.abspath("other-exclude.toml"),
-            ]
+            ],
         )
-        with self.assertRaisesRegex(ExcludeError, 'Included configs'):
+        with self.assertRaisesRegex(ExcludeError, "Included configs"):
             parser.parse("grandparent.toml")
-        with self.assertRaisesRegex(ExcludeError, 'Excluded configs'):
+        with self.assertRaisesRegex(ExcludeError, "Excluded configs"):
             parser.parse("wrapped.toml")
 
     def test_paths(self):
-        parser = MockTOMLParser({
-            "l10n.toml": """
+        parser = MockTOMLParser(
+            {
+                "l10n.toml": """
 [[paths]]
   l10n = "some/{locale}/*"
 """,
-            "ref.toml": """
+                "ref.toml": """
 [[paths]]
   reference = "ref/l10n/*"
   l10n = "some/{locale}/*"
 """,
-            "tests.toml": """
+                "tests.toml": """
 [[paths]]
   l10n = "some/{locale}/*"
   test = [
     "run_this",
   ]
 """,
-        })
+            }
+        )
 
         paths = parser.parse("l10n.toml").paths
         self.assertIn("l10n", paths[0])

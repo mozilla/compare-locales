@@ -11,8 +11,8 @@ from compare_locales.parser.base import Comment, LiteralEntity, Junk, Parser
 from compare_locales.paths import File
 
 
-BLANK_LINE = 'blank_line'
-TAG_REGEX = re.compile(r'\{(ok)\}', re.I)
+BLANK_LINE = "blank_line"
+TAG_REGEX = re.compile(r"\{(ok)\}", re.I)
 
 
 class LangComment(Comment):
@@ -42,15 +42,16 @@ class LangEntity(LiteralEntity):
 
     @property
     def localized(self):
-        return self.key != self.val or 'ok' in self.tags
+        return self.key != self.val or "ok" in self.tags
 
     @property
     def extra(self):
-        return {'tags': list(self.tags)}
+        return {"tags": list(self.tags)}
 
 
 class LangVisitor(NodeVisitor):
-    grammar = Grammar(r"""
+    grammar = Grammar(
+        r"""
         lang_file = (comment / entity / blank_line)*
 
         comment = "#"+ line_content line_ending
@@ -62,7 +63,8 @@ class LangVisitor(NodeVisitor):
         entity = string translation
         string = ";" line_content line_ending
         translation = line_content line_ending
-    """)
+    """
+    )
 
     def __init__(self, ctx):
         super().__init__()
@@ -91,9 +93,7 @@ class LangVisitor(NodeVisitor):
 
     def visit_comment(self, node, node_info):
         marker, content, end = node_info
-        return LangComment(
-            node_text(marker), node_text(content), node_text(end)
-        )
+        return LangComment(node_text(marker), node_text(content), node_text(end))
 
     def visit_blank_line(self, node, _):
         return BLANK_LINE
@@ -106,9 +106,9 @@ class LangVisitor(NodeVisitor):
         tag_matches = list(re.finditer(TAG_REGEX, translation))
         if tag_matches:
             tags = [m.group(1).lower() for m in tag_matches]
-            translation = translation[:tag_matches[0].start()].strip()
+            translation = translation[: tag_matches[0].start()].strip()
 
-        if translation == '':
+        if translation == "":
             return Junk(self.ctx, (0, 0))
 
         return LangEntity(string, translation, node.text, tags)
@@ -134,9 +134,9 @@ def node_text(node):
     actually be a list of nodes due to repetition.
     """
     if node is None:
-        return ''
+        return ""
     elif isinstance(node, list):
-        return ''.join([n.text for n in node])
+        return "".join([n.text for n in node])
     else:
         return node.text
 
@@ -145,7 +145,7 @@ class LangParser(Parser):
     def use(self, path):
         if isinstance(path, File):
             path = path.fullpath
-        return path.endswith('.lang')
+        return path.endswith(".lang")
 
     def walk(self, only_localizable=False):
         if not self.ctx:
