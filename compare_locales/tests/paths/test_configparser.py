@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
 import tempfile
 import unittest
 
@@ -125,7 +126,11 @@ basepath = "."
         self.assertListEqual(paths[0]["test"], ["run_this"])
 
     def test_toml_load(self):
-        with tempfile.NamedTemporaryFile(suffix=".toml") as file:
-            file.write(b'basepath = "."\n')
-            config = TOMLParser().parse(file.name)
+        fd, path = tempfile.mkstemp(suffix=".toml")
+        try:
+            os.write(fd, b'basepath = "."\n')
+            os.close(fd)
+            config = TOMLParser().parse(path)
             self.assertIsInstance(config, ProjectConfig)
+        finally:
+            os.remove(path)
