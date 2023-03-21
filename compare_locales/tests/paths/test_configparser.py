@@ -2,9 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import tempfile
 import unittest
 
 from . import MockTOMLParser
+from compare_locales.paths import TOMLParser
 from compare_locales.paths.matcher import Matcher
 from compare_locales.paths.project import ProjectConfig, ExcludeError
 from compare_locales import mozpath
@@ -121,3 +123,9 @@ basepath = "."
         self.assertNotIn("reference", paths[0])
         self.assertIn("test", paths[0])
         self.assertListEqual(paths[0]["test"], ["run_this"])
+
+    def test_toml_load(self):
+        with tempfile.NamedTemporaryFile(suffix=".toml") as file:
+            file.write(b'basepath = "."\n')
+            config = TOMLParser().parse(file.name)
+            self.assertIsInstance(config, ProjectConfig)
