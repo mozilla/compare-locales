@@ -15,10 +15,10 @@ from compare_locales.parser.android import DocumentWrapper
 
 class TestAndroidParser(ParserTestMixin, unittest.TestCase):
     maxDiff = None
-    filename = 'strings.xml'
+    filename = "strings.xml"
 
     def test_simple_string(self):
-        source = '''\
+        source = """\
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <!-- bar -->
@@ -31,39 +31,34 @@ class TestAndroidParser(ParserTestMixin, unittest.TestCase):
 
   <string name="baz">so lonely</string>
 </resources>
-'''
+"""
         self._test(
             source,
             (
-                (DocumentWrapper, '<?xml'),
-                (DocumentWrapper, '>'),
-                (Whitespace, '\n  '),
-                ('foo', 'value', 'bar'),
-                (Whitespace, '\n'),
-                ('bar', 'multi-line comment', 'bar\nfoo'),
-                (Whitespace, '\n  '),
-                (Comment, 'standalone'),
-                (Whitespace, '\n  '),
-                ('baz', 'so lonely'),
-                (Whitespace, '\n'),
-                (DocumentWrapper, '</resources>')
-            )
+                (DocumentWrapper, "<?xml"),
+                (DocumentWrapper, ">"),
+                (Whitespace, "\n  "),
+                ("foo", "value", "bar"),
+                (Whitespace, "\n"),
+                ("bar", "multi-line comment", "bar\nfoo"),
+                (Whitespace, "\n  "),
+                (Comment, "standalone"),
+                (Whitespace, "\n  "),
+                ("baz", "so lonely"),
+                (Whitespace, "\n"),
+                (DocumentWrapper, "</resources>"),
+            ),
         )
 
     def test_bad_doc(self):
-        source = '''\
+        source = """\
 <?xml version="1.0" ?>
 <not-a-resource/>
-'''
-        self._test(
-            source,
-            (
-                (Junk, '<not-a-resource/>'),
-            )
-        )
+"""
+        self._test(source, ((Junk, "<not-a-resource/>"),))
 
     def test_bad_elements(self):
-        source = '''\
+        source = """\
 <?xml version="1.0" ?>
 <resources>
   <string name="first">value</string>
@@ -72,54 +67,49 @@ class TestAndroidParser(ParserTestMixin, unittest.TestCase):
   <string nomine="dom">value</string>
   <string name="last">value</string>
 </resources>
-'''
+"""
         self._test(
             source,
             (
-                (DocumentWrapper, '<?xml'),
-                (DocumentWrapper, '>'),
-                (Whitespace, '\n  '),
-                ('first', 'value'),
-                (Whitespace, '\n  '),
+                (DocumentWrapper, "<?xml"),
+                (DocumentWrapper, ">"),
+                (Whitespace, "\n  "),
+                ("first", "value"),
+                (Whitespace, "\n  "),
                 (Junk, '<non-string name="bad">'),
-                (Whitespace, '\n  '),
-                ('mid', 'value'),
-                (Whitespace, '\n  '),
+                (Whitespace, "\n  "),
+                ("mid", "value"),
+                (Whitespace, "\n  "),
                 (Junk, '<string nomine="dom">'),
-                (Whitespace, '\n  '),
-                ('last', 'value'),
-                (Whitespace, '\n'),
-                (DocumentWrapper, '</resources>')
-            )
+                (Whitespace, "\n  "),
+                ("last", "value"),
+                (Whitespace, "\n"),
+                (DocumentWrapper, "</resources>"),
+            ),
         )
 
     def test_xml_parse_error(self):
-        source = 'no xml'
-        self._test(
-            source,
-            (
-                (Junk, 'no xml'),
-            )
-        )
+        source = "no xml"
+        self._test(source, ((Junk, "no xml"),))
 
     def test_empty_strings(self):
-        source = '''\
+        source = """\
 <?xml version="1.0" ?>
 <resources>
   <string name="one"></string>
   <string name="two"/>
 </resources>
-'''
+"""
         self._test(
             source,
             (
-                (DocumentWrapper, '<?xml'),
-                (DocumentWrapper, '>'),
-                (Whitespace, '\n  '),
-                ('one', ''),
-                (Whitespace, '\n  '),
-                ('two', ''),
-                (Whitespace, '\n'),
-                (DocumentWrapper, '</resources>')
-            )
+                (DocumentWrapper, "<?xml"),
+                (DocumentWrapper, ">"),
+                (Whitespace, "\n  "),
+                ("one", ""),
+                (Whitespace, "\n  "),
+                ("two", ""),
+                (Whitespace, "\n"),
+                (DocumentWrapper, "</resources>"),
+            ),
         )

@@ -12,66 +12,65 @@ from compare_locales.parser import (
 
 class TestPoParser(ParserTestMixin, unittest.TestCase):
     maxDiff = None
-    filename = 'strings.po'
+    filename = "strings.po"
 
     def test_parse_string_list(self):
-        self.parser.readUnicode('  ')
+        self.parser.readUnicode("  ")
         ctx = self.parser.ctx
         with self.assertRaises(BadEntity):
-            self.parser._parse_string_list(ctx, 0, 'msgctxt')
-        self.parser.readUnicode('msgctxt   ')
+            self.parser._parse_string_list(ctx, 0, "msgctxt")
+        self.parser.readUnicode("msgctxt   ")
         ctx = self.parser.ctx
         with self.assertRaises(BadEntity):
-            self.parser._parse_string_list(ctx, 0, 'msgctxt')
+            self.parser._parse_string_list(ctx, 0, "msgctxt")
         self.parser.readUnicode('msgctxt " "')
         ctx = self.parser.ctx
         self.assertTupleEqual(
-            self.parser._parse_string_list(ctx, 0, 'msgctxt'),
-            (" ", len(ctx.contents))
+            self.parser._parse_string_list(ctx, 0, "msgctxt"), (" ", len(ctx.contents))
         )
         self.parser.readUnicode('msgctxt " " \t "A"\r "B"asdf')
         ctx = self.parser.ctx
         self.assertTupleEqual(
-            self.parser._parse_string_list(ctx, 0, 'msgctxt'),
-            (" AB", len(ctx.contents)-4)
+            self.parser._parse_string_list(ctx, 0, "msgctxt"),
+            (" AB", len(ctx.contents) - 4),
         )
         self.parser.readUnicode('msgctxt "\\\\ " "A" "B"asdf"fo"')
         ctx = self.parser.ctx
         self.assertTupleEqual(
-            self.parser._parse_string_list(ctx, 0, 'msgctxt'),
-            ("\\ AB", len(ctx.contents)-8)
+            self.parser._parse_string_list(ctx, 0, "msgctxt"),
+            ("\\ AB", len(ctx.contents) - 8),
         )
 
     def test_simple_string(self):
-        source = '''
+        source = """
 msgid "untranslated string"
 msgstr "translated string"
-'''
+"""
         self._test(
             source,
             (
-                (Whitespace, '\n'),
-                (('untranslated string', None), 'translated string'),
-                (Whitespace, '\n'),
-            )
+                (Whitespace, "\n"),
+                (("untranslated string", None), "translated string"),
+                (Whitespace, "\n"),
+            ),
         )
 
     def test_escapes(self):
-        source = r'''
+        source = r"""
 msgid "untranslated string"
 msgstr "\\\t\r\n\""
-'''
+"""
         self._test(
             source,
             (
-                (Whitespace, '\n'),
-                (('untranslated string', None), '\\\t\r\n"'),
-                (Whitespace, '\n'),
-            )
+                (Whitespace, "\n"),
+                (("untranslated string", None), '\\\t\r\n"'),
+                (Whitespace, "\n"),
+            ),
         )
 
     def test_comments(self):
-        source = '''
+        source = """
 #  translator-comments
 #. extracted-comments
 #: reference...
@@ -80,58 +79,52 @@ msgstr "\\\t\r\n\""
 #| msgid previous-untranslated-string
 msgid "untranslated string"
 msgstr "translated string"
-'''
+"""
         self._test(
             source,
             (
-                (Whitespace, '\n'),
+                (Whitespace, "\n"),
                 (
-                    ('untranslated string', None),
-                    'translated string',
-                    'extracted-comments',
+                    ("untranslated string", None),
+                    "translated string",
+                    "extracted-comments",
                 ),
-                (Whitespace, '\n'),
-            )
+                (Whitespace, "\n"),
+            ),
         )
 
     def test_simple_context(self):
-        source = '''
+        source = """
 msgctxt "context to use"
 msgid "untranslated string"
 msgstr "translated string"
-'''
+"""
         self._test(
             source,
             (
-                (Whitespace, '\n'),
-                (
-                    ('untranslated string', 'context to use'),
-                    'translated string'
-                ),
-                (Whitespace, '\n'),
-            )
+                (Whitespace, "\n"),
+                (("untranslated string", "context to use"), "translated string"),
+                (Whitespace, "\n"),
+            ),
         )
 
     def test_translated(self):
-        source = '''
+        source = """
 msgid "reference 1"
 msgstr "translated string"
 
 msgid "reference 2"
 msgstr ""
-'''
+"""
         self._test(
             source,
             (
-                (Whitespace, '\n'),
-                (('reference 1', None), 'translated string'),
-                (Whitespace, '\n'),
-                (('reference 2', None), 'reference 2'),
-                (Whitespace, '\n'),
-            )
+                (Whitespace, "\n"),
+                (("reference 1", None), "translated string"),
+                (Whitespace, "\n"),
+                (("reference 2", None), "reference 2"),
+                (Whitespace, "\n"),
+            ),
         )
         entities = self.parser.parse()
-        self.assertListEqual(
-            [e.localized for e in entities],
-            [True, False]
-        )
+        self.assertListEqual([e.localized for e in entities], [True, False])

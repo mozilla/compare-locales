@@ -12,46 +12,72 @@ class TestMergeProperties(unittest.TestCase):
     name = "foo.properties"
 
     def test_no_changes(self):
-        channels = (b"""
+        channels = (
+            b"""
 foo = Foo 1
-""", b"""
+""",
+            b"""
 foo = Foo 2
-""")
+""",
+        )
         self.assertEqual(
-            merge_channels(self.name, channels), b"""
+            merge_channels(self.name, channels),
+            b"""
 foo = Foo 1
-""")
+""",
+        )
 
     def test_encoding(self):
-        channels = (encode("""
+        channels = (
+            encode(
+                """
 foo = Foo 1…
-""", "utf8"), encode("""
+""",
+                "utf8",
+            ),
+            encode(
+                """
 foo = Foo 2…
-""", "utf8"))
+""",
+                "utf8",
+            ),
+        )
         output = merge_channels(self.name, channels)
-        self.assertEqual(output, encode("""
+        self.assertEqual(
+            output,
+            encode(
+                """
 foo = Foo 1…
-""", "utf8"))
+""",
+                "utf8",
+            ),
+        )
 
         u_output = decode(output, "utf8")
-        self.assertEqual(u_output, """
+        self.assertEqual(
+            u_output,
+            """
 foo = Foo 1…
-""")
+""",
+        )
 
     def test_repetitive(self):
-        channels = (b"""\
+        channels = (
+            b"""\
 # comment
 one = one
 # comment
 three = three
-""", b"""\
+""",
+            b"""\
 # comment
 one = one
 # comment
 two = two
 # comment
 three = three
-""")
+""",
+        )
         output = merge_channels(self.name, channels)
         self.assertMultiLineEqual(
             decode(output, "utf-8"),
@@ -62,5 +88,5 @@ one = one
 two = two
 # comment
 three = three
-"""
+""",
         )

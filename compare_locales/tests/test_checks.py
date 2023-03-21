@@ -12,76 +12,58 @@ class CSSParserTest(unittest.TestCase):
         self.mixin = CSSCheckMixin()
 
     def test_other(self):
-        refMap, errors = self.mixin.parse_css_spec('foo')
+        refMap, errors = self.mixin.parse_css_spec("foo")
         self.assertIsNone(refMap)
         self.assertIsNone(errors)
 
     def test_css_specs(self):
         for prop in (
-            'min-width', 'width', 'max-width',
-            'min-height', 'height', 'max-height',
+            "min-width",
+            "width",
+            "max-width",
+            "min-height",
+            "height",
+            "max-height",
         ):
-            refMap, errors = self.mixin.parse_css_spec(f'{prop}:1px;')
-            self.assertDictEqual(
-                refMap, {prop: 'px'}
-            )
+            refMap, errors = self.mixin.parse_css_spec(f"{prop}:1px;")
+            self.assertDictEqual(refMap, {prop: "px"})
             self.assertIsNone(errors)
 
     def test_single_whitespace(self):
-        refMap, errors = self.mixin.parse_css_spec('width:15px;')
-        self.assertDictEqual(
-            refMap, {'width': 'px'}
-        )
+        refMap, errors = self.mixin.parse_css_spec("width:15px;")
+        self.assertDictEqual(refMap, {"width": "px"})
         self.assertIsNone(errors)
-        refMap, errors = self.mixin.parse_css_spec('width   : \t 15px  ;  ')
-        self.assertDictEqual(
-            refMap, {'width': 'px'}
-        )
+        refMap, errors = self.mixin.parse_css_spec("width   : \t 15px  ;  ")
+        self.assertDictEqual(refMap, {"width": "px"})
         self.assertIsNone(errors)
-        refMap, errors = self.mixin.parse_css_spec('width: 15px')
-        self.assertDictEqual(
-            refMap, {'width': 'px'}
-        )
+        refMap, errors = self.mixin.parse_css_spec("width: 15px")
+        self.assertDictEqual(refMap, {"width": "px"})
         self.assertIsNone(errors)
 
     def test_multiple(self):
-        refMap, errors = self.mixin.parse_css_spec('width:15px;height:20.2em;')
-        self.assertDictEqual(
-            refMap, {'height': 'em', 'width': 'px'}
-        )
+        refMap, errors = self.mixin.parse_css_spec("width:15px;height:20.2em;")
+        self.assertDictEqual(refMap, {"height": "em", "width": "px"})
         self.assertIsNone(errors)
-        refMap, errors = self.mixin.parse_css_spec(
-            'width:15px \t\t;  height:20em'
-        )
-        self.assertDictEqual(
-            refMap, {'height': 'em', 'width': 'px'}
-        )
+        refMap, errors = self.mixin.parse_css_spec("width:15px \t\t;  height:20em")
+        self.assertDictEqual(refMap, {"height": "em", "width": "px"})
         self.assertIsNone(errors)
 
     def test_errors(self):
-        refMap, errors = self.mixin.parse_css_spec('width:15pxfoo')
-        self.assertDictEqual(
-            refMap, {'width': 'px'}
-        )
-        self.assertListEqual(
-            errors, [{'pos': 10, 'code': 'css-bad-content'}]
-        )
-        refMap, errors = self.mixin.parse_css_spec('width:15px height:20em')
-        self.assertDictEqual(
-            refMap, {'height': 'em', 'width': 'px'}
-        )
-        self.assertListEqual(
-            errors, [{'pos': 10, 'code': 'css-missing-semicolon'}]
-        )
-        refMap, errors = self.mixin.parse_css_spec('witdth:15px')
+        refMap, errors = self.mixin.parse_css_spec("width:15pxfoo")
+        self.assertDictEqual(refMap, {"width": "px"})
+        self.assertListEqual(errors, [{"pos": 10, "code": "css-bad-content"}])
+        refMap, errors = self.mixin.parse_css_spec("width:15px height:20em")
+        self.assertDictEqual(refMap, {"height": "em", "width": "px"})
+        self.assertListEqual(errors, [{"pos": 10, "code": "css-missing-semicolon"}])
+        refMap, errors = self.mixin.parse_css_spec("witdth:15px")
         self.assertIsNone(refMap)
         self.assertIsNone(errors)
-        refMap, errors = self.mixin.parse_css_spec('width:1,5px')
+        refMap, errors = self.mixin.parse_css_spec("width:1,5px")
         self.assertIsNone(refMap)
         self.assertIsNone(errors)
-        refMap, errors = self.mixin.parse_css_spec('width:1.5.1px')
+        refMap, errors = self.mixin.parse_css_spec("width:1.5.1px")
         self.assertIsNone(refMap)
         self.assertIsNone(errors)
-        refMap, errors = self.mixin.parse_css_spec('width:1.px')
+        refMap, errors = self.mixin.parse_css_spec("width:1.px")
         self.assertIsNone(refMap)
         self.assertIsNone(errors)

@@ -7,11 +7,11 @@ setup(
     author_email="axel@mozilla.com",
     description=".lang parser for compare-locales",
     platforms=["any"],
-    python_requires='>=3.7, <4',
+    python_requires=">=3.7, <4",
     package_dir={"": "src"},
-    packages=['cl_ext', 'cl_ext.lang'],
+    packages=["cl_ext", "cl_ext.lang"],
     install_requires=[
         "parsimonious",
         "compare_locales",
-    ]
+    ],
 )

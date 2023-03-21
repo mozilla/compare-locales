@@ -11,11 +11,14 @@ class TestMergeUnknown(unittest.TestCase):
     name = "foo.unknown"
 
     def test_not_supported_error(self):
-        channels = (b"""
+        channels = (
+            b"""
 foo = Foo 1
-""", b"""
+""",
+            b"""
 foo = Foo 2
-""")
+""",
+        )
         pattern = r"Unsupported file format \(foo\.unknown\)\."
         with self.assertRaisesRegex(MergeNotSupportedError, pattern):
             merge_channels(self.name, channels)

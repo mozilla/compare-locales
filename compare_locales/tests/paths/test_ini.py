@@ -10,79 +10,90 @@ from . import (
 
 
 class TestConfigLegacy(SetupMixin, unittest.TestCase):
-
     def test_filter_py_true(self):
-        'Test filter.py just return bool(True)'
+        "Test filter.py just return bool(True)"
+
         def filter(mod, path, entity=None):
             return True
+
         self.cfg.set_filter_py(filter)
         with self.assertRaises(AssertionError):
             self.cfg.add_rules({})
         rv = self.cfg.filter(self.file)
-        self.assertEqual(rv, 'error')
-        rv = self.cfg.filter(self.file, entity='one_entity')
-        self.assertEqual(rv, 'error')
+        self.assertEqual(rv, "error")
+        rv = self.cfg.filter(self.file, entity="one_entity")
+        self.assertEqual(rv, "error")
 
     def test_filter_py_false(self):
-        'Test filter.py just return bool(False)'
+        "Test filter.py just return bool(False)"
+
         def filter(mod, path, entity=None):
             return False
+
         self.cfg.set_filter_py(filter)
         with self.assertRaises(AssertionError):
             self.cfg.add_rules({})
         rv = self.cfg.filter(self.file)
-        self.assertEqual(rv, 'ignore')
-        rv = self.cfg.filter(self.file, entity='one_entity')
-        self.assertEqual(rv, 'ignore')
+        self.assertEqual(rv, "ignore")
+        rv = self.cfg.filter(self.file, entity="one_entity")
+        self.assertEqual(rv, "ignore")
 
     def test_filter_py_error(self):
         'Test filter.py just return str("error")'
+
         def filter(mod, path, entity=None):
-            return 'error'
+            return "error"
+
         self.cfg.set_filter_py(filter)
         with self.assertRaises(AssertionError):
             self.cfg.add_rules({})
         rv = self.cfg.filter(self.file)
-        self.assertEqual(rv, 'error')
-        rv = self.cfg.filter(self.file, entity='one_entity')
-        self.assertEqual(rv, 'error')
+        self.assertEqual(rv, "error")
+        rv = self.cfg.filter(self.file, entity="one_entity")
+        self.assertEqual(rv, "error")
 
     def test_filter_py_ignore(self):
         'Test filter.py just return str("ignore")'
+
         def filter(mod, path, entity=None):
-            return 'ignore'
+            return "ignore"
+
         self.cfg.set_filter_py(filter)
         with self.assertRaises(AssertionError):
             self.cfg.add_rules({})
         rv = self.cfg.filter(self.file)
-        self.assertEqual(rv, 'ignore')
-        rv = self.cfg.filter(self.file, entity='one_entity')
-        self.assertEqual(rv, 'ignore')
+        self.assertEqual(rv, "ignore")
+        rv = self.cfg.filter(self.file, entity="one_entity")
+        self.assertEqual(rv, "ignore")
 
     def test_filter_py_report(self):
         'Test filter.py just return str("report") and match to "warning"'
+
         def filter(mod, path, entity=None):
-            return 'report'
+            return "report"
+
         self.cfg.set_filter_py(filter)
         with self.assertRaises(AssertionError):
             self.cfg.add_rules({})
         rv = self.cfg.filter(self.file)
-        self.assertEqual(rv, 'warning')
-        rv = self.cfg.filter(self.file, entity='one_entity')
-        self.assertEqual(rv, 'warning')
+        self.assertEqual(rv, "warning")
+        rv = self.cfg.filter(self.file, entity="one_entity")
+        self.assertEqual(rv, "warning")
 
     def test_filter_py_module(self):
         'Test filter.py to return str("error") for browser or "ignore"'
+
         def filter(mod, path, entity=None):
-            return 'error' if mod == 'browser' else 'ignore'
+            return "error" if mod == "browser" else "ignore"
+
         self.cfg.set_filter_py(filter)
         with self.assertRaises(AssertionError):
             self.cfg.add_rules({})
         rv = self.cfg.filter(self.file)
-        self.assertEqual(rv, 'error')
-        rv = self.cfg.filter(self.file, entity='one_entity')
-        self.assertEqual(rv, 'error')
+        self.assertEqual(rv, "error")
+        rv = self.cfg.filter(self.file, entity="one_entity")
+        self.assertEqual(rv, "error")
         rv = self.cfg.filter(self.other_file)
-        self.assertEqual(rv, 'ignore')
-        rv = self.cfg.filter(self.other_file, entity='one_entity')
-        self.assertEqual(rv, 'ignore')
+        self.assertEqual(rv, "ignore")
+        rv = self.cfg.filter(self.other_file, entity="one_entity")
+        self.assertEqual(rv, "ignore")

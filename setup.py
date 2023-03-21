@@ -7,8 +7,8 @@ from compare_locales import version
 
 sys.path.insert(0, os.path.dirname(__file__))
 this_directory = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(this_directory, 'README.md'), 'rb') as f:
-    long_description = f.read().decode('utf-8')
+with open(os.path.join(this_directory, "README.md"), "rb") as f:
+    long_description = f.read().decode("utf-8")
 
 CLASSIFIERS = """\
 Development Status :: 5 - Production/Stable
@@ -25,35 +25,34 @@ Topic :: Software Development :: Localization
 Topic :: Software Development :: Testing\
 """
 
-setup(name="compare-locales",
-      version=version,
-      author="Axel Hecht",
-      author_email="axel@mozilla.com",
-      description='Lint Mozilla localizations',
-      long_description=long_description,
-      long_description_content_type='text/markdown',
-      license="MPL 2.0",
-      url="https://github.com/mozilla/compare-locales",
-      classifiers=CLASSIFIERS.split("\n"),
-      platforms=["any"],
-      python_requires='>=3.7, <4',
-      entry_points={
-        'console_scripts':
-        [
-            'compare-locales = compare_locales.commands:CompareLocales.call',
-            'moz-l10n-lint = compare_locales.lint.cli:main',
+setup(
+    name="compare-locales",
+    version=version,
+    author="Axel Hecht",
+    author_email="axel@mozilla.com",
+    description="Lint Mozilla localizations",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    license="MPL 2.0",
+    url="https://github.com/mozilla/compare-locales",
+    classifiers=CLASSIFIERS.split("\n"),
+    platforms=["any"],
+    python_requires=">=3.7, <4",
+    entry_points={
+        "console_scripts": [
+            "compare-locales = compare_locales.commands:CompareLocales.call",
+            "moz-l10n-lint = compare_locales.lint.cli:main",
         ],
-      },
-      packages=find_packages(exclude=['*.tests', '*.tests.*']),
-      package_data={
-          'compare_locales.tests': ['data/*.properties', 'data/*.dtd']
-      },
-      install_requires=[
-          'fluent.syntax >=0.18.0, <0.20',
-          'six',  # undeclared dependency of fluent-syntax 0.18.1
-          'toml',
-      ],
-      tests_require=[
-          'mock<4.0',
-      ],
-      test_suite='compare_locales.tests')
+    },
+    packages=find_packages(exclude=["*.tests", "*.tests.*"]),
+    package_data={"compare_locales.tests": ["data/*.properties", "data/*.dtd"]},
+    install_requires=[
+        "fluent.syntax >=0.18.0, <0.20",
+        "six",  # undeclared dependency of fluent-syntax 0.18.1
+        "toml",
+    ],
+    tests_require=[
+        "mock<4.0",
+    ],
+    test_suite="compare_locales.tests",
+)

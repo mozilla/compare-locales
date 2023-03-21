@@ -12,6 +12,7 @@ class Helper:
     Reads the reference_content into self.reference, and uses
     that to serialize in _test.
     """
+
     name = None
     reference_content = None
 
@@ -27,7 +28,4 @@ class Helper:
         self.parser.readUnicode(old_content)
         old_l10n = list(self.parser.walk())
         output = serialize(self.name, self.reference, old_l10n, new_data)
-        self.assertMultiLineEqual(
-            output.decode(self.parser.encoding),
-            expected
-        )
+        self.assertMultiLineEqual(output.decode(self.parser.encoding), expected)
