@@ -194,9 +194,7 @@ class EnumerateApp:
         for k, (basepath, module) in aConfig.dirsIter():
             paths = {
                 "module": module,
-                "reference": mozpath.normpath(
-                    "%s/%s/locales/en-US/**" % (basepath, module)
-                ),
+                "reference": mozpath.normpath(f"{basepath}/{module}/locales/en-US/**"),
                 "l10n": mozpath.normpath("{l10n_base}/{locale}/%s/**" % module),
             }
             if module == "mobile/android/base":

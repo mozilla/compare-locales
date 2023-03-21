@@ -74,7 +74,7 @@ class PropertiesChecker(Checker):
         if known_plurals:
             expected_forms = len(known_plurals)
             found_forms = l10nValue.count(";") + 1
-            msg = "expecting {} plurals, found {}".format(expected_forms, found_forms)
+            msg = f"expecting {expected_forms} plurals, found {found_forms}"
             if expected_forms > found_forms:
                 yield ("warning", 0, msg, "plural")
             if expected_forms < found_forms:

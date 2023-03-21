@@ -240,14 +240,10 @@ class TestAndroid(unittest.TestCase):
             # make sure we don't report if apos string is quoted
             l10n = self.getDTDEntity('"' + "\\" * (2 * i) + "'\"")
             tpl = tuple(checker.check(ref, l10n))
-            self.assertEqual(
-                tpl, (), "`%s` shouldn't fail but got %s" % (l10n.val, str(tpl))
-            )
+            self.assertEqual(tpl, (), f"`{l10n.val}` shouldn't fail but got {str(tpl)}")
             l10n = self.getDTDEntity('"' + "\\" * (2 * i + 1) + "'\"")
             tpl = tuple(checker.check(ref, l10n))
-            self.assertEqual(
-                tpl, (), "`%s` shouldn't fail but got %s" % (l10n.val, str(tpl))
-            )
+            self.assertEqual(tpl, (), f"`{l10n.val}` shouldn't fail but got {str(tpl)}")
             # make sure we're catching unescaped quotes, try 0..5 backticks
             l10n = self.getDTDEntity("\\" * (2 * i) + '"')
             self.assertEqual(
@@ -259,14 +255,10 @@ class TestAndroid(unittest.TestCase):
             # make sure we don't report if quote string is single quoted
             l10n = self.getDTDEntity("'" + "\\" * (2 * i) + "\"'")
             tpl = tuple(checker.check(ref, l10n))
-            self.assertEqual(
-                tpl, (), "`%s` shouldn't fail but got %s" % (l10n.val, str(tpl))
-            )
+            self.assertEqual(tpl, (), f"`{l10n.val}` shouldn't fail but got {str(tpl)}")
             l10n = self.getDTDEntity('"' + "\\" * (2 * i + 1) + "'\"")
             tpl = tuple(checker.check(ref, l10n))
-            self.assertEqual(
-                tpl, (), "`%s` shouldn't fail but got %s" % (l10n.val, str(tpl))
-            )
+            self.assertEqual(tpl, (), f"`{l10n.val}` shouldn't fail but got {str(tpl)}")
         # check for mixed quotes and ampersands
         l10n = self.getDTDEntity("'\"")
         self.assertEqual(

@@ -190,7 +190,7 @@ def check_params(params, string):
             yield (
                 "error",
                 0,
-                "Formatter %{}${} not found in reference".format(order, lparams[order]),
+                f"Formatter %{order}${lparams[order]} not found in reference",
                 "android",
             )
         elif params[order] != lparams[order]:

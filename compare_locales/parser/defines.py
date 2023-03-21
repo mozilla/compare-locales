@@ -31,7 +31,7 @@ class DefinesParser(Parser):
 
     class Context(Parser.Context):
         def __init__(self, contents):
-            super(DefinesParser.Context, self).__init__(contents)
+            super().__init__(contents)
             self.filter_empty_lines = False
 
     def __init__(self):

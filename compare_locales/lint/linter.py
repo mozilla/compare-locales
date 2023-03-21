@@ -69,7 +69,7 @@ class EntityLinter:
                 "lineno": lineno,
                 "column": col,
                 "level": "error",
-                "message": "Duplicate string with ID: {}".format(current_entity.key),
+                "message": f"Duplicate string with ID: {current_entity.key}",
             }
 
         if current_entity.key in self.reference:
