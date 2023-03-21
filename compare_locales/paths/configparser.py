@@ -51,7 +51,7 @@ class TOMLParser:
 
     def load(self, ctx):
         try:
-            with open(ctx.path, 'rb') as fin:
+            with open(ctx.path, 'rt') as fin:
                 ctx.data = toml.load(fin)
         except (toml.TomlDecodeError, OSError):
             raise ConfigNotFound(ctx.path)
