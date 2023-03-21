@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "compare-locales"
 description = "Lint Mozilla localizations"
 readme = "README.md"
-license = { file = "LICENSE.md" }
+license = { text = "MPL-2.0" }
 authors = [
   { name = "Mozilla", email = "l10n-drivers@mozilla.org" },
   { name = "Axel Hecht" },
