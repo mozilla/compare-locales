@@ -4,6 +4,7 @@
 
 "Mapping of locales to CLDR plural categories as implemented by PluralForm.jsm"
 from __future__ import annotations
+
 from typing import Optional, Tuple, Union
 
 CATEGORIES_BY_INDEX = (

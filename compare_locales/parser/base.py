@@ -3,14 +3,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
-import re
+
 import bisect
 import codecs
+import re
 from collections import Counter
-from compare_locales.keyedtuple import KeyedTuple
-from compare_locales.paths import File
-
 from typing import TYPE_CHECKING, Any, Iterator, Optional, Tuple, Union
+
+from ..keyedtuple import KeyedTuple
+from ..paths import File
 
 if TYPE_CHECKING:
     from .android import XMLComment, XMLWhitespace

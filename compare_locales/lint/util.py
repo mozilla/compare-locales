@@ -3,11 +3,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
-from compare_locales import paths
+
 from typing import TYPE_CHECKING, Callable
 
+from .. import paths
+
 if TYPE_CHECKING:
-    from compare_locales.paths.files import ProjectFiles
+    from ..paths.files import ProjectFiles
 
 
 def default_reference_and_tests(path):

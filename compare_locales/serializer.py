@@ -24,15 +24,14 @@ from __future__ import annotations
 
 from codecs import encode
 from functools import reduce
-
-from compare_locales.merge import merge_resources, serialize_legacy_resource
-from compare_locales.parser import getParser
-from compare_locales.parser.base import Entity, PlaceholderEntity, Junk, Whitespace
 from typing import TYPE_CHECKING, Any, Dict, List, Union
 
+from .merge import merge_resources, serialize_legacy_resource
+from .parser import getParser
+from .parser.base import Entity, Entry, Junk, PlaceholderEntity, Whitespace
+
 if TYPE_CHECKING:
-    from compare_locales.parser.android import DocumentWrapper, XMLWhitespace
-    from compare_locales.parser.base import Entry
+    from .parser.android import DocumentWrapper, XMLWhitespace
 
 
 class SerializationNotSupportedError(ValueError):

@@ -3,12 +3,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
+
+import itertools
 import os
 import re
-import itertools
-from compare_locales import mozpath
 from typing import Dict, Iterator, List, Optional, Union
 
+from .. import mozpath
 
 # Android uses non-standard locale codes, these are the mappings
 # back and forth

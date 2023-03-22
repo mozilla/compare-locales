@@ -5,17 +5,13 @@
 import argparse
 import os
 
-from compare_locales.lint.linter import L10nLinter
-from compare_locales.lint.util import (
+from .. import mozpath, parser, paths, version
+from ..lint.linter import L10nLinter
+from ..lint.util import (
     default_reference_and_tests,
-    mirror_reference_and_tests,
     l10n_base_reference_and_tests,
+    mirror_reference_and_tests,
 )
-from compare_locales import mozpath
-from compare_locales import paths
-from compare_locales import parser
-from compare_locales import version
-
 
 epilog = """\
 moz-l10n-lint checks for common mistakes in localizable files. It tests for

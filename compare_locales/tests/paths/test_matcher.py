@@ -4,7 +4,8 @@
 
 import unittest
 
-from compare_locales.paths.matcher import Matcher, ANDROID_STANDARD_MAP
+from compare_locales.paths.matcher import ANDROID_STANDARD_MAP, Matcher
+
 from . import Rooted
 
 

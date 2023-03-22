@@ -2,11 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from collections import defaultdict
 import tempfile
-from compare_locales.paths import ProjectConfig, File, ProjectFiles, TOMLParser
-from compare_locales import mozpath
+from collections import defaultdict
+
 import toml
+
+from compare_locales import mozpath
+from compare_locales.paths import File, ProjectConfig, ProjectFiles, TOMLParser
 
 
 class Rooted:

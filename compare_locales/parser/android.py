@@ -11,21 +11,22 @@ break the full parsing, and result in a single Junk entry.
 """
 
 from __future__ import annotations
+
 import re
+from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 from xml.dom import minidom
 from xml.dom.minidom import Node
 
 from .base import (
     CAN_SKIP,
-    Entity,
     Comment,
+    Entity,
     Junk,
-    Whitespace,
-    StickyEntry,
     LiteralEntity,
     Parser,
+    StickyEntry,
+    Whitespace,
 )
-from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 
 if TYPE_CHECKING:
     from xml.dom.minicompat import NodeList

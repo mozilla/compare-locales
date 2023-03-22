@@ -5,13 +5,13 @@
 "Mozilla l10n compare locales tool"
 from __future__ import annotations
 
-from compare_locales import paths
 from typing import TYPE_CHECKING, Dict, Iterator, List, Tuple, Type, Union
 
+from .. import paths
+
 if TYPE_CHECKING:
-    from compare_locales.parser.android import XMLWhitespace
-    from compare_locales.parser.base import Whitespace
-    from compare_locales.paths import File
+    from ..parser import Whitespace
+    from ..parser.android import XMLWhitespace
 
 
 class Tree:
@@ -20,7 +20,7 @@ class Tree:
         self.valuetype = valuetype
         self.value = None
 
-    def __getitem__(self, leaf: Union[str, File]) -> List[Dict[str, str]]:
+    def __getitem__(self, leaf: Union[str, paths.File]) -> List[Dict[str, str]]:
         parts = []
         if isinstance(leaf, paths.File):
             parts = []

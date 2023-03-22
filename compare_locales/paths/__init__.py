@@ -3,19 +3,20 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
-from compare_locales import mozpath
-from .files import ProjectFiles, REFERENCE_LOCALE
+
+from typing import Optional, Union
+
+from .. import mozpath
+from .configparser import ConfigNotFound, TOMLParser
+from .files import REFERENCE_LOCALE, ProjectFiles
 from .ini import (
-    L10nConfigParser,
-    SourceTreeConfigParser,
     EnumerateApp,
     EnumerateSourceTreeApp,
+    L10nConfigParser,
+    SourceTreeConfigParser,
 )
 from .matcher import Matcher
 from .project import ProjectConfig
-from .configparser import TOMLParser, ConfigNotFound
-from typing import Optional, Union
-
 
 __all__ = [
     "Matcher",

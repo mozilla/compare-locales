@@ -42,6 +42,10 @@ repository = "https://github.com/mozilla/compare-locales"
 compare-locales = "compare_locales.commands:CompareLocales.call"
 moz-l10n-lint = "compare_locales.lint.cli:main"
 
+[tool.isort]
+profile = "black"
+extra_standard_library = ["typing_extensions", "_typeshed"]
+
 [tool.setuptools]
 platforms = ["any"]
 packages = [

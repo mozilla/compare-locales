@@ -3,16 +3,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
+
 import errno
 import logging
-from compare_locales import mozpath
-from .project import ProjectConfig
-from .matcher import expand
-import toml
-from typing import TYPE_CHECKING, Dict, Iterator, Optional
+from typing import Dict, Iterator, Optional
 
-if TYPE_CHECKING:
-    from compare_locales.paths.project import ProjectConfig
+import toml
+
+from .. import mozpath
+from .matcher import expand
+from .project import ProjectConfig
 
 
 class ConfigNotFound(EnvironmentError):

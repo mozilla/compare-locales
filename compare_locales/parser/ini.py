@@ -3,10 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
+
 import re
 from typing import Union
 
-from .base import Entry, OffsetComment, Parser, Entity, Junk, Whitespace
+from .base import Entity, Entry, Junk, OffsetComment, Parser, Whitespace
 
 
 class IniSection(Entry):

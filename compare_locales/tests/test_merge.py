@@ -2,17 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import unittest
 import filecmp
 import os
-from tempfile import mkdtemp
 import shutil
+import unittest
+from tempfile import mkdtemp
 
-from compare_locales.parser import getParser
-from compare_locales.paths import File
+from compare_locales import mozpath
 from compare_locales.compare.content import ContentComparer
 from compare_locales.compare.observer import Observer
-from compare_locales import mozpath
+from compare_locales.parser import getParser
+from compare_locales.paths import File
 
 
 class ContentMixin:

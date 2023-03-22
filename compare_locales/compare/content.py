@@ -7,27 +7,18 @@ from __future__ import annotations
 
 import codecs
 import os
-import shutil
 import re
-
-from compare_locales import parser
-from compare_locales import mozpath
-from compare_locales.checks import getChecker, EntityPos
-from compare_locales.keyedtuple import KeyedTuple
-
-from .observer import ObserverList
-from .utils import AddRemove
-from compare_locales.parser.base.Parser import Context
-from compare_locales.parser.defines.DefinesParser import Context
+import shutil
 from typing import TYPE_CHECKING, Any, List, Optional, Union
 
+from .. import mozpath, parser
+from ..checks import EntityPos, getChecker
+from ..keyedtuple import KeyedTuple
+from .observer import ObserverList
+from .utils import AddRemove
+
 if TYPE_CHECKING:
-    from compare_locales.parser.base import Entity, Junk, Parser
-    from compare_locales.parser.defines import DefinesParser
-    from compare_locales.parser.dtd import DTDEntity
-    from compare_locales.parser.fluent import FluentMessage, FluentTerm
-    from compare_locales.parser.properties import PropertiesEntity
-    from compare_locales.paths import File
+    from ..paths import File
 
 
 class ContentComparer:
@@ -54,11 +45,9 @@ class ContentComparer:
         merge_file: str,
         missing: List[Union[Any, str]],
         skips: List[
-            Union[
-                Any, PropertiesEntity, FluentMessage, compare_locales.parser.base.Junk
-            ]
+            Union[Any, parser.PropertiesEntity, parser.FluentMessage, parser.Junk]
         ],
-        ctx: Optional[Union[Context, Context]],
+        ctx: Optional[parser.Parser.Context],
         capabilities: int,
         encoding: Optional[str],
     ) -> None:
@@ -354,10 +343,10 @@ class ContentComparer:
     def doUnchanged(
         self,
         entity: Union[
-            compare_locales.parser.base.Entity,
-            PropertiesEntity,
-            FluentMessage,
-            DTDEntity,
+            parser.Entity,
+            parser.PropertiesEntity,
+            parser.FluentMessage,
+            parser.DTDEntity,
         ],
     ) -> None:
         # overload this if needed
@@ -367,18 +356,18 @@ class ContentComparer:
         self,
         file: File,
         ref_entity: Union[
-            FluentTerm,
-            FluentMessage,
-            DTDEntity,
-            compare_locales.parser.base.Entity,
-            PropertiesEntity,
+            parser.FluentTerm,
+            parser.FluentMessage,
+            parser.DTDEntity,
+            parser.Entity,
+            parser.PropertiesEntity,
         ],
         l10n_entity: Union[
-            FluentTerm,
-            FluentMessage,
-            DTDEntity,
-            compare_locales.parser.base.Entity,
-            PropertiesEntity,
+            parser.FluentTerm,
+            parser.FluentMessage,
+            parser.DTDEntity,
+            parser.Entity,
+            parser.PropertiesEntity,
         ],
     ) -> None:
         # overload this if needed

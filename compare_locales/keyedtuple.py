@@ -15,14 +15,12 @@ sequences check values. Always try our dict cache `__map` first,
 and fall back to the superclass implementation.
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Iterator, Tuple, Type, Union
 
-if TYPE_CHECKING:
-    from compare_locales.tests.test_keyedtuple import KeyedThing
+from typing import Any, Iterator, Tuple, Type, Union
 
 
 class KeyedTuple(tuple):
-    def __new__(cls: Type[KeyedTuple], iterable: Any) -> "KeyedTuple":
+    def __new__(cls: Type[KeyedTuple], iterable: Any) -> KeyedTuple:
         return super().__new__(cls, iterable)
 
     def __init__(self, iterable: Any) -> None:
@@ -31,7 +29,7 @@ class KeyedTuple(tuple):
             for index, item in enumerate(self):
                 self.__map[item.key] = index
 
-    def __contains__(self, key: Union[str, KeyedThing, int]) -> bool:
+    def __contains__(self, key: Union[str, int]) -> bool:
         try:
             contains = key in self.__map
             if contains:
@@ -51,7 +49,7 @@ class KeyedTuple(tuple):
         for value in self:
             yield value.key
 
-    def items(self) -> Iterator[Tuple[str, KeyedThing]]:
+    def items(self) -> Iterator[Tuple[str, Any]]:
         for value in self:
             yield value.key, value
 

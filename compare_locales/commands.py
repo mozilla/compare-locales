@@ -5,14 +5,14 @@
 "Commands exposed to commandlines"
 
 import logging
-from argparse import ArgumentParser
-from json import dump as json_dump
 import os
 import sys
+from argparse import ArgumentParser
+from json import dump as json_dump
 
-from compare_locales import mozpath, version
-from compare_locales.paths import EnumerateApp, TOMLParser, ConfigNotFound
-from compare_locales.compare import compareProjects
+from . import mozpath, version
+from .compare import compareProjects
+from .paths import ConfigNotFound, EnumerateApp, TOMLParser
 
 
 class CompareLocales:

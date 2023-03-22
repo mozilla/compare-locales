@@ -3,10 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
-from configparser import ConfigParser, NoSectionError, NoOptionError
+
 from collections import defaultdict
-from compare_locales import util, mozpath
+from configparser import ConfigParser, NoOptionError, NoSectionError
 from typing import Any, Callable, Dict, Iterator, List, Tuple, Union
+
+from .. import mozpath, util
 from .project import ProjectConfig
 
 

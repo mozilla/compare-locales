@@ -5,17 +5,9 @@
 import unittest
 from unittest import mock
 
-from compare_locales.paths import (
-    File,
-    ProjectConfig,
-    ProjectFiles,
-)
-from . import (
-    MockOS,
-    MockProjectFiles,
-    MockTOMLParser,
-    Rooted,
-)
+from compare_locales.paths import File, ProjectConfig, ProjectFiles
+
+from . import MockOS, MockProjectFiles, MockTOMLParser, Rooted
 
 
 class TestMockOS(Rooted, unittest.TestCase):

@@ -3,10 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
-import re
 
-from .base import Entity, Junk, OffsetComment, Whitespace, Parser
+import re
 from typing import Union
+
+from .base import Entity, Junk, OffsetComment, Parser, Whitespace
 
 
 class PropertiesEntityMixin:

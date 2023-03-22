@@ -6,8 +6,6 @@
 from __future__ import annotations
 
 from collections import defaultdict
-
-from .utils import Tree
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -19,8 +17,10 @@ from typing import (
     Union,
 )
 
+from .utils import Tree
+
 if TYPE_CHECKING:
-    from compare_locales.paths import File
+    from ..paths import File
 
 
 class Observer:

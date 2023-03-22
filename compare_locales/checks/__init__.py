@@ -3,15 +3,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
-from .base import Checker, EntityPos
+
+from typing import TYPE_CHECKING, List, Optional, Union
+
 from .android import AndroidChecker
+from .base import Checker, EntityPos
 from .dtd import DTDChecker
 from .fluent import FluentChecker
 from .properties import PropertiesChecker
-from typing import TYPE_CHECKING, List, Optional, Union
 
 if TYPE_CHECKING:
-    from compare_locales.paths import File
+    from ..paths import File
 
 
 __all__ = [

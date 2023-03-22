@@ -3,16 +3,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
-from collections import Counter
-import os
 
-from compare_locales import parser, checks
-from compare_locales.paths import File, REFERENCE_LOCALE
+import os
+from collections import Counter
 from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Union
 
+from .. import checks, parser
+from ..paths import REFERENCE_LOCALE, File
+
 if TYPE_CHECKING:
-    from compare_locales.parser.base import Entity, Junk, LiteralEntity
-    from compare_locales.tests.lint.test_linter import MockChecker
+    from ..parser.base import Entity, Junk, LiteralEntity
 
 
 class L10nLinter:
@@ -52,7 +52,7 @@ class EntityLinter:
     def __init__(
         self,
         current: List[Union[Any, Entity]],
-        checker: Optional[MockChecker],
+        checker: Optional[checks.Checker],
         reference: Dict[Any, Any],
     ) -> None:
         self.key_count = Counter(entity.key for entity in current)

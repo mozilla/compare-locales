@@ -3,10 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
+
 import re
 from typing import Tuple, Union
 
-from .base import CAN_COPY, Entity, Entry, OffsetComment, Junk, Whitespace, Parser
+from .base import CAN_COPY, Entity, Entry, Junk, OffsetComment, Parser, Whitespace
 
 
 class DefinesInstruction(Entry):

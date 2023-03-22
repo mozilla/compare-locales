@@ -3,9 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
+
 import os
-from compare_locales import mozpath
 from typing import TYPE_CHECKING, Any, Iterator, List, Optional, Set, Tuple, Union
+
+from .. import mozpath
 
 if TYPE_CHECKING:
     from .matcher import Matcher

@@ -3,19 +3,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
+
 import re
 from collections import defaultdict
+from typing import TYPE_CHECKING, Any, Iterator, List, Optional, Tuple, Union
 
 from fluent.syntax import ast as ftl
 from fluent.syntax.serializer import serialize_variant_key
 from fluent.syntax.visitor import Visitor
 
+from .. import plurals
 from .base import Checker, CSSCheckMixin
-from compare_locales import plurals
-from typing import TYPE_CHECKING, Any, Iterator, List, Optional, Tuple, Union
 
 if TYPE_CHECKING:
-    from compare_locales.parser.fluent import FluentMessage, FluentTerm
     from fluent.syntax.ast import (
         Attribute,
         BaseNode,
@@ -27,6 +27,8 @@ if TYPE_CHECKING:
         TermReference,
         Variant,
     )
+
+    from ..parser.fluent import FluentMessage, FluentTerm
 
 
 MSGS = {

@@ -2,13 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import pkg_resources
 import shutil
 import tempfile
 import textwrap
 import unittest
 
-from compare_locales import parser, mozpath
+import pkg_resources
+
+from compare_locales import mozpath, parser
 
 
 class TestParserContext(unittest.TestCase):

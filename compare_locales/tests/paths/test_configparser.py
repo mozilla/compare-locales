@@ -6,11 +6,12 @@ import os
 import tempfile
 import unittest
 
-from . import MockTOMLParser
+from compare_locales import mozpath
 from compare_locales.paths import TOMLParser
 from compare_locales.paths.matcher import Matcher
-from compare_locales.paths.project import ProjectConfig, ExcludeError
-from compare_locales import mozpath
+from compare_locales.paths.project import ExcludeError, ProjectConfig
+
+from . import MockTOMLParser
 
 
 class TestConfigParser(unittest.TestCase):

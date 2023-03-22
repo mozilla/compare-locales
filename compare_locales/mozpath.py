@@ -9,11 +9,10 @@ Also contains a few additional utilities not found in :py:mod:`os.path`.
 """
 from __future__ import annotations
 
-
-import posixpath
 import os
+import posixpath
 import re
-from typing import TYPE_CHECKING, List, Tuple
+from typing import List, Tuple
 
 
 def normsep(path: str) -> str:

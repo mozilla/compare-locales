@@ -16,19 +16,17 @@ to newest instead.
 """
 from __future__ import annotations
 
-from collections import OrderedDict, defaultdict
 from codecs import encode
+from collections import OrderedDict, defaultdict
 from functools import reduce
-
-
-from compare_locales import parser as cl
-from compare_locales.parser.base import StickyEntry
-from compare_locales.compare.utils import AddRemove
 from typing import TYPE_CHECKING, Any, List, Tuple, Union
 
+from . import parser as cl
+from .compare.utils import AddRemove
+from .parser.base import Entry, StickyEntry, Whitespace
+
 if TYPE_CHECKING:
-    from compare_locales.parser.android import XMLWhitespace
-    from compare_locales.parser.base import Entry, Whitespace
+    from .parser.android import XMLWhitespace
 
 
 class MergeNotSupportedError(ValueError):

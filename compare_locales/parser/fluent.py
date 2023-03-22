@@ -3,21 +3,24 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
+
 import re
+from typing import Iterator, Optional, Tuple, Union
+
 from fluent.syntax import FluentParser as FTLParser
 from fluent.syntax import ast as ftl
 from fluent.syntax.serializer import serialize_comment
 from fluent.syntax.visitor import Visitor
-from typing import Iterator, Optional, Tuple, Union
+
 from .base import (
     CAN_SKIP,
-    Entry,
-    Entity,
     Comment,
+    Entity,
+    Entry,
     Junk,
-    Whitespace,
     LiteralEntity,
     Parser,
+    Whitespace,
 )
 
 

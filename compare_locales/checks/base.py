@@ -3,13 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
+
 import re
 from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Tuple, Union
 
 if TYPE_CHECKING:
-    from compare_locales.keyedtuple import KeyedTuple
-    from compare_locales.parser.base import Entity
-    from compare_locales.paths import File
+    from ..keyedtuple import KeyedTuple
+    from ..parser.base import Entity
+    from ..paths import File
 
 
 class EntityPos(int):

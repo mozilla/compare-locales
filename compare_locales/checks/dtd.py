@@ -3,18 +3,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
-from io import BytesIO
+
 import re
+from io import BytesIO
+from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
 from xml import sax
 
-from compare_locales.parser import DTDParser
+from ..parser import DTDParser
 from .base import Checker, CSSCheckMixin
 
-
-from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
-
 if TYPE_CHECKING:
-    from compare_locales.parser.dtd import DTDEntity
+    from ..parser.dtd import DTDEntity
 
 
 class DTDChecker(Checker, CSSCheckMixin):

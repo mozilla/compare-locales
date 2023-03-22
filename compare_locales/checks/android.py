@@ -3,12 +3,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
+
 import re
+from typing import Any, Dict, Iterator, List, Tuple, Union
 from xml.dom import minidom
 
-from .base import Checker
 from ..parser.android import AndroidEntity, textContent
-from typing import Any, Dict, Iterator, List, Tuple, Union
+from .base import Checker
 
 
 class AndroidChecker(Checker):

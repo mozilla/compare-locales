@@ -7,10 +7,11 @@
 Parses gettext po and pot files.
 """
 from __future__ import annotations
-import re
 
-from .base import CAN_SKIP, Comment, Entity, BadEntity, Parser
+import re
 from typing import List, Optional, Tuple, Union
+
+from .base import CAN_SKIP, BadEntity, Comment, Entity, Parser
 
 
 class PoEntityMixin:

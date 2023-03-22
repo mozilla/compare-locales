@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
-import re
 
+import re
 from typing import Optional, Tuple, Union
 
 try:
@@ -15,7 +15,7 @@ except ImportError:
     html_parser = HTMLParser()
     html_unescape = html_parser.unescape
 
-from .base import Entity, Comment, Junk, Parser, Whitespace
+from .base import Comment, Entity, Junk, Parser, Whitespace
 
 
 class DTDEntityMixin:
