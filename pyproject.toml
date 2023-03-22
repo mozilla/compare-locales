@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools >= 61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "compare-locales"
+description = "Lint Mozilla localizations"
+readme = "README.md"
+license = { text = "MPL-2.0" }
+authors = [
+  { name = "Mozilla", email = "l10n-drivers@mozilla.org" },
+  { name = "Axel Hecht" },
+  { name = "Eemeli Aro", email = "eemeli@mozilla.com" },
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Software Development :: Localization",
+  "Topic :: Software Development :: Testing",
+]
+requires-python = ">=3.7, <4"
+dependencies = [
+  "fluent.syntax >=0.18.0, <0.20",
+  "six",                           # undeclared dependency of fluent-syntax 0.18.1
+  "toml",
+]
+dynamic = ["version"]
+
+[project.urls]
+repository = "https://github.com/mozilla/compare-locales"
+
+[project.scripts]
+compare-locales = "compare_locales.commands:CompareLocales.call"
+moz-l10n-lint = "compare_locales.lint.cli:main"
+
+[tool.setuptools]
+platforms = ["any"]
+packages = [
+  "compare_locales",
+  "compare_locales.checks",
+  "compare_locales.compare",
+  "compare_locales.lint",
+  "compare_locales.parser",
+  "compare_locales.paths",
+]
+
+[tool.setuptools.dynamic]
+version = { attr = "compare_locales.version" }
