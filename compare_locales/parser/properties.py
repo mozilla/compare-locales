@@ -2,9 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import annotations
 import re
 
-from .base import Entity, OffsetComment, Whitespace, Parser
+from .base import Entity, Junk, OffsetComment, Whitespace, Parser
+from typing import Union
 
 
 class PropertiesEntityMixin:
@@ -14,7 +16,7 @@ class PropertiesEntityMixin:
     known_escapes = {"n": "\n", "r": "\r", "t": "\t", "\\": "\\"}
 
     @property
-    def val(self):
+    def val(self) -> str:
         def unescape(m):
             found = m.groupdict()
             if found["uni"]:
@@ -33,14 +35,16 @@ class PropertiesEntity(PropertiesEntityMixin, Entity):
 class PropertiesParser(Parser):
     Comment = OffsetComment
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.reKey = re.compile("(?P<key>[^#! \t\r\n][^=:\n]*?)[ \t]*[:=][ \t]*", re.M)
         self.reComment = re.compile("(?:[#!][^\n]*\n)*(?:[#!][^\n]*)", re.M)
         self._escapedEnd = re.compile(r"\\+$")
         self._trailingWS = re.compile(r"[ \t\r\n]*(?:\n|\Z)", re.M)
         Parser.__init__(self)
 
-    def getNext(self, ctx, offset):
+    def getNext(
+        self, ctx: Parser.Context, offset: int
+    ) -> Union[Whitespace, OffsetComment, Junk, PropertiesEntity]:
         junk_offset = offset
         # overwritten to parse values line by line
         contents = ctx.contents

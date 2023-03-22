@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import annotations
 import re
 
 from .base import (
@@ -21,17 +22,8 @@ from .base import (
 from .android import AndroidParser
 from .defines import DefinesParser, DefinesInstruction
 from .dtd import DTDEntity, DTDParser
-from .fluent import (
-    FluentParser,
-    FluentComment,
-    FluentEntity,
-    FluentMessage,
-    FluentTerm,
-)
-from .ini import (
-    IniParser,
-    IniSection,
-)
+from .fluent import FluentParser, FluentComment, FluentEntity, FluentMessage, FluentTerm
+from .ini import IniParser, IniSection
 from .po import PoParser
 from .properties import PropertiesParser, PropertiesEntity
 
@@ -68,7 +60,7 @@ __all__ = [
 __constructors = []
 
 
-def getParser(path):
+def getParser(path: str) -> Parser:
     for item in __constructors:
         if re.search(item[0], path):
             return item[1]

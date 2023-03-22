@@ -2,7 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import annotations
 import re
+from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Tuple, Union
+
+if TYPE_CHECKING:
+    from compare_locales.keyedtuple import KeyedTuple
+    from compare_locales.parser.base import Entity
+    from compare_locales.paths import File
 
 
 class EntityPos(int):
@@ -20,15 +27,19 @@ class Checker:
     needs_reference = False
 
     @classmethod
-    def use(cls, file):
+    def use(cls, file: File) -> Optional[re.Match]:
         return cls.pattern.match(file.file)
 
-    def __init__(self, extra_tests, locale=None):
+    def __init__(
+        self, extra_tests: Optional[List[str]], locale: Optional[str] = None
+    ) -> None:
         self.extra_tests = extra_tests
         self.locale = locale
         self.reference = None
 
-    def check(self, refEnt, l10nEnt):
+    def check(
+        self, refEnt: Entity, l10nEnt: Entity
+    ) -> Iterator[Tuple[str, EntityPos, str, str]]:
         """Given the reference and localized Entities, performs checks.
 
         This is a generator yielding tuples of
@@ -46,7 +57,7 @@ class Checker:
                 "encodings",
             )
 
-    def set_reference(self, reference):
+    def set_reference(self, reference: KeyedTuple) -> None:
         """Set the reference entities.
         Only do this if self.needs_reference is True.
         """
@@ -54,14 +65,16 @@ class Checker:
 
 
 class CSSCheckMixin:
-    def maybe_style(self, ref_value, l10n_value):
+    def maybe_style(self, ref_value: str, l10n_value: str) -> None:
         ref_map, _ = self.parse_css_spec(ref_value)
         if not ref_map:
             return
         l10n_map, errors = self.parse_css_spec(l10n_value)
         yield from self.check_style(ref_map, l10n_map, errors)
 
-    def check_style(self, ref_map, l10n_map, errors):
+    def check_style(
+        self, ref_map: Dict[str, str], l10n_map: Optional[Dict[str, str]], errors: None
+    ) -> Iterator[Tuple[str, int, str, str]]:
         if not l10n_map:
             yield ("error", 0, "reference is a CSS spec", "css")
             return
@@ -85,7 +98,13 @@ class CSSCheckMixin:
         if msgs:
             yield ("warning", 0, ", ".join(msgs), "css")
 
-    def parse_css_spec(self, val):
+    def parse_css_spec(
+        self, val: str
+    ) -> Union[
+        Tuple[Dict[str, str], None],
+        Tuple[None, None],
+        Tuple[Dict[str, str], List[Dict[str, Union[int, str]]]],
+    ]:
         if not hasattr(self, "_css_spec"):
             self._css_spec = re.compile(
                 r"(?:"

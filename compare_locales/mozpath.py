@@ -7,14 +7,16 @@ Like :py:mod:`os.path`, with a reduced set of functions, and with normalized
 path separators (always use forward slashes).
 Also contains a few additional utilities not found in :py:mod:`os.path`.
 """
+from __future__ import annotations
 
 
 import posixpath
 import os
 import re
+from typing import TYPE_CHECKING, List, Tuple
 
 
-def normsep(path):
+def normsep(path: str) -> str:
     """
     Normalize path separators, by using forward slashes instead of whatever
     :py:const:`os.sep` is.
@@ -26,44 +28,44 @@ def normsep(path):
     return path
 
 
-def relpath(path, start):
+def relpath(path: str, start: str) -> str:
     rel = normsep(os.path.relpath(path, start))
     return "" if rel == "." else rel
 
 
-def realpath(path):
+def realpath(path: str) -> str:
     return normsep(os.path.realpath(path))
 
 
-def abspath(path):
+def abspath(path: str) -> str:
     return normsep(os.path.abspath(path))
 
 
-def join(*paths):
+def join(*paths) -> str:
     return normsep(os.path.join(*paths))
 
 
-def normpath(path):
+def normpath(path: str) -> str:
     return posixpath.normpath(normsep(path))
 
 
-def dirname(path):
+def dirname(path: str) -> str:
     return posixpath.dirname(normsep(path))
 
 
-def commonprefix(paths):
+def commonprefix(paths: List[str]) -> str:
     return posixpath.commonprefix([normsep(path) for path in paths])
 
 
-def basename(path):
+def basename(path: str) -> str:
     return os.path.basename(path)
 
 
-def splitext(path):
+def splitext(path: str) -> Tuple[str, str]:
     return posixpath.splitext(normsep(path))
 
 
-def split(path):
+def split(path: str) -> List[str]:
     """
     Return the normalized path as a list of its components.
 
@@ -72,7 +74,7 @@ def split(path):
     return normsep(path).split("/")
 
 
-def basedir(path, bases):
+def basedir(path: str, bases: List[str]) -> str:
     """
     Given a list of directories (`bases`), return which one contains the given
     path. If several matches are found, the deepest base directory is returned.
@@ -92,7 +94,7 @@ def basedir(path, bases):
 re_cache = {}
 
 
-def match(path, pattern):
+def match(path: str, pattern: str) -> bool:
     """
     Return whether the given path matches the given pattern.
     An asterisk can be used to match any string, including the null string, in
@@ -134,7 +136,7 @@ def match(path, pattern):
     return re_cache[pattern].match(path) is not None
 
 
-def rebase(oldbase, base, relativepath):
+def rebase(oldbase: str, base: str, relativepath: str) -> str:
     """
     Return `relativepath` relative to `base` instead of `oldbase`.
     """

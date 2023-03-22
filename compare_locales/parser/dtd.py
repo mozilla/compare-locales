@@ -2,7 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import annotations
 import re
+
+from typing import Optional, Tuple, Union
 
 try:
     from html import unescape as html_unescape
@@ -12,7 +15,7 @@ except ImportError:
     html_parser = HTMLParser()
     html_unescape = html_parser.unescape
 
-from .base import Entity, Comment, Junk, Parser
+from .base import Entity, Comment, Junk, Parser, Whitespace
 
 
 class DTDEntityMixin:
@@ -30,7 +33,9 @@ class DTDEntityMixin:
         """
         return html_unescape(self.raw_val)
 
-    def value_position(self, offset=0):
+    def value_position(
+        self, offset: Union[Tuple[int, int], int] = 0
+    ) -> Tuple[int, int]:
         # DTDChecker already returns tuples of (line, col) positions
         if isinstance(offset, tuple):
             line_pos, col_pos = offset
@@ -87,13 +92,15 @@ class DTDParser(Parser):
 
     class Comment(Comment):
         @property
-        def val(self):
+        def val(self) -> str:
             if self._val_cache is None:
                 # Strip "<!--" and "-->" to comment contents
                 self._val_cache = self.all[4:-3]
             return self._val_cache
 
-    def getNext(self, ctx, offset):
+    def getNext(
+        self, ctx: Parser.Context, offset: int
+    ) -> Union[Whitespace, DTDParser.Comment, Junk, DTDEntity]:
         """
         Overload Parser.getNext to special-case ParsedEntities.
         Just check for a parsed entity if that method claims junk.
@@ -112,7 +119,13 @@ class DTDParser(Parser):
                 )
         return entity
 
-    def createEntity(self, ctx, m, current_comment, white_space):
+    def createEntity(
+        self,
+        ctx: Parser.Context,
+        m: re.Match,
+        current_comment: Optional[DTDParser.Comment],
+        white_space: Optional[Whitespace],
+    ) -> DTDEntity:
         valspan = m.span("val")
         valspan = (valspan[0] + 1, valspan[1] - 1)
         return DTDEntity(

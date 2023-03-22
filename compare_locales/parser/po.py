@@ -6,24 +6,24 @@
 
 Parses gettext po and pot files.
 """
-
-
+from __future__ import annotations
 import re
 
-from .base import CAN_SKIP, Entity, BadEntity, Parser
+from .base import CAN_SKIP, Comment, Entity, BadEntity, Parser
+from typing import List, Optional, Tuple, Union
 
 
 class PoEntityMixin:
     @property
-    def val(self):
+    def val(self) -> str:
         return self.stringlist_val if self.stringlist_val else self.stringlist_key[0]
 
     @property
-    def key(self):
+    def key(self) -> Union[Tuple[str, str], Tuple[str, None]]:
         return self.stringlist_key
 
     @property
-    def localized(self):
+    def localized(self) -> bool:
         # gettext denotes a non-localized string by an empty value
         return bool(self.stringlist_val)
 
@@ -36,7 +36,7 @@ class PoEntity(PoEntityMixin, Entity):
 
 
 # Unescape and concat a string list
-def eval_stringlist(lines):
+def eval_stringlist(lines: List[str]) -> str:
     return "".join(
         (
             line.replace(r"\\", "\\")
@@ -63,10 +63,16 @@ class PoParser(Parser):
     # `"`
     reListItem = re.compile(r'[ \t\r\n]*"((?:\\[\\trn"]|[^"\n\\])*)"')
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
-    def createEntity(self, ctx, m, current_comment, white_space):
+    def createEntity(
+        self,
+        ctx: Parser.Context,
+        m: re.Match,
+        current_comment: Optional[Comment],
+        white_space: None,
+    ) -> PoEntity:
         start = cursor = m.start()
         id_start = cursor
         try:
@@ -98,7 +104,9 @@ class PoParser(Parser):
         e.stringlist_val = msgstr
         return e
 
-    def _parse_string_list(self, ctx, cursor, key):
+    def _parse_string_list(
+        self, ctx: Parser.Context, cursor: int, key: str
+    ) -> Tuple[str, int]:
         if not ctx.contents.startswith(key, cursor):
             raise BadEntity
         cursor += len(key)

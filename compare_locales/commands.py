@@ -10,8 +10,7 @@ from json import dump as json_dump
 import os
 import sys
 
-from compare_locales import mozpath
-from compare_locales import version
+from compare_locales import mozpath, version
 from compare_locales.paths import EnumerateApp, TOMLParser, ConfigNotFound
 from compare_locales.compare import compareProjects
 

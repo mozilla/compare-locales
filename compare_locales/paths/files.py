@@ -2,15 +2,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import annotations
 import os
 from compare_locales import mozpath
+from typing import TYPE_CHECKING, Any, Iterator, List, Optional, Set, Tuple, Union
+
+if TYPE_CHECKING:
+    from .matcher import Matcher
+    from .project import ProjectConfig
 
 
 REFERENCE_LOCALE = "en-x-moz-reference"
 
 
 class ConfigList(list):
-    def maybe_extend(self, other):
+    def maybe_extend(self, other: List[ProjectConfig]) -> None:
         """Add configs from other list if this list doesn't have this path yet."""
         for config in other:
             if any(mine.path == config.path for mine in self):
@@ -26,7 +32,12 @@ class ProjectFiles:
     both reference and locale for a reference self-test.
     """
 
-    def __init__(self, locale, projects, mergebase=None):
+    def __init__(
+        self,
+        locale: Optional[str],
+        projects: List[Union[ProjectConfig, Any]],
+        mergebase: Optional[str] = None,
+    ) -> None:
         self.locale = locale
         self.matchers = []
         self.exclude = None
@@ -107,14 +118,23 @@ class ProjectFiles:
         for i in drops:
             del self.matchers[i]
 
-    def __iter__(self):
+    def __iter__(self) -> None:
         # The iteration is pretty different when we iterate over
         # a localization vs over the reference. We do that latter
         # when running in validation mode.
         inner = self.iter_locale() if self.locale else self.iter_reference()
         yield from inner
 
-    def iter_locale(self):
+    def iter_locale(
+        self,
+    ) -> Iterator[
+        Union[
+            Tuple[str, str, None, Set[Any]],
+            Tuple[str, None, None, Set[Any]],
+            Tuple[str, str, str, Set[Any]],
+            Tuple[str, None, str, Set[Any]],
+        ]
+    ]:
         """Iterate over locale files."""
         known = {}
         for matchers in self.matchers:
@@ -140,7 +160,7 @@ class ProjectFiles:
         for path, d in sorted(known.items()):
             yield (path, d.get("reference"), d.get("merge"), d["test"])
 
-    def iter_reference(self):
+    def iter_reference(self) -> Iterator[Tuple[str, str, None, Set[Any]]]:
         """Iterate over reference files."""
         # unset self.exclude, as we don't want that for our reference files
         exclude = self.exclude
@@ -158,7 +178,7 @@ class ProjectFiles:
             yield (path, d.get("reference"), None, d["test"])
         self.exclude = exclude
 
-    def _files(self, matcher):
+    def _files(self, matcher: Matcher) -> Iterator[str]:
         """Base implementation of getting all files in a hierarchy
         using the file system.
         Subclasses might replace this method to support different IO
@@ -179,13 +199,13 @@ class ProjectFiles:
                 if matcher.match(p) is not None:
                     yield p
 
-    def _isfile(self, path):
+    def _isfile(self, path: str) -> bool:
         return os.path.isfile(path)
 
-    def _walk(self, base):
+    def _walk(self, base: str) -> None:
         yield from os.walk(base)
 
-    def match(self, path):
+    def match(self, path: str) -> Any:
         """Return the tuple of l10n_path, reference, mergepath, tests
         if the given path matches any config, otherwise None.
 

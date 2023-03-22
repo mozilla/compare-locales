@@ -2,20 +2,27 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import annotations
 import re
+from typing import Tuple, Union
 
-from .base import CAN_COPY, Entry, OffsetComment, Junk, Whitespace, Parser
+from .base import CAN_COPY, Entity, Entry, OffsetComment, Junk, Whitespace, Parser
 
 
 class DefinesInstruction(Entry):
     """Entity-like object representing processing instructions in inc files"""
 
-    def __init__(self, ctx, span, val_span):
+    def __init__(
+        self,
+        ctx: DefinesParser.Context,
+        span: Tuple[int, int],
+        val_span: Tuple[int, int],
+    ) -> None:
         self.ctx = ctx
         self.span = span
         self.key_span = self.val_span = val_span
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.raw_val
 
 
@@ -30,11 +37,11 @@ class DefinesParser(Parser):
         comment_offset = 2
 
     class Context(Parser.Context):
-        def __init__(self, contents):
+        def __init__(self, contents: str) -> None:
             super().__init__(contents)
             self.filter_empty_lines = False
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.reComment = re.compile("(?:^# .*?\n)*(?:^# [^\n]*)", re.M)
         # corresponds to
         # https://hg.mozilla.org/mozilla-central/file/72ee4800d4156931c89b58bd807af4a3083702bb/python/mozbuild/mozbuild/preprocessor.py#l561  # noqa
@@ -44,7 +51,9 @@ class DefinesParser(Parser):
         self.rePI = re.compile(r"#(?P<val>\w+[ \t]+[^\n]+)", re.M)
         Parser.__init__(self)
 
-    def getNext(self, ctx, offset):
+    def getNext(
+        self, ctx: DefinesParser.Context, offset: int
+    ) -> Union[DefinesInstruction, Entity, Whitespace, DefinesParser.Comment, Junk]:
         junk_offset = offset
         contents = ctx.contents
 

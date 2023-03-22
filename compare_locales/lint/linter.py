@@ -2,11 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import annotations
 from collections import Counter
 import os
 
 from compare_locales import parser, checks
 from compare_locales.paths import File, REFERENCE_LOCALE
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Union
+
+if TYPE_CHECKING:
+    from compare_locales.parser.base import Entity, Junk, LiteralEntity
+    from compare_locales.tests.lint.test_linter import MockChecker
 
 
 class L10nLinter:
@@ -43,7 +49,12 @@ class L10nLinter:
 class EntityLinter:
     """Factored out helper to run linters on a single entity."""
 
-    def __init__(self, current, checker, reference):
+    def __init__(
+        self,
+        current: List[Union[Any, Entity]],
+        checker: Optional[MockChecker],
+        reference: Dict[Any, Any],
+    ) -> None:
         self.key_count = Counter(entity.key for entity in current)
         self.checker = checker
         self.reference = reference
@@ -58,7 +69,9 @@ class EntityLinter:
         for res in self.lint_value(current_entity):
             yield res
 
-    def lint_full_entity(self, current_entity):
+    def lint_full_entity(
+        self, current_entity: Entity
+    ) -> Iterator[Dict[str, Union[int, str]]]:
         """Checks that go good or bad for a full entity,
         without a particular spot inside the entity.
         """
@@ -87,7 +100,9 @@ class EntityLinter:
                     "message": msg,
                 }
 
-    def lint_value(self, current_entity):
+    def lint_value(
+        self, current_entity: Entity
+    ) -> Iterator[Dict[str, Union[int, str]]]:
         """Checks that error on particular locations in the entity value."""
         if self.checker:
             for tp, pos, msg, cat in self.checker.check(current_entity, current_entity):
@@ -102,7 +117,9 @@ class EntityLinter:
                     "message": msg,
                 }
 
-    def handle_junk(self, current_entity):
+    def handle_junk(
+        self, current_entity: Union[LiteralEntity, Junk]
+    ) -> Optional[Dict[str, Union[int, str]]]:
         if not isinstance(current_entity, parser.Junk):
             return None
 

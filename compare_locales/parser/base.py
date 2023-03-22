@@ -2,12 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import annotations
 import re
 import bisect
 import codecs
 from collections import Counter
 from compare_locales.keyedtuple import KeyedTuple
 from compare_locales.paths import File
+
+from typing import TYPE_CHECKING, Any, Iterator, Optional, Tuple, Union
+
+if TYPE_CHECKING:
+    from .android import XMLComment, XMLWhitespace
+    from .defines import DefinesParser
+    from .dtd import DTDEntity, DTDParser
 
 __constructors = []
 
@@ -41,7 +49,17 @@ class Entry:
     <--- definition ---->
     """
 
-    def __init__(self, ctx, pre_comment, inner_white, span, key_span, val_span):
+    def __init__(
+        self,
+        ctx: Optional[Union[Parser.Context, DefinesParser.Context]],
+        pre_comment: Optional[
+            Union[XMLComment, DTDParser.Comment, DefinesParser.Comment]
+        ],
+        inner_white: Optional[Union[XMLWhitespace, Whitespace]],
+        span: Optional[Union[Tuple[None, None], Tuple[int, int]]],
+        key_span: Optional[Union[Tuple[None, None], Tuple[int, int]]],
+        val_span: Optional[Union[Tuple[None, None], Tuple[int, int]]],
+    ) -> None:
         self.ctx = ctx
         self.span = span
         self.key_span = key_span
@@ -49,7 +67,7 @@ class Entry:
         self.pre_comment = pre_comment
         self.inner_white = inner_white
 
-    def position(self, offset=0):
+    def position(self, offset: int = 0) -> Tuple[int, int]:
         """Get the 1-based line and column of the character
         with given offset into the Entity.
 
@@ -61,7 +79,7 @@ class Entry:
             pos = self.span[0] + offset
         return self.ctx.linecol(pos)
 
-    def value_position(self, offset=0):
+    def value_position(self, offset: int = 0) -> Tuple[int, int]:
         """Get the 1-based line and column of the character
         with given offset into the value.
 
@@ -74,39 +92,39 @@ class Entry:
             pos = self.val_span[0] + offset
         return self.ctx.linecol(pos)
 
-    def _span_start(self):
+    def _span_start(self) -> int:
         start = self.span[0]
         if hasattr(self, "pre_comment") and self.pre_comment is not None:
             start = self.pre_comment.span[0]
         return start
 
     @property
-    def all(self):
+    def all(self) -> str:
         start = self._span_start()
         end = self.span[1]
         return self.ctx.contents[start:end]
 
     @property
-    def key(self):
+    def key(self) -> str:
         return self.ctx.contents[self.key_span[0] : self.key_span[1]]
 
     @property
-    def raw_val(self):
+    def raw_val(self) -> str:
         if self.val_span is None:
             return None
         return self.ctx.contents[self.val_span[0] : self.val_span[1]]
 
     @property
-    def val(self):
+    def val(self) -> str:
         return self.raw_val
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.key
 
     re_br = re.compile("<br[ \t\r\n]*/?>", re.U)
     re_sgml = re.compile(r"</?\w+.*?>", re.U | re.M)
 
-    def count_words(self):
+    def count_words(self) -> int:
         """Count the words in an English string.
         Replace a couple of xml markup to make that safer, too.
         """
@@ -114,7 +132,7 @@ class Entry:
         value = self.re_sgml.sub("", value)
         return len(value.split())
 
-    def equals(self, other):
+    def equals(self, other: Union[Entity, DTDEntity, LiteralEntity]) -> bool:
         return self.key == other.key and self.val == other.val
 
 
@@ -128,7 +146,7 @@ class StickyEntry(Entry):
 
 class Entity(Entry):
     @property
-    def localized(self):
+    def localized(self) -> bool:
         """Is this entity localized.
 
         Always true for monolingual files.
@@ -160,14 +178,14 @@ class LiteralEntity(Entity):
     It's storing string literals for key, raw_val and all instead of spans.
     """
 
-    def __init__(self, key, val, all):
+    def __init__(self, key: str, val: str, all: str) -> None:
         super().__init__(None, None, None, None, None, None)
         self._key = key
         self._raw_val = val
         self._all = all
 
     @property
-    def key(self):
+    def key(self) -> str:
         return self._key
 
     @property
@@ -175,19 +193,21 @@ class LiteralEntity(Entity):
         return self._raw_val
 
     @property
-    def all(self):
+    def all(self) -> str:
         return self._all
 
 
 class PlaceholderEntity(LiteralEntity):
     """Subclass of Entity to be removed in merges."""
 
-    def __init__(self, key):
+    def __init__(self, key: str) -> None:
         super().__init__(key, "", "\nplaceholder\n")
 
 
 class Comment(Entry):
-    def __init__(self, ctx, span):
+    def __init__(
+        self, ctx: Union[Parser.Context, DefinesParser.Context], span: Tuple[int, int]
+    ) -> None:
         self.ctx = ctx
         self.span = span
         self.val_span = None
@@ -198,12 +218,12 @@ class Comment(Entry):
         return None
 
     @property
-    def val(self):
+    def val(self) -> str:
         if self._val_cache is None:
             self._val_cache = self.all
         return self._val_cache
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.all
 
 
@@ -216,7 +236,7 @@ class OffsetComment(Comment):
     comment_offset = 1
 
     @property
-    def val(self):
+    def val(self) -> str:
         if self._val_cache is None:
             self._val_cache = "".join(
                 line[self.comment_offset :] for line in self.all.splitlines(True)
@@ -233,13 +253,17 @@ class Junk:
 
     junkid = 0
 
-    def __init__(self, ctx, span):
+    def __init__(
+        self,
+        ctx: Optional[Union[Parser.Context, DefinesParser.Context]],
+        span: Tuple[int, int],
+    ) -> None:
         self.ctx = ctx
         self.span = span
         self.__class__.junkid += 1
         self.key = "_junk_%d_%d-%d" % (self.__class__.junkid, span[0], span[1])
 
-    def position(self, offset=0):
+    def position(self, offset: int = 0) -> Tuple[int, int]:
         """Get the 1-based line and column of the character
         with given offset into the Entity.
 
@@ -252,25 +276,25 @@ class Junk:
         return self.ctx.linecol(pos)
 
     @property
-    def all(self):
+    def all(self) -> str:
         return self.ctx.contents[self.span[0] : self.span[1]]
 
     @property
-    def raw_val(self):
+    def raw_val(self) -> str:
         return self.all
 
     @property
-    def val(self):
+    def val(self) -> str:
         return self.all
 
-    def error_message(self):
+    def error_message(self) -> str:
         params = (self.val,) + self.position() + self.position(-1)
         return (
             'Unparsed content "%s" from line %d column %d'
             " to line %d column %d" % params
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.key
 
 
@@ -279,11 +303,13 @@ class Whitespace(Entry):
     if allowed
     """
 
-    def __init__(self, ctx, span):
+    def __init__(
+        self, ctx: Union[Parser.Context, DefinesParser.Context], span: Tuple[int, int]
+    ) -> None:
         self.ctx = ctx
         self.span = self.key_span = self.val_span = span
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.raw_val
 
 
@@ -308,7 +334,7 @@ class Parser:
             # cache split lines
             self._lines = None
 
-        def linecol(self, position):
+        def linecol(self, position: int) -> Tuple[int, int]:
             "Returns 1-based line and column numbers."
             if self._lines is None:
                 nl = re.compile("\n", re.M)
@@ -320,12 +346,12 @@ class Parser:
 
             return line_offset + 1, col_offset + 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         if not hasattr(self, "encoding"):
             self.encoding = "utf-8"
         self.ctx = None
 
-    def readFile(self, file):
+    def readFile(self, file: Union[str, File]) -> None:
         """Read contents from disk, with universal_newlines"""
         if isinstance(file, File):
             file = file.fullpath
@@ -334,7 +360,7 @@ class Parser:
         with open(file, encoding=self.encoding, errors="replace", newline=None) as f:
             self.readUnicode(f.read())
 
-    def readContents(self, contents):
+    def readContents(self, contents: bytes) -> None:
         """Read contents and create parsing context.
 
         contents are in native encoding, but with normalized line endings.
@@ -342,16 +368,16 @@ class Parser:
         (contents, _) = codecs.getdecoder(self.encoding)(contents, "replace")
         self.readUnicode(contents)
 
-    def readUnicode(self, contents):
+    def readUnicode(self, contents: str) -> None:
         self.ctx = self.Context(contents)
 
-    def parse(self):
+    def parse(self) -> KeyedTuple:
         return KeyedTuple(self)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Any]:
         return self.walk(only_localizable=True)
 
-    def walk(self, only_localizable=False):
+    def walk(self, only_localizable: bool = False) -> Iterator[Any]:
         if not self.ctx:
             # loading file failed, or we just didn't load anything
             return
@@ -369,7 +395,9 @@ class Parser:
 
             next_offset = entity.span[1]
 
-    def getNext(self, ctx, offset):
+    def getNext(
+        self, ctx: Parser.Context, offset: int
+    ) -> Union[Junk, DTDEntity, DTDParser.Comment, Whitespace]:
         """Parse the next fragment.
 
         Parse comments first, then white-space.
@@ -417,7 +445,12 @@ class Parser:
             return white_space
         return self.getJunk(ctx, junk_offset, self.reKey, self.reComment)
 
-    def getJunk(self, ctx, offset, *expressions):
+    def getJunk(
+        self,
+        ctx: Union[Parser.Context, DefinesParser.Context],
+        offset: int,
+        *expressions,
+    ) -> Junk:
         junkend = None
         for exp in expressions:
             m = exp.search(ctx.contents, offset)
@@ -425,13 +458,19 @@ class Parser:
                 junkend = min(junkend, m.start()) if junkend else m.start()
         return Junk(ctx, (offset, junkend or len(ctx.contents)))
 
-    def createEntity(self, ctx, m, current_comment, white_space):
+    def createEntity(
+        self,
+        ctx: DefinesParser.Context,
+        m: re.Match,
+        current_comment: Optional[DefinesParser.Comment],
+        white_space: Optional[Whitespace],
+    ) -> Entity:
         return Entity(
             ctx, current_comment, white_space, m.span(), m.span("key"), m.span("val")
         )
 
     @classmethod
-    def findDuplicates(cls, entities):
+    def findDuplicates(cls, entities: KeyedTuple) -> None:
         found = Counter(entity.key for entity in entities)
         for entity_id, cnt in found.items():
             if cnt > 1:

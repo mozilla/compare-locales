@@ -7,5 +7,9 @@
 # development.
 
 
-def parseLocales(content):
+from __future__ import annotations
+from typing import Any, List, Union
+
+
+def parseLocales(content: str) -> List[Union[str, Any]]:
     return sorted(line.split()[0] for line in content.splitlines() if line)

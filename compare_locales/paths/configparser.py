@@ -2,12 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import annotations
 import errno
 import logging
 from compare_locales import mozpath
 from .project import ProjectConfig
 from .matcher import expand
 import toml
+from typing import TYPE_CHECKING, Dict, Iterator, Optional
+
+if TYPE_CHECKING:
+    from compare_locales.paths.project import ProjectConfig
 
 
 class ConfigNotFound(EnvironmentError):
@@ -16,7 +21,9 @@ class ConfigNotFound(EnvironmentError):
 
 
 class ParseContext:
-    def __init__(self, path, env, ignore_missing_includes):
+    def __init__(
+        self, path: str, env: Dict[str, str], ignore_missing_includes: bool
+    ) -> None:
         self.path = path
         self.env = env
         self.ignore_missing_includes = ignore_missing_includes
@@ -25,7 +32,12 @@ class ParseContext:
 
 
 class TOMLParser:
-    def parse(self, path, env=None, ignore_missing_includes=False):
+    def parse(
+        self,
+        path: str,
+        env: Optional[Dict[str, str]] = None,
+        ignore_missing_includes: bool = False,
+    ) -> ProjectConfig:
         ctx = self.context(
             path, env=env, ignore_missing_includes=ignore_missing_includes
         )
@@ -39,36 +51,41 @@ class TOMLParser:
         self.processLocales(ctx)
         return self.asConfig(ctx)
 
-    def context(self, path, env=None, ignore_missing_includes=False):
+    def context(
+        self,
+        path: str,
+        env: Optional[Dict[str, str]] = None,
+        ignore_missing_includes: bool = False,
+    ) -> ParseContext:
         return ParseContext(
             path,
             env if env is not None else {},
             ignore_missing_includes,
         )
 
-    def load(self, ctx):
+    def load(self, ctx: ParseContext) -> None:
         try:
             with open(ctx.path) as fin:
                 ctx.data = toml.load(fin)
         except (toml.TomlDecodeError, OSError):
             raise ConfigNotFound(ctx.path)
 
-    def processBasePath(self, ctx):
+    def processBasePath(self, ctx: ParseContext) -> None:
         assert ctx.data is not None
         ctx.pc.set_root(ctx.data.get("basepath", "."))
 
-    def processEnv(self, ctx):
+    def processEnv(self, ctx: ParseContext) -> None:
         assert ctx.data is not None
         ctx.pc.add_environment(**ctx.data.get("env", {}))
         # add parser environment, possibly overwriting file variables
         ctx.pc.add_environment(**ctx.env)
 
-    def processLocales(self, ctx):
+    def processLocales(self, ctx: ParseContext) -> None:
         assert ctx.data is not None
         if "locales" in ctx.data:
             ctx.pc.set_locales(ctx.data["locales"])
 
-    def processPaths(self, ctx):
+    def processPaths(self, ctx: ParseContext) -> None:
         assert ctx.data is not None
         for data in ctx.data.get("paths", []):
             paths = {"l10n": data["l10n"]}
@@ -80,7 +97,7 @@ class TOMLParser:
                 paths["test"] = data["test"]
             ctx.pc.add_paths(paths)
 
-    def processFilters(self, ctx):
+    def processFilters(self, ctx: ParseContext) -> None:
         assert ctx.data is not None
         for data in ctx.data.get("filters", []):
             paths = data["path"]
@@ -91,15 +108,15 @@ class TOMLParser:
                 rule["key"] = data["key"]
             ctx.pc.add_rules(rule)
 
-    def processIncludes(self, ctx):
+    def processIncludes(self, ctx: ParseContext) -> None:
         for child in self._processChild(ctx, "includes"):
             ctx.pc.add_child(child)
 
-    def processExcludes(self, ctx):
+    def processExcludes(self, ctx: ParseContext) -> None:
         for child in self._processChild(ctx, "excludes"):
             ctx.pc.exclude(child)
 
-    def _processChild(self, ctx, field):
+    def _processChild(self, ctx: ParseContext, field: str) -> Iterator[ProjectConfig]:
         assert ctx.data is not None
         if field not in ctx.data:
             return
@@ -123,5 +140,5 @@ class TOMLParser:
                 continue
             yield child
 
-    def asConfig(self, ctx):
+    def asConfig(self, ctx: ParseContext) -> ProjectConfig:
         return ctx.pc

@@ -20,25 +20,28 @@ actual entities in the reference are replaced with Placeholders, which
 are removed in a final pass over the result of merge_resources. After that,
 we also prune whitespace once more.`
 """
+from __future__ import annotations
 
 from codecs import encode
 from functools import reduce
 
 from compare_locales.merge import merge_resources, serialize_legacy_resource
 from compare_locales.parser import getParser
-from compare_locales.parser.base import (
-    Entity,
-    PlaceholderEntity,
-    Junk,
-    Whitespace,
-)
+from compare_locales.parser.base import Entity, PlaceholderEntity, Junk, Whitespace
+from typing import TYPE_CHECKING, Any, Dict, List, Union
+
+if TYPE_CHECKING:
+    from compare_locales.parser.android import DocumentWrapper, XMLWhitespace
+    from compare_locales.parser.base import Entry
 
 
 class SerializationNotSupportedError(ValueError):
     pass
 
 
-def serialize(filename, reference, old_l10n, new_data):
+def serialize(
+    filename: str, reference: List[Entry], old_l10n: List[Any], new_data: Dict[str, str]
+) -> bytes:
     """Returns a byte string of the serialized content to use.
 
     Input are a filename to create the right parser, a reference and
@@ -98,7 +101,9 @@ def sanitize_old(known_keys, old_l10n, new_data):
     ]
 
 
-def placeholder(entry):
+def placeholder(
+    entry: Entry,
+) -> Union[DocumentWrapper, PlaceholderEntity, Whitespace, XMLWhitespace]:
     if isinstance(entry, Entity):
         return PlaceholderEntity(entry.key)
     return entry

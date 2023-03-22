@@ -3,17 +3,24 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 "Mozilla l10n compare locales tool"
+from __future__ import annotations
 
 from compare_locales import paths
+from typing import TYPE_CHECKING, Dict, Iterator, List, Tuple, Type, Union
+
+if TYPE_CHECKING:
+    from compare_locales.parser.android import XMLWhitespace
+    from compare_locales.parser.base import Whitespace
+    from compare_locales.paths import File
 
 
 class Tree:
-    def __init__(self, valuetype):
+    def __init__(self, valuetype: Union[Type[list], Type[dict]]) -> None:
         self.branches = dict()
         self.valuetype = valuetype
         self.value = None
 
-    def __getitem__(self, leaf):
+    def __getitem__(self, leaf: Union[str, File]) -> List[Dict[str, str]]:
         parts = []
         if isinstance(leaf, paths.File):
             parts = []
@@ -60,7 +67,15 @@ class Tree:
 
     indent = "  "
 
-    def getContent(self, depth=0):
+    def getContent(
+        self, depth: int = 0
+    ) -> Iterator[
+        Union[
+            Tuple[int, str, Tuple[str]],
+            Tuple[int, str, Dict[str, int]],
+            Tuple[int, str, Tuple[str, str]],
+        ]
+    ]:
         """
         Returns iterator of (depth, flag, key_or_value) tuples.
         If flag is 'value', key_or_value is a value object, otherwise
@@ -73,7 +88,15 @@ class Tree:
             yield (depth, "key", key)
             yield from self.branches[key].getContent(depth + 1)
 
-    def toJSON(self):
+    def toJSON(
+        self,
+    ) -> Union[
+        Dict[str, int],
+        Dict[str, Dict[str, Dict[str, int]]],
+        List[Dict[str, str]],
+        Dict[str, List[Dict[str, str]]],
+        Dict[str, Dict[str, int]],
+    ]:
         """
         Returns this Tree as a JSON-able tree of hashes.
         Only the values need to take care that they're JSON-able.
@@ -84,7 +107,7 @@ class Tree:
             "/".join(key): self.branches[key].toJSON() for key in self.branches.keys()
         }
 
-    def getStrRows(self):
+    def getStrRows(self) -> List[str]:
         def tostr(t):
             if t[1] == "key":
                 return self.indent * t[0] + "/".join(t[2])
@@ -92,25 +115,34 @@ class Tree:
 
         return [tostr(c) for c in self.getContent()]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "\n".join(self.getStrRows())
 
 
 class AddRemove:
-    def __init__(self):
+    def __init__(self) -> None:
         self.left = self.right = None
 
-    def set_left(self, left):
+    def set_left(self, left: List[str]) -> None:
         if not isinstance(left, list):
             left = list(li for li in left)
         self.left = left
 
-    def set_right(self, right):
+    def set_right(self, right: List[str]) -> None:
         if not isinstance(right, list):
             right = list(li for li in right)
         self.right = right
 
-    def __iter__(self):
+    def __iter__(
+        self,
+    ) -> Iterator[
+        Union[
+            Tuple[str, str],
+            Tuple[str, XMLWhitespace],
+            Tuple[str, Tuple[str, int]],
+            Tuple[str, Whitespace],
+        ]
+    ]:
         # order_map stores index in left and then index in right
         order_map = {item: (i, -1) for i, item in enumerate(self.left)}
         left_items = set(order_map)

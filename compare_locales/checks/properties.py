@@ -2,12 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import annotations
 import re
 from difflib import SequenceMatcher
 
 from compare_locales.parser import PropertiesEntity
 from compare_locales import plurals
 from .base import Checker
+from typing import TYPE_CHECKING, Any, Iterator, List, Tuple, Union
+
+if TYPE_CHECKING:
+    from compare_locales.parser.dtd import DTDEntity
+    from compare_locales.parser.properties import PropertiesEntity
 
 
 class PrintfException(Exception):
@@ -28,7 +34,11 @@ class PropertiesChecker(Checker):
         r"(?P<spec>[duxXosScpfg]))?"
     )
 
-    def check(self, refEnt, l10nEnt):
+    def check(
+        self,
+        refEnt: Union[compare_locales.parser.properties.PropertiesEntity, DTDEntity],
+        l10nEnt: Union[compare_locales.parser.properties.PropertiesEntity, DTDEntity],
+    ) -> Iterator[Tuple[str, int, str, str]]:
         """Test for the different variable formats."""
         yield from super().check(refEnt, l10nEnt)
         refValue, l10nValue = refEnt.val, l10nEnt.val
@@ -66,7 +76,9 @@ class PropertiesChecker(Checker):
             yield from self.checkPrintf(refSpecs, l10nValue)
             return
 
-    def check_plural(self, refValue, l10nValue):
+    def check_plural(
+        self, refValue: str, l10nValue: str
+    ) -> Iterator[Tuple[str, int, str, str]]:
         """Check for the stringbundle plurals logic.
         The common variable pattern is #1.
         """
@@ -89,7 +101,9 @@ class PropertiesChecker(Checker):
         if lpats - pats:
             yield ("error", 0, "unreplaced variables in l10n", "plural")
 
-    def checkPrintf(self, refSpecs, l10nValue):
+    def checkPrintf(
+        self, refSpecs: List[str], l10nValue: str
+    ) -> Iterator[Tuple[str, int, str, str]]:
         try:
             l10nSpecs = self.getPrintfSpecs(l10nValue)
         except PrintfException as e:
@@ -133,7 +147,7 @@ class PropertiesChecker(Checker):
             if warn is not None:
                 yield ("warning", 0, warn, "printf")
 
-    def getPrintfSpecs(self, val):
+    def getPrintfSpecs(self, val: str) -> List[Union[Any, str]]:
         hasNumber = False
         specs = []
         for m in self.printf.finditer(val):

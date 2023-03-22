@@ -3,14 +3,28 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 "Mozilla l10n compare locales tool"
+from __future__ import annotations
 
 from collections import defaultdict
 
 from .utils import Tree
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    DefaultDict,
+    Dict,
+    List,
+    Optional,
+    Union,
+)
+
+if TYPE_CHECKING:
+    from compare_locales.paths import File
 
 
 class Observer:
-    def __init__(self, quiet=0, filter=None):
+    def __init__(self, quiet: int = 0, filter: Optional[Callable] = None) -> None:
         """Create Observer
         For quiet=1, skip per-entity missing and obsolete strings,
         for quiet=2, skip missing and obsolete files. For quiet=3,
@@ -36,13 +50,26 @@ class Observer:
         self.filter = filter
         self.error = False
 
-    def _dictify(self, d):
+    def _dictify(
+        self,
+        d: Union[DefaultDict[None, Dict[str, int]], DefaultDict[str, Dict[str, int]]],
+    ) -> Union[Dict[str, Dict[str, int]], Dict[None, Dict[str, int]]]:
         plaindict = {}
         for k, v in d.items():
             plaindict[k] = dict(v)
         return plaindict
 
-    def toJSON(self):
+    def toJSON(
+        self,
+    ) -> Dict[
+        str,
+        Union[
+            Dict[None, Dict[str, int]],
+            Dict[str, List[Dict[str, str]]],
+            Dict[str, Dict[str, int]],
+            Dict[Any, Any],
+        ],
+    ]:
         # Don't export file stats, even if we collected them.
         # Those are not part of the data we use toJSON for.
         return {
@@ -50,7 +77,7 @@ class Observer:
             "details": self.details.toJSON(),
         }
 
-    def updateStats(self, file, stats):
+    def updateStats(self, file: File, stats: Dict[str, int]) -> None:
         # in multi-project scenarios, this file might not be ours,
         # check that.
         # Pass in a dummy entity key '' to avoid getting in to
@@ -65,7 +92,7 @@ class Observer:
                 self.error = True
             self.summary[file.locale][category] += value
 
-    def notify(self, category, file, data):
+    def notify(self, category: str, file: File, data: Optional[str]) -> str:
         rv = "error"
         if category in ["missingFile", "obsoleteFile"]:
             if self.filter is not None:
@@ -98,17 +125,17 @@ class Observer:
 
 
 class ObserverList(Observer):
-    def __init__(self, quiet=0):
+    def __init__(self, quiet: int = 0) -> None:
         super().__init__(quiet=quiet)
         self.observers = []
 
     def __iter__(self):
         return iter(self.observers)
 
-    def append(self, observer):
+    def append(self, observer: Observer) -> None:
         self.observers.append(observer)
 
-    def notify(self, category, file, data):
+    def notify(self, category: str, file: File, data: Optional[str]) -> str:
         """Check observer for the found data, and if it's
         not to ignore, notify stat_observers.
         """
@@ -123,7 +150,7 @@ class ObserverList(Observer):
         assert len(rvs) == 1
         return rvs.pop()
 
-    def updateStats(self, file, stats):
+    def updateStats(self, file: File, stats: Dict[str, int]) -> None:
         """Check observer for the found data, and if it's
         not to ignore, notify stat_observers.
         """

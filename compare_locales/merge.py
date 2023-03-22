@@ -14,6 +14,7 @@ newest to the oldest resource, too.
 In merge_resources, there's an option to choose the values from oldest
 to newest instead.
 """
+from __future__ import annotations
 
 from collections import OrderedDict, defaultdict
 from codecs import encode
@@ -23,13 +24,20 @@ from functools import reduce
 from compare_locales import parser as cl
 from compare_locales.parser.base import StickyEntry
 from compare_locales.compare.utils import AddRemove
+from typing import TYPE_CHECKING, Any, List, Tuple, Union
+
+if TYPE_CHECKING:
+    from compare_locales.parser.android import XMLWhitespace
+    from compare_locales.parser.base import Entry, Whitespace
 
 
 class MergeNotSupportedError(ValueError):
     pass
 
 
-def merge_channels(name, resources):
+def merge_channels(
+    name: str, resources: Union[Tuple[bytes, bytes], Tuple[bytes, bytes, bytes]]
+) -> bytes:
     try:
         parser = cl.getParser(name)
     except UserWarning:
@@ -80,7 +88,9 @@ def merge_resources(parser, resources, keep_newest=True):
     return entities.values()
 
 
-def merge_two(newer, older, keep_newer=True):
+def merge_two(
+    newer: OrderedDict, older: OrderedDict, keep_newer: bool = True
+) -> OrderedDict:
     """Merge two OrderedDicts.
 
     The order of the result dict is determined by `newer`.
@@ -118,7 +128,11 @@ def merge_two(newer, older, keep_newer=True):
     return OrderedDict(pruned)
 
 
-def get_newer_entity(newer, older, key):
+def get_newer_entity(
+    newer: OrderedDict,
+    older: OrderedDict,
+    key: Union[str, Tuple[str, int], XMLWhitespace, Whitespace],
+) -> Any:
     entity = newer.get(key, None)
 
     # Always prefer the newer version.
@@ -128,7 +142,11 @@ def get_newer_entity(newer, older, key):
     return older.get(key)
 
 
-def get_older_entity(newer, older, key):
+def get_older_entity(
+    newer: OrderedDict,
+    older: OrderedDict,
+    key: Union[str, Tuple[str, int], XMLWhitespace, Whitespace],
+) -> Entry:
     entity = older.get(key, None)
 
     # If we don't have an older version, or it's a StickyEntry,
@@ -139,5 +157,5 @@ def get_older_entity(newer, older, key):
     return entity
 
 
-def serialize_legacy_resource(entities):
+def serialize_legacy_resource(entities: List[Entry]) -> str:
     return "".join(entity.all for entity in entities)

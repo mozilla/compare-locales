@@ -2,12 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import annotations
 from io import BytesIO
 import re
 from xml import sax
 
 from compare_locales.parser import DTDParser
 from .base import Checker, CSSCheckMixin
+
+
+from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
+
+if TYPE_CHECKING:
+    from compare_locales.parser.dtd import DTDEntity
 
 
 class DTDChecker(Checker, CSSCheckMixin):
@@ -31,14 +38,14 @@ class DTDChecker(Checker, CSSCheckMixin):
 """
     xmllist = {"amp", "lt", "gt", "apos", "quot"}
 
-    def __init__(self, extra_tests, locale=None):
+    def __init__(self, extra_tests: Optional[List[str]], locale: None = None) -> None:
         super().__init__(extra_tests, locale=locale)
         self.processContent = False
         if self.extra_tests is not None and "android-dtd" in self.extra_tests:
             self.processContent = True
         self.__known_entities = None
 
-    def known_entities(self, refValue):
+    def known_entities(self, refValue: str) -> Set[str]:
         if self.__known_entities is None and self.reference is not None:
             self.__known_entities = set()
             for ent in self.reference.values():
@@ -49,7 +56,7 @@ class DTDChecker(Checker, CSSCheckMixin):
             else self.entities_for_value(refValue)
         )
 
-    def entities_for_value(self, value):
+    def entities_for_value(self, value: str) -> Set[str]:
         reflist = {m.group(1) for m in self.eref.finditer(value)}
         reflist -= self.xmllist
         return reflist
@@ -58,7 +65,7 @@ class DTDChecker(Checker, CSSCheckMixin):
     class TextContent(sax.handler.ContentHandler):
         textcontent = ""
 
-        def characters(self, content):
+        def characters(self, content: str) -> None:
             self.textcontent += content
 
     defaulthandler = sax.handler.ContentHandler()
@@ -69,7 +76,11 @@ class DTDChecker(Checker, CSSCheckMixin):
     lengthPattern = "%s(em|px|ch|cm|in)" % numPattern
     length = re.compile("^%s$" % lengthPattern)
 
-    def check(self, refEnt, l10nEnt):
+    def check(
+        self, refEnt: DTDEntity, l10nEnt: DTDEntity
+    ) -> Iterator[
+        Union[Tuple[str, int, str, str], Tuple[str, Tuple[int, int], str, str]]
+    ]:
         """Try to parse the refvalue inside a dummy element, and keep
         track of entities that we need to define to make that work.
 
@@ -190,7 +201,7 @@ class DTDChecker(Checker, CSSCheckMixin):
 
     quoted = re.compile("(?P<q>[\"']).*(?P=q)$")
 
-    def unicode_escape(self, str):
+    def unicode_escape(self, str: str) -> None:
         """Helper method to try to decode all unicode escapes in a string.
 
         This code uses the standard python decode for unicode-escape, but
@@ -215,7 +226,7 @@ class DTDChecker(Checker, CSSCheckMixin):
             args[3] = i + len(badstring)
             raise UnicodeDecodeError(*args)
 
-    def processAndroidContent(self, val):
+    def processAndroidContent(self, val: str) -> Iterator[Tuple[str, int, str, str]]:
         """Check for the string values that Android puts into an XML container.
 
         http://developer.android.com/guide/topics/resources/string-resource.html#FormattingAndStyling  # noqa

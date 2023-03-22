@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 "Mozilla l10n compare locales tool"
+from __future__ import annotations
 
 import codecs
 import os
@@ -16,13 +17,24 @@ from compare_locales.keyedtuple import KeyedTuple
 
 from .observer import ObserverList
 from .utils import AddRemove
+from compare_locales.parser.base.Parser import Context
+from compare_locales.parser.defines.DefinesParser import Context
+from typing import TYPE_CHECKING, Any, List, Optional, Union
+
+if TYPE_CHECKING:
+    from compare_locales.parser.base import Entity, Junk, Parser
+    from compare_locales.parser.defines import DefinesParser
+    from compare_locales.parser.dtd import DTDEntity
+    from compare_locales.parser.fluent import FluentMessage, FluentTerm
+    from compare_locales.parser.properties import PropertiesEntity
+    from compare_locales.paths import File
 
 
 class ContentComparer:
     keyRE = re.compile("[kK]ey")
     nl = re.compile("\n", re.M)
 
-    def __init__(self, quiet=0):
+    def __init__(self, quiet: int = 0) -> None:
         """Create a ContentComparer.
         observer is usually a instance of Observer. The return values
         of the notify method are used to control the handling of missing
@@ -30,22 +42,26 @@ class ContentComparer:
         """
         self.observers = ObserverList(quiet=quiet)
 
-    def create_merge_dir(self, merge_file):
+    def create_merge_dir(self, merge_file: str) -> None:
         outdir = mozpath.dirname(merge_file)
         os.makedirs(outdir, exist_ok=True)
 
     def merge(
         self,
-        ref_entities,
-        ref_file,
-        l10n_file,
-        merge_file,
-        missing,
-        skips,
-        ctx,
-        capabilities,
-        encoding,
-    ):
+        ref_entities: KeyedTuple,
+        ref_file: File,
+        l10n_file: File,
+        merge_file: str,
+        missing: List[Union[Any, str]],
+        skips: List[
+            Union[
+                Any, PropertiesEntity, FluentMessage, compare_locales.parser.base.Junk
+            ]
+        ],
+        ctx: Optional[Union[Context, Context]],
+        capabilities: int,
+        encoding: Optional[str],
+    ) -> None:
         """Create localized file in merge dir
 
         `ref_entities` and `ref_map` are the parser result of the
@@ -132,7 +148,7 @@ class ContentComparer:
         if f is not None:
             f.close()
 
-    def remove(self, ref_file, l10n, merge_file):
+    def remove(self, ref_file: File, l10n: File, merge_file: str) -> None:
         """Obsolete l10n file.
 
         Copy to merge stage if we can.
@@ -150,7 +166,9 @@ class ContentComparer:
             None,
         )
 
-    def compare(self, ref_file, l10n, merge_file, extra_tests=None):
+    def compare(
+        self, ref_file: File, l10n: File, merge_file: str, extra_tests: None = None
+    ) -> None:
         try:
             p = parser.getParser(ref_file.file)
         except UserWarning:
@@ -286,7 +304,7 @@ class ContentComparer:
         self.observers.updateStats(l10n, stats)
         pass
 
-    def add(self, orig, missing, merge_file):
+    def add(self, orig: File, missing: File, merge_file: str) -> None:
         """Add missing localized file."""
         f = orig
         try:
@@ -333,10 +351,35 @@ class ContentComparer:
             missing_w += e.count_words()
         self.observers.updateStats(missing, {"missing_w": missing_w})
 
-    def doUnchanged(self, entity):
+    def doUnchanged(
+        self,
+        entity: Union[
+            compare_locales.parser.base.Entity,
+            PropertiesEntity,
+            FluentMessage,
+            DTDEntity,
+        ],
+    ) -> None:
         # overload this if needed
         pass
 
-    def doChanged(self, file, ref_entity, l10n_entity):
+    def doChanged(
+        self,
+        file: File,
+        ref_entity: Union[
+            FluentTerm,
+            FluentMessage,
+            DTDEntity,
+            compare_locales.parser.base.Entity,
+            PropertiesEntity,
+        ],
+        l10n_entity: Union[
+            FluentTerm,
+            FluentMessage,
+            DTDEntity,
+            compare_locales.parser.base.Entity,
+            PropertiesEntity,
+        ],
+    ) -> None:
         # overload this if needed
         pass

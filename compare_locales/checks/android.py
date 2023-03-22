@@ -2,17 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import annotations
 import re
 from xml.dom import minidom
 
 from .base import Checker
-from ..parser.android import textContent
+from ..parser.android import AndroidEntity, textContent
+from typing import Any, Dict, Iterator, List, Tuple, Union
 
 
 class AndroidChecker(Checker):
     pattern = re.compile("(.*)?strings.*\\.xml$")
 
-    def check(self, refEnt, l10nEnt):
+    def check(self, refEnt: AndroidEntity, l10nEnt: AndroidEntity) -> None:
         """Given the reference and localized Entities, performs checks.
 
         This is a generator yielding tuples of
@@ -34,7 +36,9 @@ class AndroidChecker(Checker):
             return
         yield from self.check_string([refNode], l10nEnt)
 
-    def check_string(self, refs, l10nEnt):
+    def check_string(
+        self, refs: List[minidom.Element], l10nEnt: AndroidEntity
+    ) -> Iterator[Tuple[str, int, str, str]]:
         """Check a single string literal against a list of references.
 
         There should be multiple nodes given for <plurals> or <string-array>.
@@ -64,14 +68,14 @@ class AndroidChecker(Checker):
         if params:
             yield from check_params(params, l10nEnt.val)
 
-    def not_translatable(self, *nodes):
+    def not_translatable(self, *nodes) -> bool:
         return any(
             node.hasAttribute("translatable")
             and node.getAttribute("translatable") == "false"
             for node in nodes
         )
 
-    def no_at_string(self, *ref_nodes):
+    def no_at_string(self, *ref_nodes) -> bool:
         """Android allows to reference other strings by using
         @string/identifier
         instead of the actual value. Those references don't belong into
@@ -79,7 +83,7 @@ class AndroidChecker(Checker):
         """
         return any(textContent(node).startswith("@string/") for node in ref_nodes)
 
-    def non_simple_data(self, node):
+    def non_simple_data(self, node: minidom.Element) -> bool:
         """Only allow single text nodes, or, a single CDATA node
         surrounded by whitespace.
         """
@@ -110,7 +114,7 @@ class AndroidChecker(Checker):
 silencer = re.compile(r'\\.|""')
 
 
-def check_apostrophes(string):
+def check_apostrophes(string: str) -> Iterator[Tuple[str, int, str, str]]:
     """Check Android logic for quotes and apostrophes.
 
     If you have an apostrophe (') in your string, you must either escape it
@@ -136,7 +140,9 @@ def check_apostrophes(string):
             yield ("error", m.start(), "Apostrophe must be escaped", "android")
 
 
-def get_params(refs):
+def get_params(
+    refs: List[Union[minidom.Element, str]]
+) -> Union[Tuple[Dict[int, str], List[Any]], Tuple[Dict[Any, Any], List[Any]]]:
     """Get printf parameters and internal errors.
 
     Returns a sparse map of positions to formatter, and a list
@@ -169,7 +175,9 @@ def get_params(refs):
     return params, errors
 
 
-def check_params(params, string):
+def check_params(
+    params: Dict[int, str], string: str
+) -> Iterator[Tuple[str, int, str, str]]:
     """Compare the printf parameters in the given string to the reference
     parameters.
 
