@@ -7,7 +7,18 @@ from __future__ import annotations
 import itertools
 import os
 import re
-from typing import Dict, Iterator, List, Optional, Union
+from typing import (
+    Dict,
+    Generic,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    TypeVar,
+    Union,
+    cast,
+    overload,
+)
 
 from .. import mozpath
 
@@ -18,8 +29,10 @@ ANDROID_STANDARD_MAP = {
     legacy: standard for standard, legacy in ANDROID_LEGACY_MAP.items()
 }
 
+StrType = TypeVar("StrType", str, bytes)
 
-class Matcher:
+
+class Matcher(Generic[StrType]):
     """Path pattern matcher
     Supports path matching similar to mozpath.match(), but does
     not match trailing file paths without trailing wildcards.
@@ -28,6 +41,37 @@ class Matcher:
     the own matches in a path on a different Matcher. compare-locales
     uses that to transform l10n and en-US paths back and forth.
     """
+
+    env: EnvType
+
+    @overload
+    def __new__(cls, other: Matcher[StrType]) -> Matcher[StrType]:
+        ...
+
+    @overload
+    def __new__(
+        cls,
+        pattern: Union[str, Matcher],
+        env: Dict[str, str] = {},
+        root: Optional[str] = None,
+        encoding: None = None,
+    ) -> Matcher[str]:
+        ...
+
+    @overload
+    def __new__(
+        cls,
+        pattern: Union[str, Matcher],
+        env: Dict[str, str] = {},
+        root: Optional[str] = None,
+        encoding: Optional[str] = None,
+    ) -> Matcher[bytes]:
+        ...
+
+    def __new__(
+        cls, *args, **kwargs
+    ) -> Union[Matcher[str], Matcher[bytes], Matcher[StrType]]:
+        return super().__new__(cls)  # type: ignore
 
     def __init__(
         self,
@@ -38,7 +82,7 @@ class Matcher:
     ) -> None:
         """Create regular expression similar to mozpath.match()."""
         parser = PatternParser()
-        real_env = {k: parser.parse(v) for k, v in env.items()}
+        real_env: EnvType = {k: parser.parse(v) for k, v in env.items()}
         self._cached_re = None
         if root is not None:
             # make sure that our root is fully expanded and ends with /
@@ -60,33 +104,33 @@ class Matcher:
             self.pattern.root = root
         self.encoding = encoding
 
-    def with_env(self, environ: Dict[str, str]) -> "Matcher":
+    def with_env(self, environ: Dict[str, str]) -> Matcher[str]:
         return Matcher(self, environ)
 
     @property
-    def prefix(self) -> Union[str, bytes]:
+    def prefix(self) -> StrType:
         subpattern = Pattern(self.pattern[: self.pattern.prefix_length])
         subpattern.root = self.pattern.root
         prefix = subpattern.expand(self.env)
         if self.encoding is not None:
             prefix = prefix.encode(self.encoding)
-        return prefix
+        return cast(StrType, prefix)
 
-    def match(
-        self, path: Union[str, bytes]
-    ) -> Optional[Union[Dict[str, Optional[str]], Dict[str, str]]]:
+    def match(self, path: StrType) -> Union[Dict[str, str], None]:
         """Test the given path against this matcher and its environment.
 
         Return None if there's no match, and the dictionary of matched
         variables in this matcher if there's a match.
         """
-        self._cache_regex()
-        m = self._cached_re.match(path)
+        m = self._cached_regex().match(path)  # type: ignore
         if m is None:
             return None
-        d = m.groupdict()
+        d = cast(Dict[str, str], m.groupdict())
         if self.encoding is not None:
-            d = {key: value.decode(self.encoding) for key, value in d.items()}
+            d = {
+                key: cast(bytes, value).decode(self.encoding)
+                for key, value in d.items()
+            }
         if "android_locale" in d and "locale" not in d:
             # map android_locale to locale code
             locale = d["android_locale"]
@@ -101,17 +145,18 @@ class Matcher:
             d["locale"] = locale
         return d
 
-    def _cache_regex(self) -> None:
-        if self._cached_re is not None:
-            return
-        pattern = self.pattern.regex_pattern(self.env) + "$"
-        if self.encoding is not None:
-            pattern = pattern.encode(self.encoding)
-        self._cached_re = re.compile(pattern)
+    _cached_re: Union[re.Pattern[StrType], None]
 
-    def sub(
-        self, other: "Matcher", path: Union[str, bytes]
-    ) -> Optional[Union[str, bytes]]:
+    def _cached_regex(self) -> re.Pattern[StrType]:
+        if self._cached_re is None:
+            pattern = self.pattern.regex_pattern(self.env) + "$"
+            if self.encoding is not None:
+                pattern = pattern.encode(self.encoding)
+                self._cached_re = re.compile(pattern)  # type: ignore
+            self._cached_re = re.compile(pattern)  # type: ignore
+        return self._cached_re
+
+    def sub(self, other: Matcher, path: StrType) -> Optional[StrType]:
         """
         Replace the wildcard matches in this pattern into the
         pattern of the other Match object.
@@ -125,12 +170,12 @@ class Matcher:
             for key, value in m.items()
         )
         env.update(other.env)
-        path = other.pattern.expand(env)
+        path_ = other.pattern.expand(env)
         if self.encoding is not None:
-            path = path.encode(self.encoding)
-        return path
+            path_ = path_.encode(self.encoding)
+        return cast(StrType, path_)
 
-    def concat(self, other: Union[str, Matcher]) -> "Matcher":
+    def concat(self, other: Union[str, Matcher]) -> Matcher:
         """Concat two Matcher objects.
 
         The intent is to create one Matcher with variable substitutions that
@@ -138,17 +183,18 @@ class Matcher:
         This doesn't do path separator logic, though, and it won't resolve
         parent directories.
         """
-        if not isinstance(other, Matcher):
-            other_matcher = Matcher(other)
-        else:
-            other_matcher = other
+        other_matcher = other if isinstance(other, Matcher) else Matcher(other)
         other_pattern = other_matcher.pattern
         if other_pattern.root is not None:
             raise ValueError("Other matcher must not be rooted")
         result = Matcher(self)
         result.pattern += other_pattern
         if self.pattern.prefix_length == len(self.pattern):
-            result.pattern.prefix_length += other_pattern.prefix_length
+            if result.pattern.prefix_length:
+                if other_pattern.prefix_length:
+                    result.pattern.prefix_length += other_pattern.prefix_length
+            else:
+                result.pattern.prefix_length = other_pattern.prefix_length
         result.env.update(other_matcher.env)
         return result
 
@@ -160,10 +206,10 @@ class Matcher:
             type(self).__name__, self.pattern, self.env, self.pattern.root
         )
 
-    def __ne__(self, other: "Matcher") -> bool:
+    def __ne__(self, other: Matcher) -> bool:
         return not (self == other)
 
-    def __eq__(self, other: "Matcher") -> bool:
+    def __eq__(self, other: Matcher) -> bool:
         """Equality for Matcher.
 
         The equality for Matchers is defined to have the same pattern,
@@ -185,7 +231,7 @@ class Matcher:
         return True
 
 
-def expand(root: str, path: str, env: Dict[str, str]) -> str:
+def expand(root: Optional[str], path: str, env: Dict[str, str]) -> str:
     """Expand a given path relative to the given root,
     using the given env to resolve variables.
 
@@ -224,9 +270,9 @@ class Pattern(list, Node):
     ) -> None:
         list.__init__(self, iterable)
         self.root = getattr(iterable, "root", None)
-        self.prefix_length = getattr(iterable, "prefix_length", None)
+        self.prefix_length: Optional[int] = getattr(iterable, "prefix_length", None)
 
-    def regex_pattern(self, env: Dict[str, Pattern]) -> str:
+    def regex_pattern(self, env: EnvType) -> str:
         root = ""
         if self.root is not None:
             # make sure we're not hiding a full path
@@ -235,9 +281,7 @@ class Pattern(list, Node):
                 root = re.escape(self.root)
         return root + "".join(child.regex_pattern(env) for child in self)
 
-    def expand(
-        self, env: Dict[str, Union[Pattern, Literal]], raise_missing: bool = False
-    ) -> str:
+    def expand(self, env: EnvType, raise_missing: bool = False) -> str:
         root = ""
         if self.root is not None:
             # make sure we're not hiding a full path
@@ -247,7 +291,7 @@ class Pattern(list, Node):
         return root + "".join(self._expand_children(env, raise_missing))
 
     def _expand_children(
-        self, env: Dict[str, Union[Pattern, Literal]], raise_missing: bool
+        self, env: EnvType, raise_missing: bool
     ) -> Iterator[Union[str, Literal]]:
         # Helper iterator to convert Exception to a stopped iterator
         for child in self:
@@ -267,16 +311,17 @@ class Pattern(list, Node):
         if other.__class__ == list:
             # good for tests and debugging
             return True
-        return self.root == other.root and self.prefix_length == other.prefix_length
+        return (
+            self.root == cast(Pattern, other).root
+            and self.prefix_length == cast(Pattern, other).prefix_length
+        )
 
 
 class Literal(str, Node):
-    def regex_pattern(self, env: Dict[str, Pattern]) -> str:
+    def regex_pattern(self, env: EnvType) -> str:
         return re.escape(self)
 
-    def expand(
-        self, env: Dict[str, Union[Pattern, Literal]], raise_missing: bool = False
-    ) -> "Literal":
+    def expand(self, env: EnvType, raise_missing: bool = False) -> Literal:
         return self
 
 
@@ -285,21 +330,19 @@ class Variable(Node):
         self.name = name
         self.repeat = repeat
 
-    def regex_pattern(self, env: Dict[str, Pattern]) -> str:
+    def regex_pattern(self, env: EnvType) -> str:
         if self.repeat:
             return f"(?P={self.name})"
         return f"(?P<{self.name}>{self._pattern_from_env(env)})"
 
-    def _pattern_from_env(self, env: Dict[str, Pattern]) -> str:
+    def _pattern_from_env(self, env: EnvType) -> str:
         if self.name in env:
             # make sure we match the value in the environment
             return env[self.name].regex_pattern(self._no_cycle(env))
         # match anything, including path segments
         return ".+?"
 
-    def expand(
-        self, env: Dict[str, Union[Pattern, Literal]], raise_missing: bool = False
-    ) -> Union[str, Literal]:
+    def expand(self, env: EnvType, raise_missing: bool = False) -> Union[str, Literal]:
         """Create a string for this Variable.
 
         This expansion happens recursively. We avoid recusion loops
@@ -310,9 +353,7 @@ class Variable(Node):
             raise MissingEnvironment
         return env[self.name].expand(self._no_cycle(env), raise_missing=raise_missing)
 
-    def _no_cycle(
-        self, env: Dict[str, Union[Pattern, Literal]]
-    ) -> Dict[str, Union[Pattern, Literal]]:
+    def _no_cycle(self, env: EnvType) -> EnvType:
         """Remove our variable name from the environment.
         That way, we can't create cyclic references.
         """
@@ -346,13 +387,13 @@ class AndroidLocale(Variable):
         self.name = "android_locale"
         self.repeat = repeat
 
-    def _pattern_from_env(self, env: Dict[str, Pattern]) -> str:
+    def _pattern_from_env(self, env: EnvType) -> str:
         android_locale = self._get_android_locale(env)
         if android_locale is not None:
             return re.escape(android_locale)
         return ".+?"
 
-    def expand(self, env: Dict[str, Pattern], raise_missing: bool = False) -> str:
+    def expand(self, env: EnvType, raise_missing: bool = False) -> str:
         """Create a string for this Variable.
 
         This expansion happens recursively. We avoid recusion loops
@@ -364,7 +405,7 @@ class AndroidLocale(Variable):
             raise MissingEnvironment
         return android_locale
 
-    def _get_android_locale(self, env: Dict[str, Pattern]) -> Optional[str]:
+    def _get_android_locale(self, env: EnvType) -> Optional[str]:
         if "locale" not in env:
             return None
         android = bcp47 = env["locale"].expand(self._no_cycle(env))
@@ -385,13 +426,11 @@ class Star(Node):
     def __init__(self, number: int) -> None:
         self.number = number
 
-    def regex_pattern(self, env: Dict[str, Pattern]) -> str:
+    def regex_pattern(self, env: EnvType) -> str:
         return f"(?P<s{self.number}>[^/]*)"
 
-    def expand(
-        self, env: Dict[str, Union[Pattern, Literal]], raise_missing: bool = False
-    ) -> Literal:
-        return env["s%d" % self.number]
+    def expand(self, env: EnvType, raise_missing: bool = False) -> Literal:
+        return cast(Literal, env["s%d" % self.number])
 
     def __repr__(self):
         return type(self).__name__
@@ -399,7 +438,7 @@ class Star(Node):
     def __ne__(self, other):
         return not (self == other)
 
-    def __eq__(self, other: Union[Star, Starstar]) -> bool:
+    def __eq__(self, other: Star) -> bool:
         if other.__class__ is not self.__class__:
             return False
         return self.number == other.number
@@ -410,13 +449,13 @@ class Starstar(Star):
         self.number = number
         self.suffix = suffix
 
-    def regex_pattern(self, env: Dict[str, Pattern]) -> str:
+    def regex_pattern(self, env: EnvType) -> str:
         return f"(?P<s{self.number}>.+{self.suffix})?"
 
     def __ne__(self, other):
         return not (self == other)
 
-    def __eq__(self, other: "Starstar") -> bool:
+    def __eq__(self, other: Starstar) -> bool:
         if not super().__eq__(other):
             return False
         return self.suffix == other.suffix
@@ -435,9 +474,10 @@ class PatternParser:
     def __init__(self) -> None:
         # Not really initializing anything, just making room for our
         # result and state members.
-        self.pattern = None
-        self._stargroup = self._cursor = None
-        self._known_vars = None
+        self.pattern = cast(Pattern, None)
+        self._cursor = 0
+        self._stargroup = cast(itertools.count, None)
+        self._known_vars = cast(Set[str], None)
 
     def parse(self, pattern: str) -> Pattern:
         if isinstance(pattern, Pattern):
@@ -458,24 +498,26 @@ class PatternParser:
             self.pattern.prefix_length = len(self.pattern)
         return self.pattern
 
-    def handle(self, match: re.Match) -> None:
+    def handle(self, match: re.Match[str]) -> None:
         if match.group("variable"):
             self.variable(match)
         else:
             self.wildcard(match)
         self._cursor = match.end()
 
-    def variable(self, match: re.Match) -> None:
+    def variable(self, match: re.Match[str]) -> None:
         varname = match.group("varname")
+        repeat = varname in self._known_vars
         # Special case Android locale code matching.
         # It's kinda sad, but true.
-        if varname == "android_locale":
-            self.pattern.append(AndroidLocale(varname in self._known_vars))
-        else:
-            self.pattern.append(Variable(varname, varname in self._known_vars))
+        self.pattern.append(
+            AndroidLocale(repeat)
+            if varname == "android_locale"
+            else Variable(varname, repeat)
+        )
         self._known_vars.add(varname)
 
-    def wildcard(self, match: re.Match) -> None:
+    def wildcard(self, match: re.Match[str]) -> None:
         # wildcard found, stop prefix
         if self.pattern.prefix_length is None:
             self.pattern.prefix_length = len(self.pattern)
@@ -486,3 +528,6 @@ class PatternParser:
         else:
             # **
             self.pattern.append(Starstar(wildcard, match.group("suffix")))
+
+
+EnvType = Dict[str, Union[Pattern, Literal]]

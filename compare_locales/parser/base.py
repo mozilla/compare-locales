@@ -8,18 +8,10 @@ import bisect
 import codecs
 import re
 from collections import Counter
-from typing import TYPE_CHECKING, Any, Iterator, Optional, Tuple, Union
+from typing import Iterator, List, Literal, Optional, Tuple, Union, overload
 
 from ..keyedtuple import KeyedTuple
 from ..paths import File
-
-if TYPE_CHECKING:
-    from .android import XMLComment, XMLWhitespace
-    from .defines import DefinesParser
-    from .dtd import DTDEntity, DTDParser
-
-__constructors = []
-
 
 # The allowed capabilities for the Parsers.  They define the exact strategy
 # used by ContentComparer.merge.
@@ -52,14 +44,12 @@ class Entry:
 
     def __init__(
         self,
-        ctx: Optional[Union[Parser.Context, DefinesParser.Context]],
-        pre_comment: Optional[
-            Union[XMLComment, DTDParser.Comment, DefinesParser.Comment]
-        ],
-        inner_white: Optional[Union[XMLWhitespace, Whitespace]],
-        span: Optional[Union[Tuple[None, None], Tuple[int, int]]],
-        key_span: Optional[Union[Tuple[None, None], Tuple[int, int]]],
-        val_span: Optional[Union[Tuple[None, None], Tuple[int, int]]],
+        ctx: Parser.Context,
+        pre_comment: Optional[Comment],
+        inner_white: Optional[Whitespace],
+        span: Tuple[int, int],
+        key_span: Tuple[int, int],
+        val_span: Tuple[int, int],
     ) -> None:
         self.ctx = ctx
         self.span = span
@@ -110,13 +100,13 @@ class Entry:
         return self.ctx.contents[self.key_span[0] : self.key_span[1]]
 
     @property
-    def raw_val(self) -> str:
+    def raw_val(self) -> Union[str, None]:
         if self.val_span is None:
             return None
         return self.ctx.contents[self.val_span[0] : self.val_span[1]]
 
     @property
-    def val(self) -> str:
+    def val(self) -> Union[str, None]:
         return self.raw_val
 
     def __repr__(self) -> str:
@@ -129,11 +119,14 @@ class Entry:
         """Count the words in an English string.
         Replace a couple of xml markup to make that safer, too.
         """
-        value = self.re_br.sub("\n", self.val)
+        value = self.val
+        if value is None:
+            return 0
+        value = self.re_br.sub("\n", value)
         value = self.re_sgml.sub("", value)
         return len(value.split())
 
-    def equals(self, other: Union[Entity, DTDEntity, LiteralEntity]) -> bool:
+    def equals(self, other: Entity) -> bool:
         return self.key == other.key and self.val == other.val
 
 
@@ -155,11 +148,11 @@ class Entity(Entry):
         """
         return True
 
-    def unwrap(self):
+    def unwrap(self) -> Optional[str]:
         """Return the literal value to be used by tools."""
         return self.raw_val
 
-    def wrap(self, raw_val):
+    def wrap(self, raw_val: str) -> LiteralEntity:
         """Create literal entity based on reference and raw value.
 
         This is used by the serialization logic.
@@ -180,7 +173,7 @@ class LiteralEntity(Entity):
     """
 
     def __init__(self, key: str, val: str, all: str) -> None:
-        super().__init__(None, None, None, None, None, None)
+        super().__init__(None, None, None, None, None, None)  # type: ignore
         self._key = key
         self._raw_val = val
         self._all = all
@@ -190,7 +183,7 @@ class LiteralEntity(Entity):
         return self._key
 
     @property
-    def raw_val(self):
+    def raw_val(self) -> str:
         return self._raw_val
 
     @property
@@ -206,16 +199,14 @@ class PlaceholderEntity(LiteralEntity):
 
 
 class Comment(Entry):
-    def __init__(
-        self, ctx: Union[Parser.Context, DefinesParser.Context], span: Tuple[int, int]
-    ) -> None:
+    def __init__(self, ctx: Parser.Context, span: Tuple[int, int]) -> None:
         self.ctx = ctx
         self.span = span
-        self.val_span = None
-        self._val_cache = None
+        self.val_span = None  # type:ignore
+        self._val_cache: Optional[str] = None
 
     @property
-    def key(self):
+    def key(self) -> None:  # type:ignore[override]
         return None
 
     @property
@@ -256,7 +247,7 @@ class Junk:
 
     def __init__(
         self,
-        ctx: Optional[Union[Parser.Context, DefinesParser.Context]],
+        ctx: Parser.Context,
         span: Tuple[int, int],
     ) -> None:
         self.ctx = ctx
@@ -304,9 +295,10 @@ class Whitespace(Entry):
     if allowed
     """
 
-    def __init__(
-        self, ctx: Union[Parser.Context, DefinesParser.Context], span: Tuple[int, int]
-    ) -> None:
+    raw_val: str
+    val: str
+
+    def __init__(self, ctx: Parser.Context, span: Tuple[int, int]) -> None:
         self.ctx = ctx
         self.span = self.key_span = self.val_span = span
 
@@ -320,20 +312,24 @@ class BadEntity(ValueError):
     pass
 
 
+Comment_ = Comment
+
+
 class Parser:
     capabilities = CAN_SKIP | CAN_MERGE
     reWhitespace = re.compile("[ \t\r\n]+", re.M)
     Comment = Comment
     # NotImplementedError would be great, but also tedious
-    reKey = reComment = None
+    reKey: re.Pattern[str] = None  # type: ignore
+    reComment: re.Pattern[str] = None  # type: ignore
 
     class Context:
         "Fixture for content and line numbers"
 
-        def __init__(self, contents):
+        def __init__(self, contents: str):
             self.contents = contents
             # cache split lines
-            self._lines = None
+            self._lines: Optional[List[int]] = None
 
         def linecol(self, position: int) -> Tuple[int, int]:
             "Returns 1-based line and column numbers."
@@ -350,7 +346,7 @@ class Parser:
     def __init__(self) -> None:
         if not hasattr(self, "encoding"):
             self.encoding = "utf-8"
-        self.ctx = None
+        self.ctx: Optional[Parser.Context] = None
 
     def readFile(self, file: Union[str, File]) -> None:
         """Read contents from disk, with universal_newlines"""
@@ -366,8 +362,8 @@ class Parser:
 
         contents are in native encoding, but with normalized line endings.
         """
-        (contents, _) = codecs.getdecoder(self.encoding)(contents, "replace")
-        self.readUnicode(contents)
+        (string, _) = codecs.getdecoder(self.encoding)(contents, "replace")
+        self.readUnicode(string)
 
     def readUnicode(self, contents: str) -> None:
         self.ctx = self.Context(contents)
@@ -375,10 +371,22 @@ class Parser:
     def parse(self) -> KeyedTuple:
         return KeyedTuple(self)
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator[Union[Entity, Junk]]:
         return self.walk(only_localizable=True)
 
-    def walk(self, only_localizable: bool = False) -> Iterator[Any]:
+    @overload
+    def walk(self, only_localizable: Literal[True]) -> Iterator[Union[Entity, Junk]]:
+        ...
+
+    @overload
+    def walk(
+        self, only_localizable: bool = False
+    ) -> Iterator[Union[Entity, Junk, Comment_, Whitespace]]:
+        ...
+
+    def walk(
+        self, only_localizable: bool = False
+    ) -> Iterator[Union[Entity, Junk, Comment_, Whitespace]]:
         if not self.ctx:
             # loading file failed, or we just didn't load anything
             return
@@ -389,16 +397,14 @@ class Parser:
         while next_offset < len(contents):
             entity = self.getNext(ctx, next_offset)
 
-            if isinstance(entity, (Entity, Junk)):
-                yield entity
-            elif not only_localizable:
+            if isinstance(entity, (Entity, Junk)) or not only_localizable:
                 yield entity
 
             next_offset = entity.span[1]
 
     def getNext(
         self, ctx: Parser.Context, offset: int
-    ) -> Union[Junk, DTDEntity, DTDParser.Comment, Whitespace]:
+    ) -> Union[Entity, Junk, Comment_, Whitespace]:
         """Parse the next fragment.
 
         Parse comments first, then white-space.
@@ -448,11 +454,11 @@ class Parser:
 
     def getJunk(
         self,
-        ctx: Union[Parser.Context, DefinesParser.Context],
+        ctx: Parser.Context,
         offset: int,
-        *expressions,
+        *expressions: re.Pattern[str],
     ) -> Junk:
-        junkend = None
+        junkend: Optional[int] = None
         for exp in expressions:
             m = exp.search(ctx.contents, offset)
             if m:
@@ -461,9 +467,9 @@ class Parser:
 
     def createEntity(
         self,
-        ctx: DefinesParser.Context,
-        m: re.Match,
-        current_comment: Optional[DefinesParser.Comment],
+        ctx: Parser.Context,
+        m: re.Match[str],
+        current_comment: Optional[Comment_],
         white_space: Optional[Whitespace],
     ) -> Entity:
         return Entity(
@@ -471,7 +477,7 @@ class Parser:
         )
 
     @classmethod
-    def findDuplicates(cls, entities: KeyedTuple) -> None:
+    def findDuplicates(cls, entities: KeyedTuple) -> Iterator[str]:
         found = Counter(entity.key for entity in entities)
         for entity_id, cnt in found.items():
             if cnt > 1:

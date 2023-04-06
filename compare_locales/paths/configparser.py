@@ -6,13 +6,13 @@ from __future__ import annotations
 
 import errno
 import logging
-from typing import Dict, Iterator, Optional
+from typing import Any, Dict, Iterator, Optional, Union
 
 import toml
 
 from .. import mozpath
 from .matcher import expand
-from .project import ProjectConfig
+from .project import PathDictionary, ProjectConfig
 
 
 class ConfigNotFound(EnvironmentError):
@@ -21,6 +21,8 @@ class ConfigNotFound(EnvironmentError):
 
 
 class ParseContext:
+    data: Union[Dict[str, Any], None]
+
     def __init__(
         self, path: str, env: Dict[str, str], ignore_missing_includes: bool
     ) -> None:
@@ -88,7 +90,7 @@ class TOMLParser:
     def processPaths(self, ctx: ParseContext) -> None:
         assert ctx.data is not None
         for data in ctx.data.get("paths", []):
-            paths = {"l10n": data["l10n"]}
+            paths: PathDictionary = {"l10n": data["l10n"]}
             if "locales" in data:
                 paths["locales"] = data["locales"]
             if "reference" in data:

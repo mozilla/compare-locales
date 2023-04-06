@@ -40,7 +40,7 @@ def abspath(path: str) -> str:
     return normsep(os.path.abspath(path))
 
 
-def join(*paths) -> str:
+def join(*paths: str) -> str:
     return normsep(os.path.join(*paths))
 
 
@@ -73,7 +73,7 @@ def split(path: str) -> List[str]:
     return normsep(path).split("/")
 
 
-def basedir(path: str, bases: List[str]) -> str:
+def basedir(path: str, bases: List[str]) -> str:  # type: ignore
     """
     Given a list of directories (`bases`), return which one contains the given
     path. If several matches are found, the deepest base directory is returned.

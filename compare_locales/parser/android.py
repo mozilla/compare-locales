@@ -36,8 +36,8 @@ class AndroidEntity(Entity):
     def __init__(
         self,
         ctx: Parser.Context,
-        pre_comment: "XMLComment",
-        white_space: "XMLWhitespace",
+        pre_comment: Union[XMLComment, None],
+        white_space: Union[XMLWhitespace, None],
         node: minidom.Element,
         all: str,
         key: str,
@@ -47,7 +47,7 @@ class AndroidEntity(Entity):
         # fill out superclass as good as we can right now
         # most span can get modified at endElement
         super().__init__(
-            ctx, pre_comment, white_space, (None, None), (None, None), (None, None)
+            ctx, pre_comment, white_space, (None, None), (None, None), (None, None)  # type: ignore
         )
         self.node = node
         self._all_literal = all
@@ -87,7 +87,7 @@ class AndroidEntity(Entity):
             for child in clone.childNodes:
                 if child.nodeType == Node.CDATA_SECTION_NODE:
                     break
-        child.data = raw_val
+        child.data = raw_val  # type: ignore
         all = []
         if self.pre_comment is not None:
             all.append(self.pre_comment.all)
@@ -150,7 +150,7 @@ class DocumentWrapper(NodeMixin, StickyEntry):
 
 class XMLJunk(Junk):
     def __init__(self, all: str) -> None:
-        super().__init__(None, (0, 0))
+        super().__init__(None, (0, 0))  # type: ignore
         self._all_literal = all
 
     @property
@@ -280,7 +280,7 @@ class AndroidParser(Parser):
     ) -> Union[AndroidEntity, XMLJunk]:
         if element.nodeName == "string" and element.hasAttribute("name"):
             return AndroidEntity(
-                self.ctx,
+                self.ctx,  # type: ignore
                 current_comment,
                 white_space,
                 element,

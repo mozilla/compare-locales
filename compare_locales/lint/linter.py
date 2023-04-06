@@ -6,17 +6,18 @@ from __future__ import annotations
 
 import os
 from collections import Counter
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterator, List, Optional, Union
 
 from .. import checks, parser
 from ..paths import REFERENCE_LOCALE, File
 
 if TYPE_CHECKING:
+    from ..keyedtuple import KeyedTuple
     from ..parser.base import Entity, Junk, LiteralEntity
 
 
 class L10nLinter:
-    def lint(self, files, get_reference_and_tests):
+    def lint(self, files: Iterator[str], get_reference_and_tests: Callable):
         results = []
         for path in files:
             if not parser.hasParser(path):
@@ -25,7 +26,7 @@ class L10nLinter:
             results.extend(self.lint_file(path, ref, extra_tests))
         return results
 
-    def lint_file(self, path, ref, extra_tests):
+    def lint_file(self, path: str, ref: Any, extra_tests):
         file_parser = parser.getParser(path)
         if ref is not None and os.path.isfile(ref):
             file_parser.readFile(ref)
@@ -51,9 +52,9 @@ class EntityLinter:
 
     def __init__(
         self,
-        current: List[Union[Any, Entity]],
+        current: Union[List[Entity], KeyedTuple],
         checker: Optional[checks.Checker],
-        reference: Dict[Any, Any],
+        reference: Union[Dict[Any, Any], KeyedTuple],
     ) -> None:
         self.key_count = Counter(entity.key for entity in current)
         self.checker = checker
@@ -88,7 +89,7 @@ class EntityLinter:
         if current_entity.key in self.reference:
             reference_entity = self.reference[current_entity.key]
             if not current_entity.equals(reference_entity):
-                if lineno is None:
+                if lineno is None or col is None:
                     lineno, col = current_entity.position()
                 msg = "Changes to string require a new ID: {}".format(
                     current_entity.key

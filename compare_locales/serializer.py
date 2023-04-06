@@ -24,14 +24,11 @@ from __future__ import annotations
 
 from codecs import encode
 from functools import reduce
-from typing import TYPE_CHECKING, Any, Dict, List, Union
+from typing import Iterable, List, Mapping, Union
 
 from .merge import merge_resources, serialize_legacy_resource
 from .parser import getParser
 from .parser.base import Entity, Entry, Junk, PlaceholderEntity, Whitespace
-
-if TYPE_CHECKING:
-    from .parser.android import DocumentWrapper, XMLWhitespace
 
 
 class SerializationNotSupportedError(ValueError):
@@ -39,7 +36,10 @@ class SerializationNotSupportedError(ValueError):
 
 
 def serialize(
-    filename: str, reference: List[Entry], old_l10n: List[Any], new_data: Dict[str, str]
+    filename: str,
+    reference: Iterable[Entry],
+    old_l10n: Iterable[Entry],
+    new_data: Mapping[str, str],
 ) -> bytes:
     """Returns a byte string of the serialized content to use.
 
@@ -63,12 +63,11 @@ def serialize(
     old_l10n = sanitize_old(ref_mapping.keys(), old_l10n, new_data)
     # create new Entities
     # .val can just be "", merge_channels doesn't need that
-    new_l10n = []
-    for key, new_raw_val in new_data.items():
-        if new_raw_val is None or key not in ref_mapping:
-            continue
-        ref_ent = ref_mapping[key]
-        new_l10n.append(ref_ent.wrap(new_raw_val))
+    new_l10n = [
+        ref_mapping[key].wrap(new_raw_val)
+        for key, new_raw_val in new_data.items()
+        if new_raw_val is not None and key in ref_mapping
+    ]
 
     merged = merge_resources(
         parser, [placeholders, old_l10n, new_l10n], keep_newest=False
@@ -77,14 +76,16 @@ def serialize(
     return encode(serialize_legacy_resource(pruned), parser.encoding)
 
 
-def sanitize_old(known_keys, old_l10n, new_data):
+def sanitize_old(
+    known_keys: Iterable[str], old_l10n: Iterable[Entry], new_data: Mapping[str, str]
+) -> List[Entry]:
     """Strip Junk and replace obsolete messages with placeholders.
     If new_data has `None` as a value, strip the existing translation.
     Use placeholders generously, so that we can rely on `prune_placeholders`
     to find their associated comments and remove them, too.
     """
 
-    def should_placeholder(entry):
+    def should_placeholder(entry: Entry):
         # If entry is an Entity, check if it's obsolete
         # or marked to be removed.
         if not isinstance(entry, Entity):
@@ -100,18 +101,20 @@ def sanitize_old(known_keys, old_l10n, new_data):
     ]
 
 
-def placeholder(
-    entry: Entry,
-) -> Union[DocumentWrapper, PlaceholderEntity, Whitespace, XMLWhitespace]:
+def placeholder(entry: Entry) -> Entry:
     if isinstance(entry, Entity):
         return PlaceholderEntity(entry.key)
     return entry
 
 
-def prune_placeholders(entries):
+def prune_placeholders(
+    entries: Iterable[Union[Entry, Junk]]
+) -> List[Union[Entry, Junk]]:
     pruned = [entry for entry in entries if not isinstance(entry, PlaceholderEntity)]
 
-    def prune_whitespace(acc, entity):
+    def prune_whitespace(
+        acc: List[Union[Entry, Junk]], entity: Union[Entry, Junk]
+    ) -> List[Union[Entry, Junk]]:
         if len(acc) and isinstance(entity, Whitespace):
             prev_entity = acc[-1]
 

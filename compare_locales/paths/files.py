@@ -5,20 +5,31 @@
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Any, Iterator, List, Optional, Set, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+    cast,
+)
 
 from .. import mozpath
 
 if TYPE_CHECKING:
     from .matcher import Matcher
-    from .project import ProjectConfig
+    from .project import ProjectConfig, ProjectConfigPath
 
 
 REFERENCE_LOCALE = "en-x-moz-reference"
 
 
-class ConfigList(list):
-    def maybe_extend(self, other: List[ProjectConfig]) -> None:
+class ConfigList(List["ProjectConfig"]):
+    def maybe_extend(self, other: Iterable[ProjectConfig]) -> None:
         """Add configs from other list if this list doesn't have this path yet."""
         for config in other:
             if any(mine.path == config.path for mine in self):
@@ -37,12 +48,12 @@ class ProjectFiles:
     def __init__(
         self,
         locale: Optional[str],
-        projects: List[Union[ProjectConfig, Any]],
+        projects: Iterable[ProjectConfig],
         mergebase: Optional[str] = None,
     ) -> None:
         self.locale = locale
-        self.matchers = []
-        self.exclude = None
+        self.matchers: List[ProjectConfigPath] = []
+        self.exclude: Optional[ProjectFiles] = None
         self.mergebase = mergebase
         configs = ConfigList()
         excludes = ConfigList()
@@ -68,7 +79,7 @@ class ProjectFiles:
             for paths in pc.paths:
                 if locale and "locales" in paths and locale not in paths["locales"]:
                     continue
-                m = {
+                m: ProjectConfigPath = {
                     "l10n": paths["l10n"].with_env(
                         {"locale": locale or REFERENCE_LOCALE}
                     ),
@@ -78,7 +89,10 @@ class ProjectFiles:
                     m["reference"] = paths["reference"]
                 if self.mergebase is not None:
                     m["merge"] = paths["l10n"].with_env(
-                        {"locale": locale, "l10n_base": self.mergebase}
+                        {
+                            "locale": locale or REFERENCE_LOCALE,
+                            "l10n_base": self.mergebase,
+                        }
                     )
                 m["test"] = set(paths.get("test", []))
                 if "locales" in paths:
@@ -108,19 +122,22 @@ class ProjectFiles:
                 # check that we're comparing the same thing
                 if "reference" in m:
                     if mozpath.realpath(m["reference"].prefix) != mozpath.realpath(
-                        m_.get("reference").prefix
+                        cast(Matcher, m_.get("reference")).prefix
                     ):
                         raise RuntimeError(
                             "Mismatch in reference for "
                             + mozpath.realpath(m["l10n"].prefix)
                         )
                 drops.add(i_ + i + 1)
-                m["test"] |= m_["test"]
+                if "test" in m and "test" in m_:
+                    m["test"] |= m_["test"]
         drops = sorted(drops, reverse=True)
         for i in drops:
             del self.matchers[i]
 
-    def __iter__(self) -> None:
+    def __iter__(
+        self,
+    ) -> Iterator[Tuple[str, Union[str, None], Union[str, None], Set[Any]]]:
         # The iteration is pretty different when we iterate over
         # a localization vs over the reference. We do that latter
         # when running in validation mode.
@@ -129,14 +146,7 @@ class ProjectFiles:
 
     def iter_locale(
         self,
-    ) -> Iterator[
-        Union[
-            Tuple[str, str, None, Set[Any]],
-            Tuple[str, None, None, Set[Any]],
-            Tuple[str, str, str, Set[Any]],
-            Tuple[str, None, str, Set[Any]],
-        ]
-    ]:
+    ) -> Iterator[Tuple[str, Union[str, None], Union[str, None], Set[Any]]]:
         """Iterate over locale files."""
         known = {}
         for matchers in self.matchers:
@@ -204,10 +214,14 @@ class ProjectFiles:
     def _isfile(self, path: str) -> bool:
         return os.path.isfile(path)
 
-    def _walk(self, base: str) -> None:
+    def _walk(self, base: str) -> Iterator[Tuple[str, List[str], List[str]]]:
         yield from os.walk(base)
 
-    def match(self, path: str) -> Any:
+    def match(
+        self, path: str
+    ) -> Optional[
+        Tuple[Optional[str], Optional[str], Optional[str], Optional[Set[Any]]]
+    ]:
         """Return the tuple of l10n_path, reference, mergepath, tests
         if the given path matches any config, otherwise None.
 

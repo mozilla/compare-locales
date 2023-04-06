@@ -46,6 +46,9 @@ moz-l10n-lint = "compare_locales.lint.cli:main"
 profile = "black"
 extra_standard_library = ["typing_extensions", "_typeshed"]
 
+[tool.mypy]
+strict = false
+
 [tool.setuptools]
 platforms = ["any"]
 packages = [

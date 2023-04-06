@@ -26,7 +26,7 @@ class PropertiesEntityMixin:
                 return ""
             return self.known_escapes.get(found["single"], found["single"])
 
-        return self.escape.sub(unescape, self.raw_val)
+        return self.escape.sub(unescape, self.raw_val)  # type: ignore
 
 
 class PropertiesEntity(PropertiesEntityMixin, Entity):

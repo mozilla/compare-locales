@@ -57,8 +57,6 @@ CATEGORIES_BY_INDEX = (
     ("one", "few", "other"),
 )
 
-CATEGORIES_EXCEPTIONS = {}
-
 CATEGORIES_BY_LOCALE = {
     "ace": 0,
     "ach": 1,
@@ -209,7 +207,16 @@ CATEGORIES_BY_LOCALE = {
 
 def get_plural(
     locale: Optional[str],
-) -> Optional[Union[Tuple[str, str, str], Tuple[str, str]]]:
+) -> Optional[
+    Union[
+        Tuple[str],
+        Tuple[str, str],
+        Tuple[str, str, str],
+        Tuple[str, str, str, str],
+        Tuple[str, str, str, str, str],
+        Tuple[str, str, str, str, str, str],
+    ]
+]:
     plural_form = get_plural_rule(locale)
     if plural_form is None:
         return None

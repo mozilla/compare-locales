@@ -14,13 +14,16 @@ from typing import List, Optional, Tuple, Union
 from .base import CAN_SKIP, BadEntity, Comment, Entity, Parser
 
 
-class PoEntityMixin:
+class PoEntity(Entity):
+    stringlist_key: Tuple[str, Union[str, None]]
+    stringlist_val: str
+
     @property
     def val(self) -> str:
         return self.stringlist_val if self.stringlist_val else self.stringlist_key[0]
 
     @property
-    def key(self) -> Union[Tuple[str, str], Tuple[str, None]]:
+    def key(self) -> Tuple[str, Union[str, None]]:
         return self.stringlist_key
 
     @property
@@ -30,10 +33,6 @@ class PoEntityMixin:
 
     def __repr__(self):
         return self.key[0]
-
-
-class PoEntity(PoEntityMixin, Entity):
-    pass
 
 
 # Unescape and concat a string list
@@ -78,9 +77,9 @@ class PoParser(Parser):
         id_start = cursor
         try:
             msgctxt, cursor = self._parse_string_list(ctx, cursor, "msgctxt")
-            m = self.reWhitespace.match(ctx.contents, cursor)
-            if m:
-                cursor = m.end()
+            match = self.reWhitespace.match(ctx.contents, cursor)
+            if match:
+                cursor = match.end()
         except BadEntity:
             # no msgctxt is OK
             msgctxt = None
@@ -88,9 +87,9 @@ class PoParser(Parser):
             id_start = cursor
         msgid, cursor = self._parse_string_list(ctx, cursor, "msgid")
         id_end = cursor
-        m = self.reWhitespace.match(ctx.contents, cursor)
-        if m:
-            cursor = m.end()
+        match = self.reWhitespace.match(ctx.contents, cursor)
+        if match:
+            cursor = match.end()
         val_start = cursor
         msgstr, cursor = self._parse_string_list(ctx, cursor, "msgstr")
         e = PoEntity(

@@ -1,11 +1,20 @@
 {
   "editor.formatOnSaveMode": "file",
+  "isort.args": ["--settings-path", "${workspaceFolder}/pyproject.toml"],
+  "python.linting.mypyEnabled": true,
+  "python.linting.mypyArgs": [
+    "--follow-imports=silent",
+    "--ignore-missing-imports",
+    "--show-column-numbers",
+    "--no-pretty",
+    "--config-file=${workspaceFolder}/pyproject.toml"
+  ],
+  "python.analysis.typeCheckingMode": "basic",
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
       "source.organizeImports": true
     }
-  },
-  "isort.args": ["--profile", "black"]
+  }
 }

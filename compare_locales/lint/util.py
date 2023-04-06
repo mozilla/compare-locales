@@ -4,22 +4,23 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+from typing import Callable, Optional, Set, Tuple
 
 from .. import paths
 
-if TYPE_CHECKING:
-    from ..paths.files import ProjectFiles
+ReferenceAndTests = Tuple[Optional[str], Optional[Set[str]]]
 
 
-def default_reference_and_tests(path):
+def default_reference_and_tests(path) -> Tuple[None, None]:
     return None, None
 
 
-def mirror_reference_and_tests(files: ProjectFiles, basedir: str) -> Callable:
+def mirror_reference_and_tests(
+    files: paths.ProjectFiles, basedir: str
+) -> Callable[[str], ReferenceAndTests]:
     """Get reference files to check for conflicts in android-l10n and friends."""
 
-    def get_reference_and_tests(path):
+    def get_reference_and_tests(path: str):
         for matchers in files.matchers:
             if "reference" not in matchers:
                 continue
@@ -34,10 +35,12 @@ def mirror_reference_and_tests(files: ProjectFiles, basedir: str) -> Callable:
     return get_reference_and_tests
 
 
-def l10n_base_reference_and_tests(files: ProjectFiles) -> Callable:
+def l10n_base_reference_and_tests(
+    files: paths.ProjectFiles,
+) -> Callable[[str], ReferenceAndTests]:
     """Get reference files to check for conflicts in gecko-strings and friends."""
 
-    def get_reference_and_tests(path):
+    def get_reference_and_tests(path: str):
         match = files.match(path)
         if match is None:
             return None, None

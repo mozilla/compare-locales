@@ -49,7 +49,7 @@ class IniParser(Parser):
         if m:
             return IniSection(ctx, m.span(), m.span("val"))
 
-        return super().getNext(ctx, offset)
+        return super().getNext(ctx, offset)  # type: ignore
 
     def getJunk(self, ctx: Parser.Context, offset: int, *expressions) -> Junk:
         # base.Parser.getNext calls us with self.reKey, self.reComment.

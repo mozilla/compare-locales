@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import re
-from typing import Iterator, Optional, Tuple, Union
+from typing import Iterator, Optional, Tuple, Union, cast
 
 from fluent.syntax import FluentParser as FTLParser
 from fluent.syntax import ast as ftl
@@ -63,22 +63,25 @@ class FluentEntity(Entity):
     def __init__(
         self, ctx: Parser.Context, entry: Union[ftl.Message, ftl.Term]
     ) -> None:
-        start = entry.span.start
-        end = entry.span.end
+        span = cast(ftl.Span, entry.span)
+        start = span.start
+        end = span.end
 
         self.ctx = ctx
         self.span = (start, end)
 
+        id_span = cast(ftl.Span, entry.id.span)
         if isinstance(entry, ftl.Term):
             # Terms don't have their '-' as part of the id, use the prior
             # character
-            self.key_span = (entry.id.span.start - 1, entry.id.span.end)
+            self.key_span = (id_span.start - 1, id_span.end)
         else:
             # Message
-            self.key_span = (entry.id.span.start, entry.id.span.end)
+            self.key_span = (id_span.start, id_span.end)
 
         if entry.value is not None:
-            self.val_span = (entry.value.span.start, entry.value.span.end)
+            val_span = cast(ftl.Span, entry.value.span)
+            self.val_span = (val_span.start, val_span.end)
         else:
             self.val_span = None
 
@@ -91,7 +94,7 @@ class FluentEntity(Entity):
         self.pre_comment = None
 
     @property
-    def root_node(self) -> ftl.Message:
+    def root_node(self) -> Union[ftl.Message, ftl.Term]:
         """AST node at which to start traversal for count_words.
 
         By default we count words in the value and in all attributes.
@@ -152,7 +155,7 @@ class FluentTerm(FluentEntity):
     ignored_fields = ["attributes", "comment", "span"]
 
     @property
-    def root_node(self) -> ftl.Pattern:
+    def root_node(self) -> Union[ftl.Pattern, None]:
         """AST node at which to start traversal for count_words.
 
         In Fluent Terms we only count words in the value. Attributes are
@@ -191,32 +194,38 @@ class FluentParser(Parser):
         last_span_end = 0
 
         for entry in resource.body:
+            span = cast(ftl.Span, entry.span)
             if not only_localizable:
-                if entry.span.start > last_span_end:
-                    yield Whitespace(self.ctx, (last_span_end, entry.span.start))
+                if span.start > last_span_end:
+                    yield Whitespace(self.ctx, (last_span_end, span.start))
 
             if isinstance(entry, ftl.Message):
                 yield FluentMessage(self.ctx, entry)
             elif isinstance(entry, ftl.Term):
                 yield FluentTerm(self.ctx, entry)
             elif isinstance(entry, ftl.Junk):
-                start = entry.span.start
-                end = entry.span.end
-                # strip leading whitespace
-                start += re.match("[ \t\r\n]*", entry.content).end()
-                if not only_localizable and entry.span.start < start:
-                    yield Whitespace(self.ctx, (entry.span.start, start))
-                # strip trailing whitespace
-                ws, we = re.search("[ \t\r\n]*$", entry.content).span()
-                end -= we - ws
+                start = span.start
+                end = span.end
+                if entry.content:
+                    # strip leading whitespace
+                    ms = re.match("[ \t\r\n]*", entry.content)
+                    if ms and ms.end() > 0:
+                        start += ms.end()
+                        if not only_localizable:
+                            yield Whitespace(self.ctx, (span.start, start))
+                    # strip trailing whitespace
+                    me = re.search("[ \t\r\n]*$", entry.content)
+                    if me:
+                        ws, we = me.span()
+                        end -= we - ws
                 yield Junk(self.ctx, (start, end))
-                if not only_localizable and end < entry.span.end:
-                    yield Whitespace(self.ctx, (end, entry.span.end))
+                if not only_localizable and end < span.end:
+                    yield Whitespace(self.ctx, (end, span.end))
             elif isinstance(entry, ftl.BaseComment) and not only_localizable:
-                span = (entry.span.start, entry.span.end)
-                yield FluentComment(self.ctx, span, entry)
+                span_ = (span.start, span.end)
+                yield FluentComment(self.ctx, span_, entry)
 
-            last_span_end = entry.span.end
+            last_span_end = span.end
 
         # Yield Whitespace at the EOF.
         if not only_localizable:

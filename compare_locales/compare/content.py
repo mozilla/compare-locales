@@ -9,7 +9,7 @@ import codecs
 import os
 import re
 import shutil
-from typing import TYPE_CHECKING, Any, List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from .. import mozpath, parser
 from ..checks import EntityPos, getChecker
@@ -43,10 +43,8 @@ class ContentComparer:
         ref_file: File,
         l10n_file: File,
         merge_file: str,
-        missing: List[Union[Any, str]],
-        skips: List[
-            Union[Any, parser.PropertiesEntity, parser.FluentMessage, parser.Junk]
-        ],
+        missing: List[Union[int, str]],
+        skips: List[Union[parser.Entry, parser.Junk]],
         ctx: Optional[parser.Parser.Context],
         capabilities: int,
         encoding: Optional[str],
@@ -92,6 +90,8 @@ class ContentComparer:
         f = None
 
         if skips:
+            assert ctx is not None
+
             # skips come in ordered by key name, we need them in file order
             skips.sort(key=lambda s: s.span[0])
 
@@ -189,7 +189,7 @@ class ContentComparer:
             self.observers.notify("error", l10n, str(e))
             return
 
-        ar = AddRemove()
+        ar = AddRemove[str]()
         ar.set_left(ref_entities.keys())
         ar.set_right(l10n_entities.keys())
         report = missing = obsolete = changed = unchanged = keys = 0
@@ -204,9 +204,11 @@ class ContentComparer:
         for msg in p.findDuplicates(l10n_entities):
             self.observers.notify("error", l10n, msg)
         for action, entity_id in ar:
+            refent = ref_entities[entity_id]
+            l10nent = l10n_entities[entity_id]
             if action == "delete":
                 # missing entity
-                if isinstance(ref_entities[entity_id], parser.Junk):
+                if isinstance(refent, parser.Junk):
                     self.observers.notify("warning", l10n, "Parser error in en-US")
                     continue
                 _rv = self.observers.notify("missingEntity", l10n, entity_id)
@@ -217,26 +219,22 @@ class ContentComparer:
                     # not report
                     missings.append(entity_id)
                     missing += 1
-                    refent = ref_entities[entity_id]
                     missing_w += refent.count_words()
                 else:
                     # just report
                     report += 1
             elif action == "add":
                 # obsolete entity or junk
-                if isinstance(l10n_entities[entity_id], parser.Junk):
-                    junk = l10n_entities[entity_id]
-                    self.observers.notify("error", l10n, junk.error_message())
+                if isinstance(l10nent, parser.Junk):
+                    self.observers.notify("error", l10n, l10nent.error_message())
                     if merge_file is not None:
-                        skips.append(junk)
+                        skips.append(l10nent)
                 elif (
                     self.observers.notify("obsoleteEntity", l10n, entity_id) != "ignore"
                 ):
                     obsolete += 1
             else:
                 # entity found in both ref and l10n, check for changed
-                refent = ref_entities[entity_id]
-                l10nent = l10n_entities[entity_id]
                 if self.keyRE.search(entity_id):
                     keys += 1
                 else:

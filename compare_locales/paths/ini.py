@@ -6,10 +6,10 @@ from __future__ import annotations
 
 from collections import defaultdict
 from configparser import ConfigParser, NoOptionError, NoSectionError
-from typing import Any, Callable, Dict, Iterator, List, Tuple, Union
+from typing import Callable, Dict, Iterator, List, Tuple, Union
 
 from .. import mozpath, util
-from .project import ProjectConfig
+from .project import PathDictionary, ProjectConfig
 
 
 class L10nConfigParser:
@@ -29,9 +29,9 @@ class L10nConfigParser:
         self.inipath = mozpath.normpath(inipath)
         # l10n.ini files can import other l10n.ini files, store the
         # corresponding L10nConfigParsers
-        self.children = []
+        self.children: List[L10nConfigParser] = []
         # we really only care about the l10n directories described in l10n.ini
-        self.dirs = []
+        self.dirs: List[str] = []
         # optional defaults to be passed to the inner ConfigParser (unused?)
         self.defaults = kwargs
 
@@ -43,7 +43,7 @@ class L10nConfigParser:
             depth = "."
         return depth
 
-    def getFilters(self) -> List[Union[Callable, Any]]:
+    def getFilters(self) -> List[Callable]:
         """Get the test functions from this ConfigParser and all children.
 
         Only works with synchronous loads, used by compare-locales, which
@@ -92,7 +92,7 @@ class L10nConfigParser:
             self.dirs.extend(cp.get("compare", "dirs").split())
         except (NoOptionError, NoSectionError):
             pass
-        # try to set "all_path" and "all_url"
+        # try to set "all_path"
         try:
             self.all_path = mozpath.join(self.base, cp.get("general", "all"))
         except (NoOptionError, NoSectionError):
@@ -125,6 +125,8 @@ class L10nConfigParser:
 
     def allLocales(self) -> List[str]:
         """Return a list of all the locales of this project"""
+        if not self.all_path:
+            return []
         with open(self.all_path) as f:
             return util.parseLocales(f.read())
 
@@ -200,13 +202,13 @@ class EnumerateApp:
         aConfig: Union[SourceTreeConfigParser, L10nConfigParser],
     ) -> None:
         for k, (basepath, module) in aConfig.dirsIter():
-            paths = {
+            paths: PathDictionary = {
                 "module": module,
                 "reference": mozpath.normpath(f"{basepath}/{module}/locales/en-US/**"),
                 "l10n": mozpath.normpath("{l10n_base}/{locale}/%s/**" % module),
             }
             if module == "mobile/android/base":
-                paths["test"] = ["android-dtd"]
+                paths["test"] = set(["android-dtd"])
             projectconfig.add_paths(paths)
         for child in aConfig.children:
             self._config_for_ini(projectconfig, child)

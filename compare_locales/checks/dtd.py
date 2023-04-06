@@ -37,7 +37,7 @@ class DTDChecker(Checker, CSSCheckMixin):
 """
     xmllist = {"amp", "lt", "gt", "apos", "quot"}
 
-    def __init__(self, extra_tests: Optional[List[str]], locale: None = None) -> None:
+    def __init__(self, extra_tests: Optional[List[str]], locale: Optional[str] = None) -> None:
         super().__init__(extra_tests, locale=locale)
         self.processContent = False
         if self.extra_tests is not None and "android-dtd" in self.extra_tests:

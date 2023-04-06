@@ -5,13 +5,24 @@
 "Mozilla l10n compare locales tool"
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Iterator, List, Tuple, Type, Union
+from typing import (
+    Dict,
+    Generic,
+    Iterable,
+    Iterator,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from .. import paths
 
-if TYPE_CHECKING:
-    from ..parser import Whitespace
-    from ..parser.android import XMLWhitespace
+T = TypeVar("T")
 
 
 class Tree:
@@ -21,7 +32,7 @@ class Tree:
         self.value = None
 
     def __getitem__(self, leaf: Union[str, paths.File]) -> List[Dict[str, str]]:
-        parts = []
+        parts: List[str] = []
         if isinstance(leaf, paths.File):
             parts = []
             if leaf.module:
@@ -31,12 +42,13 @@ class Tree:
             parts = leaf.split("/")
         return self.__get(parts)
 
-    def __get(self, parts):
+    def __get(self, parts: Sequence[str]):
         common = None
         old = None
         new = tuple(parts)
         t = self
         for k, v in self.branches.items():
+            i = -1
             for i, part in enumerate(zip(k, parts)):
                 if part[0] != part[1]:
                     i -= 1
@@ -119,44 +131,45 @@ class Tree:
         return "\n".join(self.getStrRows())
 
 
-class AddRemove:
+class AddRemove(Generic[T]):
+    left: Optional[List[T]]
+    right: Optional[List[T]]
+
     def __init__(self) -> None:
         self.left = self.right = None
 
-    def set_left(self, left: List[str]) -> None:
+    def set_left(self, left: Iterable[T]) -> None:
         if not isinstance(left, list):
             left = list(li for li in left)
         self.left = left
 
-    def set_right(self, right: List[str]) -> None:
+    def set_right(self, right: Iterable[T]) -> None:
         if not isinstance(right, list):
             right = list(li for li in right)
         self.right = right
 
     def __iter__(
         self,
-    ) -> Iterator[
-        Union[
-            Tuple[str, str],
-            Tuple[str, XMLWhitespace],
-            Tuple[str, Tuple[str, int]],
-            Tuple[str, Whitespace],
-        ]
-    ]:
+    ) -> Iterator[Tuple[Literal["equal", "delete", "add"], T]]:
         # order_map stores index in left and then index in right
-        order_map = {item: (i, -1) for i, item in enumerate(self.left)}
+        order_map: Dict[T, Tuple[int, int]] = (
+            {item: (i, -1) for i, item in enumerate(self.left)}
+            if self.left is not None
+            else {}
+        )
         left_items = set(order_map)
         # as we go through the right side, keep track of which left
         # item we had in right last, and for items not in left,
         # set the sortmap to (left_offset, right_index)
         left_offset = -1
         right_items = set()
-        for i, item in enumerate(self.right):
-            right_items.add(item)
-            if item in order_map:
-                left_offset = order_map[item][0]
-            else:
-                order_map[item] = (left_offset, i)
+        if self.right is not None:
+            for i, item in enumerate(self.right):
+                right_items.add(item)
+                if item in order_map:
+                    left_offset = order_map[item][0]
+                else:
+                    order_map[item] = (left_offset, i)
         for item in sorted(order_map, key=lambda item: order_map[item]):
             if item in left_items and item in right_items:
                 yield ("equal", item)
