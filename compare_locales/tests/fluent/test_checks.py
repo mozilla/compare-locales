@@ -5,8 +5,8 @@
 import textwrap
 import unittest
 
-from compare_locales.tests import BaseHelper
 from compare_locales.paths import File
+from compare_locales.tests import BaseHelper
 
 
 def dedent_ftl(text):

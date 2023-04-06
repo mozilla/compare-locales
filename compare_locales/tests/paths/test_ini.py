@@ -4,9 +4,7 @@
 
 import unittest
 
-from . import (
-    SetupMixin,
-)
+from . import SetupMixin
 
 
 class TestConfigLegacy(SetupMixin, unittest.TestCase):

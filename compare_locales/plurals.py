@@ -3,6 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 "Mapping of locales to CLDR plural categories as implemented by PluralForm.jsm"
+from __future__ import annotations
+
+from typing import Optional, Tuple, Union
 
 CATEGORIES_BY_INDEX = (
     # 0 (Chinese)
@@ -53,8 +56,6 @@ CATEGORIES_BY_INDEX = (
     # 19 (Bosnian, Croatian, Serbian)
     ("one", "few", "other"),
 )
-
-CATEGORIES_EXCEPTIONS = {}
 
 CATEGORIES_BY_LOCALE = {
     "ace": 0,
@@ -204,14 +205,25 @@ CATEGORIES_BY_LOCALE = {
 }
 
 
-def get_plural(locale):
+def get_plural(
+    locale: Optional[str],
+) -> Optional[
+    Union[
+        Tuple[str],
+        Tuple[str, str],
+        Tuple[str, str, str],
+        Tuple[str, str, str, str],
+        Tuple[str, str, str, str, str],
+        Tuple[str, str, str, str, str, str],
+    ]
+]:
     plural_form = get_plural_rule(locale)
     if plural_form is None:
         return None
     return CATEGORIES_BY_INDEX[plural_form]
 
 
-def get_plural_rule(locale):
+def get_plural_rule(locale: Optional[str]) -> Optional[int]:
     if locale is None:
         return None
     if locale in CATEGORIES_BY_LOCALE:

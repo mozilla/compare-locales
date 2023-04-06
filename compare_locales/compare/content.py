@@ -3,26 +3,29 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 "Mozilla l10n compare locales tool"
+from __future__ import annotations
 
 import codecs
 import os
-import shutil
 import re
+import shutil
+from typing import TYPE_CHECKING, List, Optional, Union
 
-from compare_locales import parser
-from compare_locales import mozpath
-from compare_locales.checks import getChecker, EntityPos
-from compare_locales.keyedtuple import KeyedTuple
-
+from .. import mozpath, parser
+from ..checks import EntityPos, getChecker
+from ..keyedtuple import KeyedTuple
 from .observer import ObserverList
 from .utils import AddRemove
+
+if TYPE_CHECKING:
+    from ..paths import File
 
 
 class ContentComparer:
     keyRE = re.compile("[kK]ey")
     nl = re.compile("\n", re.M)
 
-    def __init__(self, quiet=0):
+    def __init__(self, quiet: int = 0) -> None:
         """Create a ContentComparer.
         observer is usually a instance of Observer. The return values
         of the notify method are used to control the handling of missing
@@ -30,22 +33,22 @@ class ContentComparer:
         """
         self.observers = ObserverList(quiet=quiet)
 
-    def create_merge_dir(self, merge_file):
+    def create_merge_dir(self, merge_file: str) -> None:
         outdir = mozpath.dirname(merge_file)
         os.makedirs(outdir, exist_ok=True)
 
     def merge(
         self,
-        ref_entities,
-        ref_file,
-        l10n_file,
-        merge_file,
-        missing,
-        skips,
-        ctx,
-        capabilities,
-        encoding,
-    ):
+        ref_entities: KeyedTuple,
+        ref_file: File,
+        l10n_file: File,
+        merge_file: str,
+        missing: List[Union[int, str]],
+        skips: List[Union[parser.Entry, parser.Junk]],
+        ctx: Optional[parser.Parser.Context],
+        capabilities: int,
+        encoding: Optional[str],
+    ) -> None:
         """Create localized file in merge dir
 
         `ref_entities` and `ref_map` are the parser result of the
@@ -87,6 +90,8 @@ class ContentComparer:
         f = None
 
         if skips:
+            assert ctx is not None
+
             # skips come in ordered by key name, we need them in file order
             skips.sort(key=lambda s: s.span[0])
 
@@ -132,7 +137,7 @@ class ContentComparer:
         if f is not None:
             f.close()
 
-    def remove(self, ref_file, l10n, merge_file):
+    def remove(self, ref_file: File, l10n: File, merge_file: str) -> None:
         """Obsolete l10n file.
 
         Copy to merge stage if we can.
@@ -150,7 +155,9 @@ class ContentComparer:
             None,
         )
 
-    def compare(self, ref_file, l10n, merge_file, extra_tests=None):
+    def compare(
+        self, ref_file: File, l10n: File, merge_file: str, extra_tests: None = None
+    ) -> None:
         try:
             p = parser.getParser(ref_file.file)
         except UserWarning:
@@ -182,7 +189,7 @@ class ContentComparer:
             self.observers.notify("error", l10n, str(e))
             return
 
-        ar = AddRemove()
+        ar = AddRemove[str]()
         ar.set_left(ref_entities.keys())
         ar.set_right(l10n_entities.keys())
         report = missing = obsolete = changed = unchanged = keys = 0
@@ -197,9 +204,11 @@ class ContentComparer:
         for msg in p.findDuplicates(l10n_entities):
             self.observers.notify("error", l10n, msg)
         for action, entity_id in ar:
+            refent = ref_entities[entity_id]
+            l10nent = l10n_entities[entity_id]
             if action == "delete":
                 # missing entity
-                if isinstance(ref_entities[entity_id], parser.Junk):
+                if isinstance(refent, parser.Junk):
                     self.observers.notify("warning", l10n, "Parser error in en-US")
                     continue
                 _rv = self.observers.notify("missingEntity", l10n, entity_id)
@@ -210,26 +219,22 @@ class ContentComparer:
                     # not report
                     missings.append(entity_id)
                     missing += 1
-                    refent = ref_entities[entity_id]
                     missing_w += refent.count_words()
                 else:
                     # just report
                     report += 1
             elif action == "add":
                 # obsolete entity or junk
-                if isinstance(l10n_entities[entity_id], parser.Junk):
-                    junk = l10n_entities[entity_id]
-                    self.observers.notify("error", l10n, junk.error_message())
+                if isinstance(l10nent, parser.Junk):
+                    self.observers.notify("error", l10n, l10nent.error_message())
                     if merge_file is not None:
-                        skips.append(junk)
+                        skips.append(l10nent)
                 elif (
                     self.observers.notify("obsoleteEntity", l10n, entity_id) != "ignore"
                 ):
                     obsolete += 1
             else:
                 # entity found in both ref and l10n, check for changed
-                refent = ref_entities[entity_id]
-                l10nent = l10n_entities[entity_id]
                 if self.keyRE.search(entity_id):
                     keys += 1
                 else:
@@ -286,7 +291,7 @@ class ContentComparer:
         self.observers.updateStats(l10n, stats)
         pass
 
-    def add(self, orig, missing, merge_file):
+    def add(self, orig: File, missing: File, merge_file: str) -> None:
         """Add missing localized file."""
         f = orig
         try:
@@ -333,10 +338,35 @@ class ContentComparer:
             missing_w += e.count_words()
         self.observers.updateStats(missing, {"missing_w": missing_w})
 
-    def doUnchanged(self, entity):
+    def doUnchanged(
+        self,
+        entity: Union[
+            parser.Entity,
+            parser.PropertiesEntity,
+            parser.FluentMessage,
+            parser.DTDEntity,
+        ],
+    ) -> None:
         # overload this if needed
         pass
 
-    def doChanged(self, file, ref_entity, l10n_entity):
+    def doChanged(
+        self,
+        file: File,
+        ref_entity: Union[
+            parser.FluentTerm,
+            parser.FluentMessage,
+            parser.DTDEntity,
+            parser.Entity,
+            parser.PropertiesEntity,
+        ],
+        l10n_entity: Union[
+            parser.FluentTerm,
+            parser.FluentMessage,
+            parser.DTDEntity,
+            parser.Entity,
+            parser.PropertiesEntity,
+        ],
+    ) -> None:
         # overload this if needed
         pass

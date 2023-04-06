@@ -5,10 +5,10 @@
 
 import unittest
 
-from compare_locales.lint import util
-from compare_locales.paths.project import ProjectConfig
-from compare_locales.paths.files import ProjectFiles
 from compare_locales import mozpath
+from compare_locales.lint import util
+from compare_locales.paths.files import ProjectFiles
+from compare_locales.paths.project import ProjectConfig
 
 
 class MirrorReferenceTest(unittest.TestCase):

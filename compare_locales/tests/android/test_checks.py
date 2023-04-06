@@ -3,9 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-from compare_locales.tests import BaseHelper
 from compare_locales.paths import File
-
+from compare_locales.tests import BaseHelper
 
 ANDROID_WRAPPER = b"""<?xml version="1.0" encoding="utf-8"?>
 <resources>

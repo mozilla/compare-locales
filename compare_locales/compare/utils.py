@@ -3,18 +3,36 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 "Mozilla l10n compare locales tool"
+from __future__ import annotations
 
-from compare_locales import paths
+from typing import (
+    Dict,
+    Generic,
+    Iterable,
+    Iterator,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
+
+from .. import paths
+
+T = TypeVar("T")
 
 
 class Tree:
-    def __init__(self, valuetype):
+    def __init__(self, valuetype: Union[Type[list], Type[dict]]) -> None:
         self.branches = dict()
         self.valuetype = valuetype
         self.value = None
 
-    def __getitem__(self, leaf):
-        parts = []
+    def __getitem__(self, leaf: Union[str, paths.File]) -> List[Dict[str, str]]:
+        parts: List[str] = []
         if isinstance(leaf, paths.File):
             parts = []
             if leaf.module:
@@ -24,12 +42,13 @@ class Tree:
             parts = leaf.split("/")
         return self.__get(parts)
 
-    def __get(self, parts):
+    def __get(self, parts: Sequence[str]):
         common = None
         old = None
         new = tuple(parts)
         t = self
         for k, v in self.branches.items():
+            i = -1
             for i, part in enumerate(zip(k, parts)):
                 if part[0] != part[1]:
                     i -= 1
@@ -60,7 +79,15 @@ class Tree:
 
     indent = "  "
 
-    def getContent(self, depth=0):
+    def getContent(
+        self, depth: int = 0
+    ) -> Iterator[
+        Union[
+            Tuple[int, str, Tuple[str]],
+            Tuple[int, str, Dict[str, int]],
+            Tuple[int, str, Tuple[str, str]],
+        ]
+    ]:
         """
         Returns iterator of (depth, flag, key_or_value) tuples.
         If flag is 'value', key_or_value is a value object, otherwise
@@ -73,7 +100,15 @@ class Tree:
             yield (depth, "key", key)
             yield from self.branches[key].getContent(depth + 1)
 
-    def toJSON(self):
+    def toJSON(
+        self,
+    ) -> Union[
+        Dict[str, int],
+        Dict[str, Dict[str, Dict[str, int]]],
+        List[Dict[str, str]],
+        Dict[str, List[Dict[str, str]]],
+        Dict[str, Dict[str, int]],
+    ]:
         """
         Returns this Tree as a JSON-able tree of hashes.
         Only the values need to take care that they're JSON-able.
@@ -84,7 +119,7 @@ class Tree:
             "/".join(key): self.branches[key].toJSON() for key in self.branches.keys()
         }
 
-    def getStrRows(self):
+    def getStrRows(self) -> List[str]:
         def tostr(t):
             if t[1] == "key":
                 return self.indent * t[0] + "/".join(t[2])
@@ -92,39 +127,49 @@ class Tree:
 
         return [tostr(c) for c in self.getContent()]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "\n".join(self.getStrRows())
 
 
-class AddRemove:
-    def __init__(self):
+class AddRemove(Generic[T]):
+    left: Optional[List[T]]
+    right: Optional[List[T]]
+
+    def __init__(self) -> None:
         self.left = self.right = None
 
-    def set_left(self, left):
+    def set_left(self, left: Iterable[T]) -> None:
         if not isinstance(left, list):
             left = list(li for li in left)
         self.left = left
 
-    def set_right(self, right):
+    def set_right(self, right: Iterable[T]) -> None:
         if not isinstance(right, list):
             right = list(li for li in right)
         self.right = right
 
-    def __iter__(self):
+    def __iter__(
+        self,
+    ) -> Iterator[Tuple[Literal["equal", "delete", "add"], T]]:
         # order_map stores index in left and then index in right
-        order_map = {item: (i, -1) for i, item in enumerate(self.left)}
+        order_map: Dict[T, Tuple[int, int]] = (
+            {item: (i, -1) for i, item in enumerate(self.left)}
+            if self.left is not None
+            else {}
+        )
         left_items = set(order_map)
         # as we go through the right side, keep track of which left
         # item we had in right last, and for items not in left,
         # set the sortmap to (left_offset, right_index)
         left_offset = -1
         right_items = set()
-        for i, item in enumerate(self.right):
-            right_items.add(item)
-            if item in order_map:
-                left_offset = order_map[item][0]
-            else:
-                order_map[item] = (left_offset, i)
+        if self.right is not None:
+            for i, item in enumerate(self.right):
+                right_items.add(item)
+                if item in order_map:
+                    left_offset = order_map[item][0]
+                else:
+                    order_map[item] = (left_offset, i)
         for item in sorted(order_map, key=lambda item: order_map[item]):
             if item in left_items and item in right_items:
                 yield ("equal", item)

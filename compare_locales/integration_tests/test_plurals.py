@@ -7,8 +7,7 @@ import unittest
 from urllib.error import URLError
 from urllib.request import urlopen
 
-from compare_locales import plurals
-
+from . import plurals
 
 TRANSVISION_URL = (
     "https://transvision.mozfr.org/"

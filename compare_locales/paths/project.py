@@ -2,19 +2,71 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import annotations
+
 import re
-from compare_locales import mozpath
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Iterator,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Set,
+    Union,
+    cast,
+)
+from typing_extensions import NotRequired, TypedDict
+
+from .. import mozpath
 from .matcher import Matcher
+
+if TYPE_CHECKING:
+    from . import File
 
 
 class ExcludeError(ValueError):
     pass
 
 
+class PathDictionary(TypedDict):
+    l10n: str
+    locales: NotRequired[Sequence[str]]
+    # merge: NotRequired[Matcher]
+    module: NotRequired[str]
+    reference: NotRequired[str]
+    test: NotRequired[Set[str]]
+
+
+class ProjectConfigPath(TypedDict):
+    l10n: Matcher[str]
+    locales: NotRequired[Sequence[str]]
+    merge: NotRequired[Matcher[str]]
+    module: Optional[str]
+    reference: NotRequired[Matcher[str]]
+    test: NotRequired[Set[str]]
+
+
+FilterAction = Literal["error", "warning", "ignore"]
+
+
+class FilterRule(TypedDict):
+    action: FilterAction
+    path: Union[str, List[str], Matcher[str]]
+    key: NotRequired[Union[str, Sequence[str]]]
+
+
+class CompiledFilterRule(TypedDict):
+    action: FilterAction
+    path: Matcher[str]
+    key: NotRequired[re.Pattern[str]]
+
+
 class ProjectConfig:
     """Abstraction of l10n project configuration data."""
 
-    def __init__(self, path):
+    def __init__(self, path: Optional[str]) -> None:
         self.filter_py = None  # legacy filter code
         # {
         #  'l10n': pattern,
@@ -23,18 +75,18 @@ class ProjectConfig:
         #  'test': [],  # optional
         # }
         self.path = path
-        self.root = None
-        self.paths = []
-        self.rules = []
-        self.locales = None
+        self.root: Optional[str] = None
+        self.paths: List[ProjectConfigPath] = []
+        self.rules: List[CompiledFilterRule] = []
+        self.locales: Optional[List[str]] = None
         # cache for all_locales, as that's not in `filter`
-        self._all_locales = None
+        self._all_locales: Optional[List[str]] = None
         self.environ = {}
-        self.children = []
-        self.excludes = []
-        self._cache = None
+        self.children: List[ProjectConfig] = []
+        self.excludes: List[ProjectConfig] = []
+        self._cache: Optional[ProjectConfig.FilterCache] = None
 
-    def same(self, other):
+    def same(self, other: ProjectConfig) -> bool:
         """Equality test, ignoring locales."""
         if other.__class__ is not self.__class__:
             return False
@@ -48,16 +100,16 @@ class ProjectConfig:
                 return False
         return True
 
-    def set_root(self, basepath):
+    def set_root(self, basepath: str) -> None:
         if self.path is None:
             self.root = None
             return
         self.root = mozpath.abspath(mozpath.join(mozpath.dirname(self.path), basepath))
 
-    def add_environment(self, **kwargs):
+    def add_environment(self, **kwargs) -> None:
         self.environ.update(kwargs)
 
-    def add_paths(self, *paths):
+    def add_paths(self, *paths: PathDictionary) -> None:
         """Add path dictionaries to this config.
         The dictionaries must have a `l10n` key. For monolingual files,
         `reference` is also required.
@@ -66,7 +118,7 @@ class ProjectConfig:
         """
         self._all_locales = None  # clear cache
         for d in paths:
-            rv = {
+            rv: ProjectConfigPath = {
                 "l10n": Matcher(d["l10n"], env=self.environ, root=self.root),
                 "module": d.get("module"),
             }
@@ -80,14 +132,16 @@ class ProjectConfig:
                 rv["locales"] = d["locales"][:]
             self.paths.append(rv)
 
-    def set_filter_py(self, filter_function):
+    def set_filter_py(self, filter_function: Callable) -> None:
         """Set legacy filter.py code.
         Assert that no rules are set.
         Also, normalize output already here.
         """
         assert not self.rules
 
-        def filter_(module, path, entity=None):
+        def filter_(
+            module: Optional[str], path: str, entity: Optional[str] = None
+        ) -> FilterAction:
             try:
                 rv = filter_function(module, path, entity=entity)
             except BaseException:  # we really want to handle EVERYTHING here
@@ -98,7 +152,7 @@ class ProjectConfig:
 
         self.filter_py = filter_
 
-    def add_rules(self, *rules):
+    def add_rules(self, *rules) -> None:
         """Add rules to filter on.
         Assert that there's no legacy filter.py code hooked up.
         """
@@ -106,13 +160,13 @@ class ProjectConfig:
         for rule in rules:
             self.rules.extend(self._compile_rule(rule))
 
-    def add_child(self, child):
+    def add_child(self, child: ProjectConfig) -> None:
         self._all_locales = None  # clear cache
         if child.excludes:
             raise ExcludeError("Included configs cannot declare their own excludes.")
         self.children.append(child)
 
-    def exclude(self, child):
+    def exclude(self, child: ProjectConfig) -> None:
         for config in child.configs:
             if config.excludes:
                 raise ExcludeError(
@@ -120,7 +174,7 @@ class ProjectConfig:
                 )
         self.excludes.append(child)
 
-    def set_locales(self, locales, deep=False):
+    def set_locales(self, locales: List[str], deep: bool = False) -> None:
         self._all_locales = None  # clear cache
         self.locales = locales
         if not deep:
@@ -129,17 +183,17 @@ class ProjectConfig:
             child.set_locales(locales, deep=deep)
 
     @property
-    def configs(self):
+    def configs(self) -> Iterator[ProjectConfig]:
         "Recursively get all configs in this project and its children"
         yield self
         for child in self.children:
             yield from child.configs
 
     @property
-    def all_locales(self):
+    def all_locales(self) -> List[str]:
         "Recursively get all locales in this project and its paths"
         if self._all_locales is None:
-            all_locales = set()
+            all_locales: Set[str] = set()
             for config in self.configs:
                 if config.locales is not None:
                     all_locales.update(config.locales)
@@ -149,7 +203,7 @@ class ProjectConfig:
             self._all_locales = sorted(all_locales)
         return self._all_locales
 
-    def filter(self, l10n_file, entity=None):
+    def filter(self, l10n_file: File, entity: Optional[str] = None) -> FilterAction:
         """Filter a localization file or entities within, according to
         this configuration file."""
         if l10n_file.locale not in self.all_locales:
@@ -162,12 +216,12 @@ class ProjectConfig:
         return rv
 
     class FilterCache:
-        def __init__(self, locale):
+        def __init__(self, locale: str) -> None:
             self.locale = locale
-            self.rules = []
-            self.l10n_paths = []
+            self.rules: List[CompiledFilterRule] = []
+            self.l10n_paths: List[Matcher] = []
 
-    def cache(self, locale):
+    def cache(self, locale: str) -> ProjectConfig.FilterCache:
         if self._cache and self._cache.locale == locale:
             return self._cache
         self._cache = self.FilterCache(locale)
@@ -181,7 +235,9 @@ class ProjectConfig:
             self._cache.rules.append(cached_rule)
         return self._cache
 
-    def _filter(self, l10n_file, entity=None):
+    def _filter(
+        self, l10n_file: File, entity: Optional[str] = None
+    ) -> Optional[FilterAction]:
         if any(exclude.filter(l10n_file) == "error" for exclude in self.excludes):
             return
         actions = {child._filter(l10n_file, entity=entity) for child in self.children}
@@ -189,16 +245,17 @@ class ProjectConfig:
             # return early if we know we'll error
             return "error"
 
-        cached = self.cache(l10n_file.locale)
+        cached = self.cache(cast(str, l10n_file.locale))
         if any(p.match(l10n_file.fullpath) for p in cached.l10n_paths):
             action = "error"
             for rule in reversed(cached.rules):
                 if not rule["path"].match(l10n_file.fullpath):
                     continue
-                if ("key" in rule) ^ (entity is not None):
+                if "key" in rule:
+                    if entity is None or not rule["key"].match(entity):
+                        continue
+                elif entity is not None:
                     # key/file mismatch, not a matching rule
-                    continue
-                if "key" in rule and not rule["key"].match(entity):
                     continue
                 action = rule["action"]
                 break
@@ -210,30 +267,31 @@ class ProjectConfig:
         if "ignore" in actions:
             return "ignore"
 
-    def _compile_rule(self, rule):
+    def _compile_rule(self, rule: FilterRule) -> Iterator[CompiledFilterRule]:
         assert "path" in rule
         if isinstance(rule["path"], list):
             for path in rule["path"]:
-                _rule = rule.copy()
-                _rule["path"] = Matcher(path, env=self.environ, root=self.root)
-                yield from self._compile_rule(_rule)
+                rule_ = rule.copy()
+                rule_["path"] = Matcher(path, env=self.environ, root=self.root)
+                yield from self._compile_rule(rule_)
             return
         if isinstance(rule["path"], str):
             rule["path"] = Matcher(rule["path"], env=self.environ, root=self.root)
+
         if "key" not in rule:
-            yield rule
+            yield cast(CompiledFilterRule, rule)
             return
-        if not isinstance(rule["key"], str):
-            for key in rule["key"]:
-                _rule = rule.copy()
-                _rule["key"] = key
-                yield from self._compile_rule(_rule)
-            return
-        rule = rule.copy()
         key = rule["key"]
+        if not isinstance(key, str):
+            for key_ in key:
+                rule_ = rule.copy()
+                rule_["key"] = key_
+                yield from self._compile_rule(rule_)
+            return
+        cr = cast(CompiledFilterRule, rule.copy())
         if key.startswith("re:"):
             key = key[3:]
         else:
             key = re.escape(key) + "$"
-        rule["key"] = re.compile(key)
-        yield rule
+        cr["key"] = re.compile(key)
+        yield cr

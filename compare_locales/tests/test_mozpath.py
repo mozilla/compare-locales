@@ -2,21 +2,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
+import unittest
+
 from compare_locales.mozpath import (
-    relpath,
-    join,
-    normpath,
-    dirname,
-    commonprefix,
+    basedir,
     basename,
+    commonprefix,
+    dirname,
+    join,
+    match,
+    normpath,
+    rebase,
+    relpath,
     split,
     splitext,
-    basedir,
-    match,
-    rebase,
 )
-import unittest
-import os
 
 
 class TestPath(unittest.TestCase):

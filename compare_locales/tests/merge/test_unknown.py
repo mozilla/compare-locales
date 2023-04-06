@@ -4,7 +4,7 @@
 
 import unittest
 
-from compare_locales.merge import merge_channels, MergeNotSupportedError
+from compare_locales.merge import MergeNotSupportedError, merge_channels
 
 
 class TestMergeUnknown(unittest.TestCase):

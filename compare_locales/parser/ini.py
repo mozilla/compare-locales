@@ -2,9 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import re
+from __future__ import annotations
 
-from .base import Entry, OffsetComment, Parser
+import re
+from typing import Union
+
+from .base import Entity, Entry, Junk, OffsetComment, Parser, Whitespace
 
 
 class IniSection(Entry):
@@ -38,15 +41,17 @@ class IniParser(Parser):
         self.reKey = re.compile("(?P<key>.+?)=(?P<val>.*)", re.M)
         Parser.__init__(self)
 
-    def getNext(self, ctx, offset):
+    def getNext(
+        self, ctx: Parser.Context, offset: int
+    ) -> Union[Junk, OffsetComment, IniSection, Entity, Whitespace]:
         contents = ctx.contents
         m = self.reSection.match(contents, offset)
         if m:
             return IniSection(ctx, m.span(), m.span("val"))
 
-        return super().getNext(ctx, offset)
+        return super().getNext(ctx, offset)  # type: ignore
 
-    def getJunk(self, ctx, offset, *expressions):
+    def getJunk(self, ctx: Parser.Context, offset: int, *expressions) -> Junk:
         # base.Parser.getNext calls us with self.reKey, self.reComment.
         # Add self.reSection to the end-of-junk expressions
         expressions = expressions + (self.reSection,)

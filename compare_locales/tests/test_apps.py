@@ -1,14 +1,10 @@
-import unittest
 import os
-import tempfile
 import shutil
+import tempfile
+import unittest
 
 from compare_locales import mozpath
-from compare_locales.paths import (
-    EnumerateApp,
-    EnumerateSourceTreeApp,
-    ProjectFiles,
-)
+from compare_locales.paths import EnumerateApp, EnumerateSourceTreeApp, ProjectFiles
 
 MAIL_INI = """\
 [general]

@@ -5,7 +5,7 @@
 import unittest
 
 from compare_locales.checks import getChecker
-from compare_locales.parser import getParser, Parser, DTDEntity
+from compare_locales.parser import DTDEntity, Parser, getParser
 from compare_locales.paths import File
 from compare_locales.tests import BaseHelper
 

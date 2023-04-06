@@ -2,15 +2,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from collections import Counter
-import os
+from __future__ import annotations
 
-from compare_locales import parser, checks
-from compare_locales.paths import File, REFERENCE_LOCALE
+import os
+from collections import Counter
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterator, List, Optional, Union
+
+from .. import checks, parser
+from ..paths import REFERENCE_LOCALE, File
+
+if TYPE_CHECKING:
+    from ..keyedtuple import KeyedTuple
+    from ..parser.base import Entity, Junk, LiteralEntity
 
 
 class L10nLinter:
-    def lint(self, files, get_reference_and_tests):
+    def lint(self, files: Iterator[str], get_reference_and_tests: Callable):
         results = []
         for path in files:
             if not parser.hasParser(path):
@@ -19,7 +26,7 @@ class L10nLinter:
             results.extend(self.lint_file(path, ref, extra_tests))
         return results
 
-    def lint_file(self, path, ref, extra_tests):
+    def lint_file(self, path: str, ref: Any, extra_tests):
         file_parser = parser.getParser(path)
         if ref is not None and os.path.isfile(ref):
             file_parser.readFile(ref)
@@ -43,7 +50,12 @@ class L10nLinter:
 class EntityLinter:
     """Factored out helper to run linters on a single entity."""
 
-    def __init__(self, current, checker, reference):
+    def __init__(
+        self,
+        current: Union[List[Entity], KeyedTuple],
+        checker: Optional[checks.Checker],
+        reference: Union[Dict[Any, Any], KeyedTuple],
+    ) -> None:
         self.key_count = Counter(entity.key for entity in current)
         self.checker = checker
         self.reference = reference
@@ -58,7 +70,9 @@ class EntityLinter:
         for res in self.lint_value(current_entity):
             yield res
 
-    def lint_full_entity(self, current_entity):
+    def lint_full_entity(
+        self, current_entity: Entity
+    ) -> Iterator[Dict[str, Union[int, str]]]:
         """Checks that go good or bad for a full entity,
         without a particular spot inside the entity.
         """
@@ -75,7 +89,7 @@ class EntityLinter:
         if current_entity.key in self.reference:
             reference_entity = self.reference[current_entity.key]
             if not current_entity.equals(reference_entity):
-                if lineno is None:
+                if lineno is None or col is None:
                     lineno, col = current_entity.position()
                 msg = "Changes to string require a new ID: {}".format(
                     current_entity.key
@@ -87,7 +101,9 @@ class EntityLinter:
                     "message": msg,
                 }
 
-    def lint_value(self, current_entity):
+    def lint_value(
+        self, current_entity: Entity
+    ) -> Iterator[Dict[str, Union[int, str]]]:
         """Checks that error on particular locations in the entity value."""
         if self.checker:
             for tp, pos, msg, cat in self.checker.check(current_entity, current_entity):
@@ -102,7 +118,9 @@ class EntityLinter:
                     "message": msg,
                 }
 
-    def handle_junk(self, current_entity):
+    def handle_junk(
+        self, current_entity: Union[LiteralEntity, Junk]
+    ) -> Optional[Dict[str, Union[int, str]]]:
         if not isinstance(current_entity, parser.Junk):
             return None
 

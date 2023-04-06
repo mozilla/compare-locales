@@ -5,6 +5,7 @@
 import unittest
 
 from compare_locales.serializer import serialize
+
 from . import Helper
 
 

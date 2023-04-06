@@ -14,22 +14,31 @@ newest to the oldest resource, too.
 In merge_resources, there's an option to choose the values from oldest
 to newest instead.
 """
+from __future__ import annotations
 
-from collections import OrderedDict, defaultdict
 from codecs import encode
+from collections import OrderedDict, defaultdict
 from functools import reduce
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Union, cast
 
+from . import parser as cl
+from .compare.utils import AddRemove
+from .parser.base import Entry, StickyEntry, Whitespace
 
-from compare_locales import parser as cl
-from compare_locales.parser.base import StickyEntry
-from compare_locales.compare.utils import AddRemove
+if TYPE_CHECKING:
+    from .parser import Parser
+
+EntityKey = Union[str, Tuple[str, int], Whitespace]
+EntryOrJunk = Union[Entry, cl.Junk]
 
 
 class MergeNotSupportedError(ValueError):
     pass
 
 
-def merge_channels(name, resources):
+def merge_channels(
+    name: str, resources: Union[Tuple[bytes, bytes], Tuple[bytes, bytes, bytes]]
+) -> bytes:
     try:
         parser = cl.getParser(name)
     except UserWarning:
@@ -39,7 +48,11 @@ def merge_channels(name, resources):
     return encode(serialize_legacy_resource(entities), parser.encoding)
 
 
-def merge_resources(parser, resources, keep_newest=True):
+def merge_resources(
+    parser: Parser,
+    resources: Iterable[Union[Iterable[EntryOrJunk], bytes]],
+    keep_newest: bool = True,
+) -> Iterable[EntryOrJunk]:
     """Merge parsed or unparsed resources, returning a enumerable of Entities.
 
     Resources are ordered from newest to oldest in the input. The structure
@@ -49,16 +62,20 @@ def merge_resources(parser, resources, keep_newest=True):
     then values are taken from the oldest first.
     """
 
-    def parse_resource(resource):
+    def parse_resource(
+        resource: Union[Iterable[EntryOrJunk], bytes]
+    ) -> OrderedDict[EntityKey, EntryOrJunk]:
         # The counter dict keeps track of number of identical comments.
-        counter = defaultdict(int)
+        counter: Dict[str, int] = defaultdict(int)
         if isinstance(resource, bytes):
             parser.readContents(resource)
             resource = parser.walk()
         pairs = [get_key_value(entity, counter) for entity in resource]
         return OrderedDict(pairs)
 
-    def get_key_value(entity, counter):
+    def get_key_value(
+        entity: Union[Entry, cl.Junk], counter: Dict[str, int]
+    ) -> Tuple[EntityKey, EntryOrJunk]:
         if isinstance(entity, cl.Comment):
             counter[entity.val] += 1
             # Use the (value, index) tuple as the key. AddRemove will
@@ -80,7 +97,11 @@ def merge_resources(parser, resources, keep_newest=True):
     return entities.values()
 
 
-def merge_two(newer, older, keep_newer=True):
+def merge_two(
+    newer: OrderedDict[EntityKey, EntryOrJunk],
+    older: OrderedDict[EntityKey, EntryOrJunk],
+    keep_newer: bool = True,
+) -> OrderedDict[EntityKey, EntryOrJunk]:
     """Merge two OrderedDicts.
 
     The order of the result dict is determined by `newer`.
@@ -88,7 +109,7 @@ def merge_two(newer, older, keep_newer=True):
     If `keep_newer` is False, the values will be taken from the older
     dict.
     """
-    diff = AddRemove()
+    diff = AddRemove[EntityKey]()
     diff.set_left(newer.keys())
     diff.set_right(older.keys())
 
@@ -96,8 +117,11 @@ def merge_two(newer, older, keep_newer=True):
     get_entity = get_newer_entity if keep_newer else get_older_entity
     contents = [(key, get_entity(newer, older, key)) for _, key in diff]
 
-    def prune(acc, cur):
-        _, entity = cur
+    def prune(
+        acc: List[Tuple[EntityKey, EntryOrJunk]],
+        cur: Tuple[EntityKey, Optional[EntryOrJunk]],
+    ) -> List[Tuple[EntityKey, EntryOrJunk]]:
+        key, entity = cur
         if entity is None:
             # Prune Nones which stand for duplicated comments.
             return acc
@@ -111,14 +135,18 @@ def merge_two(newer, older, keep_newer=True):
                     acc[-1] = (entity, entity)
                 return acc
 
-        acc.append(cur)
+        acc.append((key, entity))
         return acc
 
-    pruned = reduce(prune, contents, [])
+    pruned = reduce(prune, contents, cast(List[Tuple[EntityKey, EntryOrJunk]], []))
     return OrderedDict(pruned)
 
 
-def get_newer_entity(newer, older, key):
+def get_newer_entity(
+    newer: OrderedDict[EntityKey, EntryOrJunk],
+    older: OrderedDict[EntityKey, EntryOrJunk],
+    key: EntityKey,
+) -> Optional[EntryOrJunk]:
     entity = newer.get(key, None)
 
     # Always prefer the newer version.
@@ -128,7 +156,11 @@ def get_newer_entity(newer, older, key):
     return older.get(key)
 
 
-def get_older_entity(newer, older, key):
+def get_older_entity(
+    newer: OrderedDict[EntityKey, EntryOrJunk],
+    older: OrderedDict[EntityKey, EntryOrJunk],
+    key: EntityKey,
+) -> Optional[EntryOrJunk]:
     entity = older.get(key, None)
 
     # If we don't have an older version, or it's a StickyEntry,
@@ -139,5 +171,5 @@ def get_older_entity(newer, older, key):
     return entity
 
 
-def serialize_legacy_resource(entities):
+def serialize_legacy_resource(entities: Iterable[EntryOrJunk]) -> str:
     return "".join(entity.all for entity in entities)

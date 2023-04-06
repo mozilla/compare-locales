@@ -2,10 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from configparser import ConfigParser, NoSectionError, NoOptionError
+from __future__ import annotations
+
 from collections import defaultdict
-from compare_locales import util, mozpath
-from .project import ProjectConfig
+from configparser import ConfigParser, NoOptionError, NoSectionError
+from typing import Callable, Dict, Iterator, List, Tuple, Union
+
+from .. import mozpath, util
+from .project import PathDictionary, ProjectConfig
 
 
 class L10nConfigParser:
@@ -15,7 +19,7 @@ class L10nConfigParser:
     Subclass this and overwrite loadConfigs and addChild if you need async.
     """
 
-    def __init__(self, inipath, **kwargs):
+    def __init__(self, inipath: str, **kwargs) -> None:
         """Constructor for L10nConfigParsers
 
         inipath -- l10n.ini path
@@ -25,13 +29,13 @@ class L10nConfigParser:
         self.inipath = mozpath.normpath(inipath)
         # l10n.ini files can import other l10n.ini files, store the
         # corresponding L10nConfigParsers
-        self.children = []
+        self.children: List[L10nConfigParser] = []
         # we really only care about the l10n directories described in l10n.ini
-        self.dirs = []
+        self.dirs: List[str] = []
         # optional defaults to be passed to the inner ConfigParser (unused?)
         self.defaults = kwargs
 
-    def getDepth(self, cp):
+    def getDepth(self, cp: ConfigParser) -> str:
         """Get the depth for the comparison from the parsed l10n.ini."""
         try:
             depth = cp.get("general", "depth")
@@ -39,7 +43,7 @@ class L10nConfigParser:
             depth = "."
         return depth
 
-    def getFilters(self):
+    def getFilters(self) -> List[Callable]:
         """Get the test functions from this ConfigParser and all children.
 
         Only works with synchronous loads, used by compare-locales, which
@@ -62,7 +66,7 @@ class L10nConfigParser:
 
         return filters
 
-    def loadConfigs(self):
+    def loadConfigs(self) -> ConfigParser:
         """Entry point to load the l10n.ini file this Parser refers to.
 
         This implementation uses synchronous loads, subclasses might overload
@@ -88,14 +92,14 @@ class L10nConfigParser:
             self.dirs.extend(cp.get("compare", "dirs").split())
         except (NoOptionError, NoSectionError):
             pass
-        # try to set "all_path" and "all_url"
+        # try to set "all_path"
         try:
             self.all_path = mozpath.join(self.base, cp.get("general", "all"))
         except (NoOptionError, NoSectionError):
             self.all_path = None
         return cp
 
-    def addChild(self, title, path, orig_cp):
+    def addChild(self, title: str, path: str, orig_cp: ConfigParser) -> None:
         """Create a child L10nConfigParser and load it.
 
         title -- indicates the module's name
@@ -106,7 +110,7 @@ class L10nConfigParser:
         cp.loadConfigs()
         self.children.append(cp)
 
-    def dirsIter(self):
+    def dirsIter(self) -> Iterator[Tuple[str, Tuple[str, str]]]:
         """Iterate over all dirs and our base path for this l10n.ini"""
         for dir in self.dirs:
             yield dir, (self.base, dir)
@@ -119,8 +123,10 @@ class L10nConfigParser:
         for child in self.children:
             yield from child.directories()
 
-    def allLocales(self):
+    def allLocales(self) -> List[str]:
         """Return a list of all the locales of this project"""
+        if not self.all_path:
+            return []
         with open(self.all_path) as f:
             return util.parseLocales(f.read())
 
@@ -131,7 +137,7 @@ class SourceTreeConfigParser(L10nConfigParser):
     we do for real builds.
     """
 
-    def __init__(self, inipath, base, redirects):
+    def __init__(self, inipath: str, base: str, redirects: Dict[str, str]) -> None:
         """Add additional arguments basepath.
 
         basepath is used to resolve local paths via branchnames.
@@ -142,7 +148,7 @@ class SourceTreeConfigParser(L10nConfigParser):
         self.base = base
         self.redirects = redirects
 
-    def addChild(self, title, path, orig_cp):
+    def addChild(self, title: str, path: str, orig_cp: ConfigParser) -> None:
         # check if there's a section with details for this include
         # we might have to check a different repo, or even VCS
         # for example, projects like "mail" indicate in
@@ -163,21 +169,21 @@ class SourceTreeConfigParser(L10nConfigParser):
 class EnumerateApp:
     reference = "en-US"
 
-    def __init__(self, inipath, l10nbase):
+    def __init__(self, inipath: str, l10nbase: str) -> None:
         self.setupConfigParser(inipath)
         self.modules = defaultdict(dict)
         self.l10nbase = mozpath.abspath(l10nbase)
         self.filters = []
         self.addFilters(*self.config.getFilters())
 
-    def setupConfigParser(self, inipath):
+    def setupConfigParser(self, inipath: str) -> None:
         self.config = L10nConfigParser(inipath)
         self.config.loadConfigs()
 
-    def addFilters(self, *args):
+    def addFilters(self, *args) -> None:
         self.filters += args
 
-    def asConfig(self):
+    def asConfig(self) -> ProjectConfig:
         # We've already normalized paths in the ini parsing.
         # Set the path and root to None to just keep our paths as is.
         config = ProjectConfig(None)
@@ -190,15 +196,19 @@ class EnumerateApp:
         config.set_locales(self.config.allLocales(), deep=True)
         return config
 
-    def _config_for_ini(self, projectconfig, aConfig):
+    def _config_for_ini(
+        self,
+        projectconfig: ProjectConfig,
+        aConfig: Union[SourceTreeConfigParser, L10nConfigParser],
+    ) -> None:
         for k, (basepath, module) in aConfig.dirsIter():
-            paths = {
+            paths: PathDictionary = {
                 "module": module,
                 "reference": mozpath.normpath(f"{basepath}/{module}/locales/en-US/**"),
                 "l10n": mozpath.normpath("{l10n_base}/{locale}/%s/**" % module),
             }
             if module == "mobile/android/base":
-                paths["test"] = ["android-dtd"]
+                paths["test"] = set(["android-dtd"])
             projectconfig.add_paths(paths)
         for child in aConfig.children:
             self._config_for_ini(projectconfig, child)
@@ -210,11 +220,13 @@ class EnumerateSourceTreeApp(EnumerateApp):
     be checked out for building.
     """
 
-    def __init__(self, inipath, basepath, l10nbase, redirects):
+    def __init__(
+        self, inipath: str, basepath: str, l10nbase: str, redirects: Dict[str, str]
+    ) -> None:
         self.basepath = basepath
         self.redirects = redirects
         EnumerateApp.__init__(self, inipath, l10nbase)
 
-    def setupConfigParser(self, inipath):
+    def setupConfigParser(self, inipath: str) -> None:
         self.config = SourceTreeConfigParser(inipath, self.basepath, self.redirects)
         self.config.loadConfigs()

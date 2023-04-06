@@ -5,6 +5,7 @@
 import unittest
 
 from compare_locales.paths import ProjectConfig
+
 from . import SetupMixin
 
 

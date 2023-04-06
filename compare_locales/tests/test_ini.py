@@ -4,15 +4,9 @@
 
 import unittest
 
-from compare_locales.tests import ParserTestMixin, BaseHelper
+from compare_locales.parser import Comment, IniSection, Junk, Whitespace
 from compare_locales.paths import File
-from compare_locales.parser import (
-    Comment,
-    IniSection,
-    Junk,
-    Whitespace,
-)
-
+from compare_locales.tests import BaseHelper, ParserTestMixin
 
 mpl2 = """\
 ; This Source Code Form is subject to the terms of the Mozilla Public

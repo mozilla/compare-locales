@@ -7,12 +7,10 @@
 import os
 import shutil
 
-from compare_locales import paths, mozpath
-
+from .. import mozpath, paths
 from .content import ContentComparer
 from .observer import Observer, ObserverList
-from .utils import Tree, AddRemove
-
+from .utils import AddRemove, Tree
 
 __all__ = [
     "ContentComparer",

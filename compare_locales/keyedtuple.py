@@ -14,19 +14,27 @@ In the interfaces that check for membership, dicts check keys and
 sequences check values. Always try our dict cache `__map` first,
 and fall back to the superclass implementation.
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Iterable, Iterator, Tuple, Type, Union, cast
+
+if TYPE_CHECKING:
+    from .parser import Entity, Junk
 
 
-class KeyedTuple(tuple):
-    def __new__(cls, iterable):
-        return super().__new__(cls, iterable)
+class KeyedTuple(Tuple[Union[Entity, Junk], ...]):
+    def __new__(
+        cls: Type[KeyedTuple], iterable: Iterable[Union[Entity, Junk]]
+    ) -> KeyedTuple:
+        return super().__new__(cls, iterable)  # type: ignore
 
-    def __init__(self, iterable):
+    def __init__(self, iterable: Iterable[Union[Entity, Junk]]) -> None:
         self.__map = {}
         if iterable:
             for index, item in enumerate(self):
                 self.__map[item.key] = index
 
-    def __contains__(self, key):
+    def __contains__(self, key: object) -> bool:
         try:
             contains = key in self.__map
             if contains:
@@ -35,20 +43,20 @@ class KeyedTuple(tuple):
             pass
         return super().__contains__(key)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Union[str, int]) -> Union[Entity, Junk]:  # type:ignore
         try:
             key = self.__map[key]
         except (KeyError, TypeError):
             pass
-        return super().__getitem__(key)
+        return super().__getitem__(cast(int, key))
 
-    def keys(self):
+    def keys(self) -> Iterator[str]:
         for value in self:
             yield value.key
 
-    def items(self):
+    def items(self) -> Iterator[Tuple[str, Union[Entity, Junk]]]:
         for value in self:
             yield value.key, value
 
-    def values(self):
+    def values(self) -> "KeyedTuple":
         return self

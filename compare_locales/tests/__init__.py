@@ -6,10 +6,11 @@
 """
 
 
-from itertools import zip_longest
-from pkg_resources import resource_string
 import re
 import unittest
+from itertools import zip_longest
+
+from pkg_resources import resource_string
 
 from compare_locales import parser
 from compare_locales.checks import getChecker

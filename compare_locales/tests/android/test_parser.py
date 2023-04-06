@@ -4,13 +4,9 @@
 
 import unittest
 
-from compare_locales.tests import ParserTestMixin
-from compare_locales.parser import (
-    Comment,
-    Junk,
-    Whitespace,
-)
+from compare_locales.parser import Comment, Junk, Whitespace
 from compare_locales.parser.android import DocumentWrapper
+from compare_locales.tests import ParserTestMixin
 
 
 class TestAndroidParser(ParserTestMixin, unittest.TestCase):
