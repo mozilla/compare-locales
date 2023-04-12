@@ -4,6 +4,7 @@
 
 import re
 
+from compare_locales.keyedtuple import KeyedTuple
 from compare_locales.parsers import (
     CAN_NONE,
     CAN_COPY,
@@ -33,6 +34,7 @@ from compare_locales.parsers import (
     BadEntity,
     Parser,
 )
+from compare_locales.paths import File
 
 __all__ = [
     "CAN_NONE",
@@ -67,17 +69,35 @@ __all__ = [
 __constructors = []
 
 
+def patchParser(parser):
+    "Monkeypatch the parser with methods that depend on compare-locales"
+
+    def parse(self):
+        return KeyedTuple(self)
+
+    def readFile(self, file):
+        """Read contents from disk, with universal_newlines"""
+        if isinstance(file, File):
+            file = file.fullpath
+        with open(file, encoding=self.encoding, errors="replace", newline=None) as f:
+            self.readUnicode(f.read())
+
+    parser.__class__.parse = parse
+    parser.__class__.readFile = readFile
+    return parser
+
+
 def getParser(path):
     for item in __constructors:
         if re.search(item[0], path):
-            return item[1]
+            return patchParser(item[1])
     try:
         from pkg_resources import iter_entry_points
 
         for entry_point in iter_entry_points("compare_locales.parsers"):
             p = entry_point.resolve()()
             if p.use(path):
-                return p
+                return patchParser(p)
     except (ImportError, OSError):
         pass
     raise UserWarning("Cannot find Parser")
