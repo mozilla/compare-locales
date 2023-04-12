@@ -5,7 +5,9 @@
 from collections import Counter
 import os
 
-from compare_locales import parser, checks
+from compare_locales import checks
+from compare_locales.parser import getParser, hasParser
+from compare_locales.parsers import Junk
 from compare_locales.paths import File, REFERENCE_LOCALE
 
 
@@ -13,14 +15,14 @@ class L10nLinter:
     def lint(self, files, get_reference_and_tests):
         results = []
         for path in files:
-            if not parser.hasParser(path):
+            if not hasParser(path):
                 continue
             ref, extra_tests = get_reference_and_tests(path)
             results.extend(self.lint_file(path, ref, extra_tests))
         return results
 
     def lint_file(self, path, ref, extra_tests):
-        file_parser = parser.getParser(path)
+        file_parser = getParser(path)
         if ref is not None and os.path.isfile(ref):
             file_parser.readFile(ref)
             reference = file_parser.parse()
@@ -103,7 +105,7 @@ class EntityLinter:
                 }
 
     def handle_junk(self, current_entity):
-        if not isinstance(current_entity, parser.Junk):
+        if not isinstance(current_entity, Junk):
             return None
 
         lineno, col = current_entity.position()

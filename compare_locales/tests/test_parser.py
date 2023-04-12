@@ -8,7 +8,8 @@ import tempfile
 import unittest
 from os.path import join
 
-from compare_locales.parser import Parser, getParser, patchParser
+from compare_locales.parser import getParser, patchParser
+from compare_locales.parsers import Parser
 
 
 class TestEmptyParser(unittest.TestCase):
