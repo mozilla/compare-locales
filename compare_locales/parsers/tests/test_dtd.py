@@ -8,8 +8,7 @@
 import unittest
 import re
 
-from compare_locales.parser import getParser
-from compare_locales.parsers import Comment, Entity, Junk, Whitespace
+from compare_locales.parsers import Comment, DTDParser, Entity, Junk, Whitespace
 
 from . import ParserTestMixin
 
@@ -17,7 +16,7 @@ from . import ParserTestMixin
 class TestDTD(ParserTestMixin, unittest.TestCase):
     """Tests for the DTD Parser."""
 
-    filename = "foo.dtd"
+    Parser = DTDParser
 
     def test_one_entity(self):
         self._test("""<!ENTITY foo.label "stuff">""", (("foo.label", "stuff"),))
@@ -93,7 +92,7 @@ class TestDTD(ParserTestMixin, unittest.TestCase):
         )
 
     def test_license_header(self):
-        p = getParser("foo.dtd")
+        p = DTDParser()
         p.readContents(self.resource("triple-license.dtd"))
         entities = list(p.walk())
         self.assertIsInstance(entities[0], Comment)

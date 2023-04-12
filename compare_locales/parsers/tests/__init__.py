@@ -10,18 +10,17 @@ from itertools import zip_longest
 from pkg_resources import resource_string
 import re
 
-from compare_locales.parser import getParser
 from compare_locales.parsers import Entity
 
 
 class ParserTestMixin:
     """Utility methods used by the parser tests."""
 
-    filename = None
+    Parser = None
 
     def setUp(self):
         """Create a parser for this test."""
-        self.parser = getParser(self.filename)
+        self.parser = self.Parser()
 
     def tearDown(self):
         "tear down this test"

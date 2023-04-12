@@ -4,7 +4,13 @@
 
 import unittest
 
-from compare_locales.parsers import Comment, DefinesInstruction, Junk, Whitespace
+from compare_locales.parsers import (
+    Comment,
+    DefinesInstruction,
+    DefinesParser,
+    Junk,
+    Whitespace,
+)
 
 from . import ParserTestMixin
 
@@ -16,7 +22,7 @@ mpl2 = """\
 
 
 class TestDefinesParser(ParserTestMixin, unittest.TestCase):
-    filename = "defines.inc"
+    Parser = DefinesParser
 
     def testBrowser(self):
         self._test(

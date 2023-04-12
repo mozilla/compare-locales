@@ -4,7 +4,7 @@
 
 import unittest
 
-from compare_locales.parsers import Comment, IniSection, Junk, Whitespace
+from compare_locales.parsers import Comment, IniParser, IniSection, Junk, Whitespace
 
 from . import ParserTestMixin
 
@@ -16,7 +16,7 @@ mpl2 = """\
 
 
 class TestIniParser(ParserTestMixin, unittest.TestCase):
-    filename = "foo.ini"
+    Parser = IniParser
 
     def testSimpleHeader(self):
         self._test(

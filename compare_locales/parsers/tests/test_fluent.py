@@ -9,6 +9,7 @@ from compare_locales.parsers import (
     FluentComment,
     FluentEntity,
     FluentMessage,
+    FluentParser,
     FluentTerm,
     Junk,
     Whitespace,
@@ -18,8 +19,8 @@ from . import ParserTestMixin
 
 
 class TestFluentParser(ParserTestMixin, unittest.TestCase):
+    Parser = FluentParser
     maxDiff = None
-    filename = "foo.ftl"
 
     def test_equality_same(self):
         source = b'progress = Progress: { NUMBER($num, style: "percent") }.'
