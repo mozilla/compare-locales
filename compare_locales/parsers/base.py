@@ -7,23 +7,6 @@ import bisect
 import codecs
 from collections import Counter
 
-__constructors = []
-
-
-# The allowed capabilities for the Parsers.  They define the exact strategy
-# used by ContentComparer.merge.
-
-# Don't perform any merging
-CAN_NONE = 0
-# Copy the entire reference file
-CAN_COPY = 1
-# Remove broken entities from localization
-# Without CAN_MERGE, en-US is not good to use for localization.
-CAN_SKIP = 2
-# Add missing and broken entities from the reference to localization
-# This effectively means that en-US is good to use for localized files.
-CAN_MERGE = 4
-
 
 class Entry:
     """
@@ -292,7 +275,6 @@ class BadEntity(ValueError):
 
 
 class Parser:
-    capabilities = CAN_SKIP | CAN_MERGE
     reWhitespace = re.compile("[ \t\r\n]+", re.M)
     Comment = Comment
     # NotImplementedError would be great, but also tedious

@@ -6,10 +6,6 @@ import re
 
 from compare_locales.keyedtuple import KeyedTuple
 from compare_locales.parsers import (
-    CAN_NONE,
-    CAN_COPY,
-    CAN_SKIP,
-    CAN_MERGE,
     AndroidParser,
     DefinesInstruction,
     DefinesParser,
@@ -66,10 +62,36 @@ __all__ = [
     "PropertiesEntity",
 ]
 
-__constructors = []
+# The allowed capabilities for the Parsers.  They define the exact strategy
+# used by ContentComparer.merge.
+
+# Don't perform any merging
+CAN_NONE = 0
+# Copy the entire reference file
+CAN_COPY = 1
+# Remove broken entities from localization
+# Without CAN_MERGE, en-US is not good to use for localization.
+CAN_SKIP = 2
+# Add missing and broken entities from the reference to localization
+# This effectively means that en-US is good to use for localized files.
+CAN_MERGE = 4
+
+__constructors = [
+    # Android does l10n fallback at runtime, don't merge en-US strings
+    ("strings.*\\.xml$", AndroidParser(), CAN_SKIP),
+    ("\\.dtd$", DTDParser(), CAN_SKIP | CAN_MERGE),
+    ("\\.properties$", PropertiesParser(), CAN_SKIP | CAN_MERGE),
+    ("\\.ini$", IniParser(), CAN_SKIP | CAN_MERGE),
+    # can't merge, #unfilter needs to be the last item, which we don't support
+    ("\\.inc$", DefinesParser(), CAN_COPY),
+    # Fluent does l10n fallback at runtime, don't merge en-US strings
+    ("\\.ftl$", FluentParser(), CAN_SKIP),
+    # gettext does l10n fallback at runtime, don't merge en-US strings
+    ("\\.pot?$", PoParser(), CAN_SKIP),
+]
 
 
-def patchParser(parser):
+def patchParser(parser, capabilities=CAN_SKIP | CAN_MERGE):
     "Monkeypatch the parser with methods that depend on compare-locales"
 
     def parse(self):
@@ -82,6 +104,7 @@ def patchParser(parser):
         with open(file, encoding=self.encoding, errors="replace", newline=None) as f:
             self.readUnicode(f.read())
 
+    parser.__class__.capabilities = capabilities
     parser.__class__.parse = parse
     parser.__class__.readFile = readFile
     return parser
@@ -90,7 +113,7 @@ def patchParser(parser):
 def getParser(path):
     for item in __constructors:
         if re.search(item[0], path):
-            return patchParser(item[1])
+            return patchParser(item[1], item[2])
     try:
         from pkg_resources import iter_entry_points
 
@@ -108,14 +131,3 @@ def hasParser(path):
         return bool(getParser(path))
     except UserWarning:
         return False
-
-
-__constructors = [
-    ("strings.*\\.xml$", AndroidParser()),
-    ("\\.dtd$", DTDParser()),
-    ("\\.properties$", PropertiesParser()),
-    ("\\.ini$", IniParser()),
-    ("\\.inc$", DefinesParser()),
-    ("\\.ftl$", FluentParser()),
-    ("\\.pot?$", PoParser()),
-]

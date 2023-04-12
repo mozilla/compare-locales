@@ -9,7 +9,6 @@ from fluent.syntax import ast as ftl
 from fluent.syntax.serializer import serialize_comment
 from fluent.syntax.visitor import Visitor
 from .base import (
-    CAN_SKIP,
     Entry,
     Entity,
     Comment,
@@ -162,8 +161,6 @@ class FluentComment(Comment):
 
 
 class FluentParser(Parser):
-    capabilities = CAN_SKIP
-
     def __init__(self):
         super().__init__()
         self.ftl_parser = FTLParser()

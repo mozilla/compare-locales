@@ -3,10 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from .base import (
-    CAN_NONE,
-    CAN_COPY,
-    CAN_SKIP,
-    CAN_MERGE,
     Entry,
     Entity,
     Comment,
@@ -34,10 +30,6 @@ from .po import PoParser
 from .properties import PropertiesParser, PropertiesEntity
 
 __all__ = [
-    "CAN_NONE",
-    "CAN_COPY",
-    "CAN_SKIP",
-    "CAN_MERGE",
     "Junk",
     "Entry",
     "Entity",

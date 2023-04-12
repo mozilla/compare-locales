@@ -10,7 +10,7 @@ Parses gettext po and pot files.
 
 import re
 
-from .base import CAN_SKIP, Entity, BadEntity, Parser
+from .base import Entity, BadEntity, Parser
 
 
 class PoEntityMixin:
@@ -50,9 +50,6 @@ def eval_stringlist(lines):
 
 
 class PoParser(Parser):
-    # gettext l10n fallback at runtime, don't merge en-US strings
-    capabilities = CAN_SKIP
-
     reKey = re.compile("msgctxt|msgid")
     reValue = re.compile("(?P<white>[ \t\r\n]*)(?P<cmd>msgstr)")
     reComment = re.compile(r"(?:#.*?\n)+")
