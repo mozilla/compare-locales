@@ -5,7 +5,7 @@
 import re
 from difflib import SequenceMatcher
 
-from compare_locales.parser import PropertiesEntity
+from compare_locales.parsers import PropertiesEntity
 from compare_locales import plurals
 from .base import Checker
 

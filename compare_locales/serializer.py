@@ -26,12 +26,8 @@ from functools import reduce
 
 from compare_locales.merge import merge_resources, serialize_legacy_resource
 from compare_locales.parser import getParser
-from compare_locales.parser.base import (
-    Entity,
-    PlaceholderEntity,
-    Junk,
-    Whitespace,
-)
+from compare_locales.parsers import Entity, Junk, Whitespace
+from compare_locales.parsers.base import PlaceholderEntity
 
 
 class SerializationNotSupportedError(ValueError):

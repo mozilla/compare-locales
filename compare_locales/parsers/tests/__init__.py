@@ -10,7 +10,8 @@ from itertools import zip_longest
 from pkg_resources import resource_string
 import re
 
-from compare_locales import parser
+from compare_locales.parser import getParser
+from compare_locales.parsers import Entity
 
 
 class ParserTestMixin:
@@ -20,7 +21,7 @@ class ParserTestMixin:
 
     def setUp(self):
         """Create a parser for this test."""
-        self.parser = parser.getParser(self.filename)
+        self.parser = getParser(self.filename)
 
     def tearDown(self):
         "tear down this test"
@@ -42,7 +43,7 @@ class ParserTestMixin:
         for entity, ref in zip_longest(entities, refs):
             self.assertTrue(entity, "excess reference entity " + str(ref))
             self.assertTrue(ref, "excess parsed entity " + str(entity))
-            if isinstance(entity, parser.Entity):
+            if isinstance(entity, Entity):
                 self.assertEqual(entity.key, ref[0])
                 self.assertEqual(entity.val, ref[1])
                 if len(ref) == 3:

@@ -4,8 +4,17 @@
 
 import unittest
 
-from compare_locales import parser
-from compare_locales.tests import ParserTestMixin
+from compare_locales.parsers import (
+    Comment,
+    FluentComment,
+    FluentEntity,
+    FluentMessage,
+    FluentTerm,
+    Junk,
+    Whitespace,
+)
+
+from . import ParserTestMixin
 
 
 class TestFluentParser(ParserTestMixin, unittest.TestCase):
@@ -174,60 +183,60 @@ baz = Baz
         entities = self.parser.walk()
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.FluentComment))
+        self.assertTrue(isinstance(entity, FluentComment))
         self.assertEqual(entity.all, "### Resource Comment")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.Whitespace))
+        self.assertTrue(isinstance(entity, Whitespace))
         self.assertEqual(entity.all, "\n\n")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.FluentMessage))
+        self.assertTrue(isinstance(entity, FluentMessage))
         self.assertEqual(entity.raw_val, "Foo")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.Whitespace))
+        self.assertTrue(isinstance(entity, Whitespace))
         self.assertEqual(entity.all, "\n\n")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.FluentComment))
+        self.assertTrue(isinstance(entity, FluentComment))
         self.assertEqual(entity.all, "## Group Comment")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.Whitespace))
+        self.assertTrue(isinstance(entity, Whitespace))
         self.assertEqual(entity.all, "\n\n")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.FluentTerm))
+        self.assertTrue(isinstance(entity, FluentTerm))
         self.assertEqual(entity.raw_val, "Bar")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.Whitespace))
+        self.assertTrue(isinstance(entity, Whitespace))
         self.assertEqual(entity.all, "\n\n")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.FluentComment))
+        self.assertTrue(isinstance(entity, FluentComment))
         self.assertEqual(entity.all, "##")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.Whitespace))
+        self.assertTrue(isinstance(entity, Whitespace))
         self.assertEqual(entity.all, "\n\n")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.FluentComment))
+        self.assertTrue(isinstance(entity, FluentComment))
         self.assertEqual(entity.all, "# Standalone Comment")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.Whitespace))
+        self.assertTrue(isinstance(entity, Whitespace))
         self.assertEqual(entity.all, "\n\n")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.FluentMessage))
+        self.assertTrue(isinstance(entity, FluentMessage))
         self.assertEqual(entity.raw_val, "Baz")
         self.assertEqual(entity.entry.comment.content, "Baz Comment")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.Whitespace))
+        self.assertTrue(isinstance(entity, Whitespace))
         self.assertEqual(entity.all, "\n")
 
         with self.assertRaises(StopIteration):
@@ -250,31 +259,31 @@ baz = Baz
         entity = next(entities)
         # ensure that fluent comments are FluentComments and Comments
         # Legacy comments (//) are Junk
-        self.assertTrue(isinstance(entity, parser.Junk))
+        self.assertTrue(isinstance(entity, Junk))
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.Whitespace))
+        self.assertTrue(isinstance(entity, Whitespace))
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.Comment))
+        self.assertTrue(isinstance(entity, Comment))
         self.assertEqual(entity.val, "Resource Comment")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.Whitespace))
+        self.assertTrue(isinstance(entity, Whitespace))
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.Comment))
+        self.assertTrue(isinstance(entity, Comment))
         self.assertEqual(entity.val, "Section Comment")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.Whitespace))
+        self.assertTrue(isinstance(entity, Whitespace))
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.Comment))
+        self.assertTrue(isinstance(entity, Comment))
         self.assertEqual(entity.val, "Standalone Comment")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.Whitespace))
+        self.assertTrue(isinstance(entity, Whitespace))
         self.assertEqual(entity.all, "\n")
 
         with self.assertRaises(StopIteration):
@@ -294,28 +303,28 @@ msg = value
         entities = self.parser.walk()
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.FluentComment))
+        self.assertTrue(isinstance(entity, FluentComment))
         self.assertEqual(entity.val, "Comment")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.Whitespace))
+        self.assertTrue(isinstance(entity, Whitespace))
         self.assertEqual(entity.raw_val, "\n\n")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.Junk))
+        self.assertTrue(isinstance(entity, Junk))
         self.assertEqual(entity.raw_val, "Line of junk")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.Whitespace))
+        self.assertTrue(isinstance(entity, Whitespace))
         self.assertEqual(entity.raw_val, "\n\n")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.FluentEntity))
+        self.assertTrue(isinstance(entity, FluentEntity))
         self.assertEqual(entity.raw_val, "value")
         self.assertEqual(entity.entry.comment.content, "Comment")
 
         entity = next(entities)
-        self.assertTrue(isinstance(entity, parser.Whitespace))
+        self.assertTrue(isinstance(entity, Whitespace))
         self.assertEqual(entity.raw_val, "\n")
 
         with self.assertRaises(StopIteration):

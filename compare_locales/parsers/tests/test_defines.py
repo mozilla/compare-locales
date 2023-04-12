@@ -4,13 +4,9 @@
 
 import unittest
 
-from compare_locales.tests import ParserTestMixin
-from compare_locales.parser import (
-    Comment,
-    DefinesInstruction,
-    Junk,
-    Whitespace,
-)
+from compare_locales.parsers import Comment, DefinesInstruction, Junk, Whitespace
+
+from . import ParserTestMixin
 
 
 mpl2 = """\

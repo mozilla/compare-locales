@@ -5,8 +5,9 @@
 import re
 from xml.dom import minidom
 
+from compare_locales.parsers.android import textContent
+
 from .base import Checker
-from ..parser.android import textContent
 
 
 class AndroidChecker(Checker):

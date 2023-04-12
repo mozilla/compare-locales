@@ -3,11 +3,9 @@
 
 import unittest
 
-from compare_locales.tests import ParserTestMixin
-from compare_locales.parser import (
-    BadEntity,
-    Whitespace,
-)
+from compare_locales.parsers import BadEntity, Whitespace
+
+from . import ParserTestMixin
 
 
 class TestPoParser(ParserTestMixin, unittest.TestCase):

@@ -21,8 +21,8 @@ from functools import reduce
 
 
 from compare_locales import parser as cl
-from compare_locales.parser.base import StickyEntry
 from compare_locales.compare.utils import AddRemove
+from compare_locales.parsers.base import StickyEntry
 
 
 class MergeNotSupportedError(ValueError):

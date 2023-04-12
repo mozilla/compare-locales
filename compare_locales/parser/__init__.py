@@ -4,11 +4,26 @@
 
 import re
 
-from .base import (
+from compare_locales.parsers import (
     CAN_NONE,
     CAN_COPY,
     CAN_SKIP,
     CAN_MERGE,
+    AndroidParser,
+    DefinesInstruction,
+    DefinesParser,
+    DTDEntity,
+    DTDParser,
+    FluentComment,
+    FluentEntity,
+    FluentMessage,
+    FluentParser,
+    FluentTerm,
+    IniParser,
+    IniSection,
+    PoParser,
+    PropertiesEntity,
+    PropertiesParser,
     Entry,
     Entity,
     Comment,
@@ -18,22 +33,6 @@ from .base import (
     BadEntity,
     Parser,
 )
-from .android import AndroidParser
-from .defines import DefinesParser, DefinesInstruction
-from .dtd import DTDEntity, DTDParser
-from .fluent import (
-    FluentParser,
-    FluentComment,
-    FluentEntity,
-    FluentMessage,
-    FluentTerm,
-)
-from .ini import (
-    IniParser,
-    IniSection,
-)
-from .po import PoParser
-from .properties import PropertiesParser, PropertiesEntity
 
 __all__ = [
     "CAN_NONE",

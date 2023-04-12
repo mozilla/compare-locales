@@ -5,7 +5,8 @@
 import unittest
 
 from compare_locales.lint import linter
-from compare_locales.parser import base as parser
+from compare_locales.parsers import Entity, Junk, Parser
+from compare_locales.parsers.base import LiteralEntity
 
 
 class MockChecker:
@@ -19,17 +20,17 @@ class MockChecker:
 class EntityTest(unittest.TestCase):
     def test_junk(self):
         el = linter.EntityLinter([], None, {})
-        ctx = parser.Parser.Context("foo\nbar\n")
-        ent = parser.Junk(ctx, (4, 7))
+        ctx = Parser.Context("foo\nbar\n")
+        ent = Junk(ctx, (4, 7))
         res = el.handle_junk(ent)
         self.assertIsNotNone(res)
         self.assertEqual(res["lineno"], 2)
         self.assertEqual(res["column"], 1)
-        ent = parser.LiteralEntity("one", "two", "one = two")
+        ent = LiteralEntity("one", "two", "one = two")
         self.assertIsNone(el.handle_junk(ent))
 
     def test_full_entity(self):
-        ctx = parser.Parser.Context(
+        ctx = Parser.Context(
             """\
 one = two
 two = three
@@ -37,9 +38,9 @@ one = four
 """
         )
         entities = [
-            parser.Entity(ctx, None, None, (0, 10), (0, 3), (6, 9)),
-            parser.Entity(ctx, None, None, (10, 22), (10, 13), (16, 21)),
-            parser.Entity(ctx, None, None, (22, 33), (22, 25), (28, 32)),
+            Entity(ctx, None, None, (0, 10), (0, 3), (6, 9)),
+            Entity(ctx, None, None, (10, 22), (10, 13), (16, 21)),
+            Entity(ctx, None, None, (22, 33), (22, 25), (28, 32)),
         ]
         self.assertEqual(
             (entities[0].all, entities[0].key, entities[0].val),
@@ -63,7 +64,7 @@ one = four
         self.assertEqual(result["lineno"], 3)
         self.assertEqual(result["column"], 1)
         # finally check for conflict
-        el.reference = {"two": parser.LiteralEntity("two = other", "two", "other")}
+        el.reference = {"two": LiteralEntity("two = other", "two", "other")}
         results = list(el.lint_full_entity(entities[1]))
         self.assertEqual(len(results), 1)
         result = results[0]
@@ -72,13 +73,13 @@ one = four
         self.assertEqual(result["column"], 1)
 
     def test_in_value(self):
-        ctx = parser.Parser.Context(
+        ctx = Parser.Context(
             """\
 one = two
 """
         )
         entities = [
-            parser.Entity(ctx, None, None, (0, 10), (0, 3), (6, 9)),
+            Entity(ctx, None, None, (0, 10), (0, 3), (6, 9)),
         ]
         self.assertEqual(
             (entities[0].all, entities[0].key, entities[0].val),

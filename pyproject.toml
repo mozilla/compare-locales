@@ -50,6 +50,7 @@ packages = [
   "compare_locales.compare",
   "compare_locales.lint",
   "compare_locales.parser",
+  "compare_locales.parsers",
   "compare_locales.paths",
 ]
 
