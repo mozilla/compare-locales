@@ -4,7 +4,7 @@
 
 import re
 
-from .base import CAN_COPY, Entry, OffsetComment, Junk, Whitespace, Parser
+from .base import Entry, OffsetComment, Junk, Whitespace, Parser
 
 
 class DefinesInstruction(Entry):
@@ -20,8 +20,6 @@ class DefinesInstruction(Entry):
 
 
 class DefinesParser(Parser):
-    # can't merge, #unfilter needs to be the last item, which we don't support
-    capabilities = CAN_COPY
     reWhitespace = re.compile("\n+", re.M)
 
     EMPTY_LINES = 1 << 0

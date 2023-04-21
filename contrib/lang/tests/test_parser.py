@@ -1,11 +1,12 @@
 import unittest
-from compare_locales import parser
+from compare_locales.parser import getParser
+from compare_locales.parsers import Junk
 from parsimonious.exceptions import ParseError
 
 
 class TestLangParser(unittest.TestCase):
     def test_good(self):
-        p = parser.getParser("foo.lang")
+        p = getParser("foo.lang")
         p.readUnicode(
             """\
 # Sample comment
@@ -25,7 +26,7 @@ Translated No Comments or Sources
         self.assertEqual(len(msgs), 3)
 
     def test_empty_translation(self):
-        p = parser.getParser("foo.lang")
+        p = getParser("foo.lang")
         p.readUnicode(
             """\
 # Sample comment
@@ -35,10 +36,10 @@ Translated No Comments or Sources
         )
         msgs = p.parse()
         self.assertEqual(len(msgs), 1)
-        self.assertIsInstance(msgs[0], parser.Junk)
+        self.assertIsInstance(msgs[0], Junk)
 
     def test_bad(self):
-        p = parser.getParser("foo.lang")
+        p = getParser("foo.lang")
         p.readUnicode(
             """\
 just garbage

@@ -13,6 +13,7 @@ from compare_locales import parser
 from compare_locales import mozpath
 from compare_locales.checks import getChecker, EntityPos
 from compare_locales.keyedtuple import KeyedTuple
+from compare_locales.parsers import Junk
 
 from .observer import ObserverList
 from .utils import AddRemove
@@ -117,7 +118,7 @@ class ContentComparer:
                 + [
                     ref_entities[skip.key].all
                     for skip in skips
-                    if not isinstance(skip, parser.Junk)
+                    if not isinstance(skip, Junk)
                 ]
             )
 
@@ -199,7 +200,7 @@ class ContentComparer:
         for action, entity_id in ar:
             if action == "delete":
                 # missing entity
-                if isinstance(ref_entities[entity_id], parser.Junk):
+                if isinstance(ref_entities[entity_id], Junk):
                     self.observers.notify("warning", l10n, "Parser error in en-US")
                     continue
                 _rv = self.observers.notify("missingEntity", l10n, entity_id)
@@ -217,7 +218,7 @@ class ContentComparer:
                     report += 1
             elif action == "add":
                 # obsolete entity or junk
-                if isinstance(l10n_entities[entity_id], parser.Junk):
+                if isinstance(l10n_entities[entity_id], Junk):
                     junk = l10n_entities[entity_id]
                     self.observers.notify("error", l10n, junk.error_message())
                     if merge_file is not None:
@@ -326,7 +327,7 @@ class ContentComparer:
             self.observers.notify("error", f, str(ex))
             return
         # strip parse errors
-        entities = [e for e in entities if not isinstance(e, parser.Junk)]
+        entities = [e for e in entities if not isinstance(e, Junk)]
         self.observers.updateStats(missing, {"missing": len(entities)})
         missing_w = 0
         for e in entities:

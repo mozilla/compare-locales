@@ -6,25 +6,6 @@ import re
 import bisect
 import codecs
 from collections import Counter
-from compare_locales.keyedtuple import KeyedTuple
-from compare_locales.paths import File
-
-__constructors = []
-
-
-# The allowed capabilities for the Parsers.  They define the exact strategy
-# used by ContentComparer.merge.
-
-# Don't perform any merging
-CAN_NONE = 0
-# Copy the entire reference file
-CAN_COPY = 1
-# Remove broken entities from localization
-# Without CAN_MERGE, en-US is not good to use for localization.
-CAN_SKIP = 2
-# Add missing and broken entities from the reference to localization
-# This effectively means that en-US is good to use for localized files.
-CAN_MERGE = 4
 
 
 class Entry:
@@ -294,7 +275,6 @@ class BadEntity(ValueError):
 
 
 class Parser:
-    capabilities = CAN_SKIP | CAN_MERGE
     reWhitespace = re.compile("[ \t\r\n]+", re.M)
     Comment = Comment
     # NotImplementedError would be great, but also tedious
@@ -325,15 +305,6 @@ class Parser:
             self.encoding = "utf-8"
         self.ctx = None
 
-    def readFile(self, file):
-        """Read contents from disk, with universal_newlines"""
-        if isinstance(file, File):
-            file = file.fullpath
-        # python 2 has binary input with universal newlines,
-        # python 3 doesn't. Let's split code paths
-        with open(file, encoding=self.encoding, errors="replace", newline=None) as f:
-            self.readUnicode(f.read())
-
     def readContents(self, contents):
         """Read contents and create parsing context.
 
@@ -344,9 +315,6 @@ class Parser:
 
     def readUnicode(self, contents):
         self.ctx = self.Context(contents)
-
-    def parse(self):
-        return KeyedTuple(self)
 
     def __iter__(self):
         return self.walk(only_localizable=True)

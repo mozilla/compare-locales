@@ -19,10 +19,10 @@ from collections import OrderedDict, defaultdict
 from codecs import encode
 from functools import reduce
 
-
-from compare_locales import parser as cl
-from compare_locales.parser.base import StickyEntry
 from compare_locales.compare.utils import AddRemove
+from compare_locales.parser import getParser
+from compare_locales.parsers import Comment, Whitespace
+from compare_locales.parsers.base import StickyEntry
 
 
 class MergeNotSupportedError(ValueError):
@@ -31,7 +31,7 @@ class MergeNotSupportedError(ValueError):
 
 def merge_channels(name, resources):
     try:
-        parser = cl.getParser(name)
+        parser = getParser(name)
     except UserWarning:
         raise MergeNotSupportedError(f"Unsupported file format ({name}).")
 
@@ -59,13 +59,13 @@ def merge_resources(parser, resources, keep_newest=True):
         return OrderedDict(pairs)
 
     def get_key_value(entity, counter):
-        if isinstance(entity, cl.Comment):
+        if isinstance(entity, Comment):
             counter[entity.val] += 1
             # Use the (value, index) tuple as the key. AddRemove will
             # de-deplicate identical comments at the same index.
             return ((entity.val, counter[entity.val]), entity)
 
-        if isinstance(entity, cl.Whitespace):
+        if isinstance(entity, Whitespace):
             # Use the Whitespace instance as the key so that it's always
             # unique. Adjecent whitespace will be folded into the longer one in
             # prune.
@@ -102,10 +102,10 @@ def merge_two(newer, older, keep_newer=True):
             # Prune Nones which stand for duplicated comments.
             return acc
 
-        if len(acc) and isinstance(entity, cl.Whitespace):
+        if len(acc) and isinstance(entity, Whitespace):
             _, prev_entity = acc[-1]
 
-            if isinstance(prev_entity, cl.Whitespace):
+            if isinstance(prev_entity, Whitespace):
                 # Prefer the longer whitespace.
                 if len(entity.all) > len(prev_entity.all):
                     acc[-1] = (entity, entity)

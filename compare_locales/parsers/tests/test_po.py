@@ -3,16 +3,14 @@
 
 import unittest
 
-from compare_locales.tests import ParserTestMixin
-from compare_locales.parser import (
-    BadEntity,
-    Whitespace,
-)
+from compare_locales.parsers import BadEntity, PoParser, Whitespace
+
+from . import ParserTestMixin
 
 
 class TestPoParser(ParserTestMixin, unittest.TestCase):
+    Parser = PoParser
     maxDiff = None
-    filename = "strings.po"
 
     def test_parse_string_list(self):
         self.parser.readUnicode("  ")
@@ -126,5 +124,4 @@ msgstr ""
                 (Whitespace, "\n"),
             ),
         )
-        entities = self.parser.parse()
-        self.assertListEqual([e.localized for e in entities], [True, False])
+        self.assertListEqual([e.localized for e in self.parser], [True, False])

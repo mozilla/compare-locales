@@ -6,7 +6,7 @@ from io import BytesIO
 import re
 from xml import sax
 
-from compare_locales.parser import DTDParser
+from compare_locales.parsers import DTDParser
 from .base import Checker, CSSCheckMixin
 
 

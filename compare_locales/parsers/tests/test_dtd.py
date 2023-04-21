@@ -8,19 +8,15 @@
 import unittest
 import re
 
-from compare_locales import parser
-from compare_locales.parser import (
-    Comment,
-    Junk,
-    Whitespace,
-)
-from compare_locales.tests import ParserTestMixin
+from compare_locales.parsers import Comment, DTDParser, Entity, Junk, Whitespace
+
+from . import ParserTestMixin
 
 
 class TestDTD(ParserTestMixin, unittest.TestCase):
     """Tests for the DTD Parser."""
 
-    filename = "foo.dtd"
+    Parser = DTDParser
 
     def test_one_entity(self):
         self._test("""<!ENTITY foo.label "stuff">""", (("foo.label", "stuff"),))
@@ -96,13 +92,13 @@ class TestDTD(ParserTestMixin, unittest.TestCase):
         )
 
     def test_license_header(self):
-        p = parser.getParser("foo.dtd")
+        p = DTDParser()
         p.readContents(self.resource("triple-license.dtd"))
         entities = list(p.walk())
-        self.assertIsInstance(entities[0], parser.Comment)
+        self.assertIsInstance(entities[0], Comment)
         self.assertIn("MPL", entities[0].all)
         e = entities[2]
-        self.assertIsInstance(e, parser.Entity)
+        self.assertIsInstance(e, Entity)
         self.assertEqual(e.key, "foo")
         self.assertEqual(e.val, "value")
         self.assertEqual(len(entities), 4)
@@ -116,10 +112,10 @@ class TestDTD(ParserTestMixin, unittest.TestCase):
 """
         )
         entities = list(p.walk())
-        self.assertIsInstance(entities[0], parser.Comment)
+        self.assertIsInstance(entities[0], Comment)
         self.assertIn("MPL", entities[0].all)
         e = entities[2]
-        self.assertIsInstance(e, parser.Entity)
+        self.assertIsInstance(e, Entity)
         self.assertEqual(e.key, "foo")
         self.assertEqual(e.val, "value")
         self.assertEqual(len(entities), 4)
@@ -133,10 +129,10 @@ class TestDTD(ParserTestMixin, unittest.TestCase):
 """
         )
         entities = list(p.walk())
-        self.assertIsInstance(entities[0], parser.Comment)
+        self.assertIsInstance(entities[0], Comment)
         self.assertIn("MPL", entities[0].all)
         e = entities[2]
-        self.assertIsInstance(e, parser.Entity)
+        self.assertIsInstance(e, Entity)
         self.assertEqual(e.key, "foo")
         self.assertEqual(e.val, "value")
         self.assertEqual(len(entities), 4)
@@ -235,22 +231,22 @@ spanning lines -->  <!--
         entities = self.parser.walk()
 
         entity = next(entities)
-        self.assertIsInstance(entity, parser.Comment)
+        self.assertIsInstance(entity, Comment)
         self.assertEqual(entity.val, " comment\nspanning lines ")
         entity = next(entities)
-        self.assertIsInstance(entity, parser.Whitespace)
+        self.assertIsInstance(entity, Whitespace)
 
         entity = next(entities)
-        self.assertIsInstance(entity, parser.Comment)
+        self.assertIsInstance(entity, Comment)
         self.assertEqual(entity.val, "\n")
         entity = next(entities)
-        self.assertIsInstance(entity, parser.Whitespace)
+        self.assertIsInstance(entity, Whitespace)
 
         entity = next(entities)
-        self.assertIsInstance(entity, parser.Comment)
+        self.assertIsInstance(entity, Comment)
         self.assertEqual(entity.val, " last line ")
         entity = next(entities)
-        self.assertIsInstance(entity, parser.Whitespace)
+        self.assertIsInstance(entity, Whitespace)
 
     def test_pre_comment(self):
         self.parser.readContents(
@@ -266,22 +262,22 @@ spanning lines -->  <!--
         entities = self.parser.walk()
 
         entity = next(entities)
-        self.assertIsInstance(entity.pre_comment, parser.Comment)
+        self.assertIsInstance(entity.pre_comment, Comment)
         self.assertEqual(entity.pre_comment.val, " comment ")
         entity = next(entities)
-        self.assertIsInstance(entity, parser.Whitespace)
+        self.assertIsInstance(entity, Whitespace)
 
         entity = next(entities)
-        self.assertIsInstance(entity, parser.Comment)
+        self.assertIsInstance(entity, Comment)
         self.assertEqual(entity.val, " standalone ")
         entity = next(entities)
-        self.assertIsInstance(entity, parser.Whitespace)
+        self.assertIsInstance(entity, Whitespace)
 
         entity = next(entities)
-        self.assertIsInstance(entity.pre_comment, parser.Comment)
+        self.assertIsInstance(entity.pre_comment, Comment)
         self.assertEqual(entity.pre_comment.val, " glued ")
         entity = next(entities)
-        self.assertIsInstance(entity, parser.Whitespace)
+        self.assertIsInstance(entity, Whitespace)
         with self.assertRaises(StopIteration):
             next(entities)
 

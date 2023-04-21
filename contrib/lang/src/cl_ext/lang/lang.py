@@ -7,8 +7,8 @@ import re
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 
-from compare_locales.parser.base import Comment, LiteralEntity, Junk, Parser
 from compare_locales.paths import File
+from compare_locales.parsers.base import Comment, LiteralEntity, Junk, Parser
 
 
 BLANK_LINE = "blank_line"
