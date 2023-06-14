@@ -1,4 +1,0 @@
-{
-  "editor.formatOnSaveMode": "file",
-  "python.formatting.provider": "black"
-}
