@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-
-
+from dataclasses import dataclass, field
 from typing import List, Optional, OrderedDict, Tuple, Union
 
 
@@ -30,7 +28,9 @@ class FunctionRef:
 
     name: str
     operand: Union[Literal, VariableRef, None] = None
-    options: OrderedDict[str, Union[Literal, VariableRef]] = OrderedDict()
+    options: OrderedDict[str, Union[Literal, VariableRef]] = field(
+        default_factory=OrderedDict
+    )
 
 
 @dataclass
@@ -92,7 +92,7 @@ class PatternMessage:
     """
 
     pattern: Pattern
-    declarations: Declarations = OrderedDict()
+    declarations: Declarations = field(default_factory=OrderedDict)
 
 
 @dataclass
@@ -108,7 +108,7 @@ class SelectMessage:
 
     selectors: List[Expression]
     variants: List[Tuple[List[VariantKey], Pattern]]
-    declarations: Declarations = OrderedDict()
+    declarations: Declarations = field(default_factory=OrderedDict)
 
 
 Declarations = OrderedDict[str, Expression]
