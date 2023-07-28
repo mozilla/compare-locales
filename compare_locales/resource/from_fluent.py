@@ -139,7 +139,11 @@ def messageFromFluentPattern(
     if len(args) == 0:
         return PatternMessage([elementToPart(el) for el in ast.elements])
 
-    # First determine the keys for all cases, with empty values
+    # First determine the keys for all variants, with empty values.
+    # Fluent supports selectors within a message,
+    # while our data model supports top-level selectors only.
+    # Mapping between these approaches gets a bit complicated
+    # when a message contains more than one selector.
     keys: List[List[Union[str, int, None]]]
     for i, arg in enumerate(args):
         kk: List[Union[str, int, None]] = []
@@ -150,9 +154,12 @@ def messageFromFluentPattern(
         if i == 0:
             keys = [[key] for key in kk]
         else:
-            for i in range(len(keys), 0, -1):
-                prev = keys[i - 1]
-                keys[i - 1 : i] = [prev + [key] for key in kk]
+            # For selectors after the first,
+            # replace each previous variant with len(kk) variants,
+            # one for each of this selector's keys.
+            for j in range(len(keys), 0, -1):
+                prev = keys[j - 1]
+                keys[j - 1 : j] = [prev + [key] for key in kk]
 
     variants: List[Tuple[List[VariantKey], Pattern]] = [
         (

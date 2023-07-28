@@ -30,18 +30,16 @@ def patternFromPropertiesValue(
     """
 
     pattern: Pattern = []
-    prevEnd = 0
+    prev_end = 0
     if variables:
         for match in variables.finditer(value):
             start = match.start()
-            if start > prevEnd:
-                pattern.append(Text(value[prevEnd:start]))
+            if start > prev_end:
+                pattern.append(Text(value[prev_end:start]))
             pattern.append(VariableRef(match[0]))
-            prevEnd = match.end()
-    if len(pattern) == 0:
-        pattern.append(Text(value))
-    elif prevEnd < len(value):
-        pattern.append(Text(value[prevEnd:]))
+            prev_end = match.end()
+    if len(pattern) == 0 or prev_end < len(value):
+        pattern.append(Text(value[prev_end:]))
     return PatternMessage(pattern)
 
 
