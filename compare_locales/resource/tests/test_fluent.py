@@ -7,12 +7,14 @@ import unittest
 from fluent.syntax import FluentParser
 
 from .. import (
+    CatchallKey,
     Comment,
     FunctionRef,
     Junk,
     Literal,
     Message,
     PatternMessage,
+    SelectMessage,
     Text,
     VariableRef,
     resourceFromFluent,
@@ -174,3 +176,52 @@ msg = value
         self.assertEqual(src[c[0] : c[1]], "Line of junk\n\n")
         c = res[2].comment
         self.assertEqual(src[c[0] : c[1]], "# Comment")
+
+    def test_multiple_selectors(self):
+        src = """
+abc =
+  { $a ->
+     [one]
+       { $b ->
+          [two] one-two
+         *[other] one-other
+       }
+    *[other]
+       { $b ->
+          [two] other-two
+         *[other] other-other
+       }
+  }
+"""
+        ast = FluentParser().parse(src)
+        res = resourceFromFluent(ast)
+        self.assertEqual(
+            res,
+            [
+                Message(
+                    ("abc",),
+                    SelectMessage(
+                        selectors=[VariableRef("a"), VariableRef("b")],
+                        variants=[
+                            (
+                                [Literal(False, "one"), Literal(False, "two")],
+                                [Text("one-two")],
+                            ),
+                            (
+                                [Literal(False, "one"), CatchallKey("other")],
+                                [Text("one-other")],
+                            ),
+                            (
+                                [CatchallKey("other"), Literal(False, "two")],
+                                [Text("other-two")],
+                            ),
+                            (
+                                [CatchallKey("other"), CatchallKey("other")],
+                                [Text("other-other")],
+                            ),
+                        ],
+                    ),
+                    res[0].span,
+                )
+            ],
+        )

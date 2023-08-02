@@ -206,7 +206,7 @@ def messageFromFluentPattern(
                         else value == key.value
                         for key, value in map(lambda f: (vk[f[0]], f[1]), filter)
                     ):
-                        last = vp[-1]
+                        last = vp[-1] if len(vp) else None
                         part = elementToPart(el)
                         if isinstance(last, Text) and isinstance(part, Text):
                             last.value += part.value
