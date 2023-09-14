@@ -227,10 +227,10 @@ class PrintfCountOrderedTest(BaseHelper):
     refContent = ANDROID_WRAPPER % b"%1$s %2$s"
 
     def test_match(self):
-        self._test(ANDROID_WRAPPER % b'%1$s %2$s', tuple())
+        self._test(ANDROID_WRAPPER % b"%1$s %2$s", tuple())
 
     def test_count_too_high(self):
         self._test(
-            ANDROID_WRAPPER % b'%1$s %2$s %1$s %2$s',
+            ANDROID_WRAPPER % b"%1$s %2$s %1$s %2$s",
             (("warning", 0, "Formatter count mismatch", "android"),),
         )
