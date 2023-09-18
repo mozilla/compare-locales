@@ -58,11 +58,11 @@ class AndroidChecker(Checker):
             return
         yield from check_apostrophes(l10nEnt.val)
 
-        params, errors = get_params(refs)
+        params, count, errors = get_params(refs)
         for error, pos in errors:
             yield ("warning", pos, error, "android")
         if params:
-            yield from check_params(params, l10nEnt.val)
+            yield from check_params(params, count, l10nEnt.val)
 
     def not_translatable(self, *nodes):
         return any(
@@ -139,16 +139,18 @@ def check_apostrophes(string):
 def get_params(refs):
     """Get printf parameters and internal errors.
 
-    Returns a sparse map of positions to formatter, and a list
-    of errors. Errors covered so far are mismatching formatters.
+    Returns a sparse map of positions to formatter, parameter count and
+    a list of errors. Errors covered so far are mismatching formatters.
     """
     params = {}
     errors = []
+    count = 0
     next_implicit = 1
     for ref in refs:
         if isinstance(ref, minidom.Node):
             ref = textContent(ref)
         for m in re.finditer(r"%(?P<order>[1-9]\$)?(?P<format>[sSd])", ref):
+            count += 1
             order = m.group("order")
             if order:
                 order = int(order[0])
@@ -166,18 +168,20 @@ def get_params(refs):
                 errors.append(
                     (msg.format(order=order, f1=fmt, f2=params[order]), m.start())
                 )
-    return params, errors
+    return params, count, errors
 
 
-def check_params(params, string):
+def check_params(params, count, string):
     """Compare the printf parameters in the given string to the reference
     parameters.
 
     Also yields errors that are internal to the parameters inside string,
     as found by `get_params`.
     """
-    lparams, errors = get_params([string])
+    has_errors = False
+    lparams, lcount, errors = get_params([string])
     for error, pos in errors:
+        has_errors = True
         yield ("error", pos, error, "android")
     # Compare reference for each localized parameter.
     # If there's no reference found, error, as an out-of-bounds
@@ -187,6 +191,7 @@ def check_params(params, string):
     # If there's a mismatch in the formatter, error.
     for order in sorted(lparams):
         if order not in params:
+            has_errors = True
             yield (
                 "error",
                 0,
@@ -194,11 +199,13 @@ def check_params(params, string):
                 "android",
             )
         elif params[order] != lparams[order]:
+            has_errors = True
             yield ("error", 0, "Mismatching formatter", "android")
     # All parameters used in the reference are expected to be included.
     # Warn if this isn't the case.
     for order in params:
         if order not in sorted(lparams):
+            has_errors = True
             yield (
                 "warning",
                 0,
@@ -207,3 +214,5 @@ def check_params(params, string):
                 ),
                 "android",
             )
+    if not has_errors and count != lcount:
+        yield ("warning", 0, "Formatter count mismatch", "android")
