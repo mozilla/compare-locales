@@ -16,7 +16,7 @@ from .. import (
     SelectMessage,
     Text,
     VariableRef,
-    resourceFromFluent,
+    from_fluent,
 )
 
 
@@ -24,7 +24,7 @@ class TestFluentParser(unittest.TestCase):
     def test_simple_message(self):
         src = "a = A"
         ast = FluentParser().parse(src)
-        res = resourceFromFluent(ast)
+        res = from_fluent(ast)
         self.assertEqual(
             res,
             [Message(("a",), PatternMessage([Text("A")]))],
@@ -33,7 +33,7 @@ class TestFluentParser(unittest.TestCase):
     def test_complex_message(self):
         src = "abc = A { $arg } B { msg } C"
         ast = FluentParser().parse(src)
-        res = resourceFromFluent(ast)
+        res = from_fluent(ast)
         self.assertEqual(
             res,
             [
@@ -60,7 +60,7 @@ abc =
     C
 """
         ast = FluentParser().parse(src)
-        res = resourceFromFluent(ast)
+        res = from_fluent(ast)
         self.assertEqual(
             res,
             [Message(("abc",), PatternMessage([Text("A\nB\nC")]))],
@@ -74,7 +74,7 @@ abc = ABC
     .attr = Attr
 """
         ast = FluentParser().parse(src)
-        res = resourceFromFluent(ast)
+        res = from_fluent(ast)
         self.assertEqual(
             res,
             [
@@ -89,7 +89,7 @@ abc =
     .attr = Attr
 """
         ast = FluentParser().parse(src)
-        res = resourceFromFluent(ast)
+        res = from_fluent(ast)
         self.assertEqual(
             res,
             [
@@ -113,7 +113,7 @@ foo = Foo
 baz = Baz
 """
         ast = FluentParser().parse(src)
-        res = resourceFromFluent(ast)
+        res = from_fluent(ast)
         self.assertEqual(
             res,
             [
@@ -140,7 +140,7 @@ msg = value
 """
         ast = FluentParser().parse(src)
         try:
-            resourceFromFluent(ast)
+            from_fluent(ast)
             raise AssertionError("Expected parse error")
         except ParseError:
             pass
@@ -162,7 +162,7 @@ abc =
   }
 """
         ast = FluentParser().parse(src)
-        res = resourceFromFluent(ast)
+        res = from_fluent(ast)
         self.assertEqual(
             res,
             [

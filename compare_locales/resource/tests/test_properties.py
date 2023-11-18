@@ -11,7 +11,7 @@ from .. import (
     PatternMessage,
     Text,
     VariableRef,
-    resourceFromProperties,
+    from_properties,
 )
 
 
@@ -26,7 +26,7 @@ and still has another line coming
 """
         parser = PropertiesParser()
         parser.readUnicode(src)
-        res = resourceFromProperties(parser.walk())
+        res = from_properties(parser.walk())
         self.assertEqual(
             res,
             [
@@ -64,7 +64,7 @@ three = This %1$s and %2$d
 """
         parser = PropertiesParser()
         parser.readUnicode(src)
-        res = resourceFromProperties(parser.walk())
+        res = from_properties(parser.walk())
         self.assertEqual(
             res,
             [
@@ -107,7 +107,7 @@ foo=value
 """
         parser = PropertiesParser()
         parser.readUnicode(src)
-        res = resourceFromProperties(parser.walk())
+        res = from_properties(parser.walk())
         self.assertEqual(
             res,
             [
@@ -129,7 +129,7 @@ seven = \n\r\t\\
 """
         parser = PropertiesParser()
         parser.readContents(src)
-        res = resourceFromProperties(parser.walk())
+        res = from_properties(parser.walk())
         self.assertEqual(
             res,
             [
@@ -157,7 +157,7 @@ second = string
 """
         parser = PropertiesParser()
         parser.readUnicode(src)
-        res = resourceFromProperties(parser.walk())
+        res = from_properties(parser.walk())
         self.assertEqual(
             res,
             [
@@ -170,7 +170,7 @@ second = string
         parser = PropertiesParser()
         for src in ["", "\n", "\n\n", " \n\n"]:
             parser.readUnicode(src)
-            res = resourceFromProperties(parser.walk())
+            res = from_properties(parser.walk())
             self.assertEqual(res, [])
 
     def test_pre_comment(self):
@@ -186,7 +186,7 @@ second = string
 """
         parser = PropertiesParser()
         parser.readUnicode(src)
-        res = resourceFromProperties(parser.walk())
+        res = from_properties(parser.walk())
         self.assertEqual(
             res,
             [
@@ -210,7 +210,7 @@ and this is junk
         parser = PropertiesParser()
         parser.readUnicode(src)
         try:
-            resourceFromProperties(parser.walk())
+            from_properties(parser.walk())
             raise AssertionError("Expected parse error")
         except ParseError:
             pass

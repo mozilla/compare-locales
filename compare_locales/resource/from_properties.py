@@ -17,9 +17,7 @@ printf = re.compile(
 )
 
 
-def patternFromPropertiesValue(
-    value: str, variables: Optional[re.Pattern[str]] = None
-) -> PatternMessage:
+def pattern(value: str, variables: Optional[re.Pattern[str]] = None) -> PatternMessage:
     """
     Compile a .properties value into a PatternMessage data class.
 
@@ -41,7 +39,7 @@ def patternFromPropertiesValue(
     return PatternMessage(pattern)
 
 
-def resourceFromProperties(
+def from_properties(
     entries: Iterable[Union[ParserComment, ParserWhitespace, ParserEntity, ParserJunk]],
     variables: Optional[re.Pattern[str]] = printf,
 ) -> List[Message]:
@@ -54,7 +52,7 @@ def resourceFromProperties(
     res: List[Message] = []
     for pe in entries:
         if isinstance(pe, ParserEntity):
-            value = patternFromPropertiesValue(cast(str, pe.val), variables)
+            value = pattern(cast(str, pe.val), variables)
             if pe.pre_comment:
                 lines = cast(str, pe.pre_comment.val).split("\n")
                 comments = [re.sub(r"^[ \t]?", "", line, 1) for line in lines]

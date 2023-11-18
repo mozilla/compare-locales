@@ -27,7 +27,7 @@ class SelectArg:
         self.defaultName = ""
         self.selector = sel.selector
 
-        def getName(v: Fluent.Variant) -> Union[str, None]:
+        def name(v: Fluent.Variant) -> Union[str, None]:
             name = v.key.name if isinstance(v.key, Fluent.Identifier) else v.key.value
             if v.default:
                 self.defaultName = str(name)
@@ -35,10 +35,10 @@ class SelectArg:
             else:
                 return name
 
-        self.keys: List[Union[str, int, None]] = list(map(getName, sel.variants))
+        self.keys: List[Union[str, int, None]] = list(map(name, sel.variants))
 
 
-def findSelectArgs(pattern: Fluent.Pattern) -> List[SelectArg]:
+def select_args(pattern: Fluent.Pattern) -> List[SelectArg]:
     args: List[SelectArg] = []
 
     def add(arg: SelectArg) -> None:
@@ -54,12 +54,12 @@ def findSelectArgs(pattern: Fluent.Pattern) -> List[SelectArg]:
         ):
             add(SelectArg(el.expression))
             for v in el.expression.variants:
-                for arg in findSelectArgs(v.value):
+                for arg in select_args(v.value):
                     add(arg)
     return args
 
 
-def getOptions(args: Optional[Fluent.CallArguments]) -> OrderedDict[str, OptionValue]:
+def options(args: Optional[Fluent.CallArguments]) -> OrderedDict[str, OptionValue]:
     options: OrderedDict[str, OptionValue] = OrderedDict()
     if args:
         for arg in args.named:
@@ -71,7 +71,7 @@ def getOptions(args: Optional[Fluent.CallArguments]) -> OrderedDict[str, OptionV
     return options
 
 
-def expressionToPart(exp: Union[Fluent.Expression, Fluent.Placeable]) -> Expression:
+def expression_part(exp: Union[Fluent.Expression, Fluent.Placeable]) -> Expression:
     if isinstance(exp, Fluent.NumberLiteral):
         return FunctionRef("number", Literal(False, exp.value))
     elif isinstance(exp, Fluent.StringLiteral):
@@ -79,7 +79,7 @@ def expressionToPart(exp: Union[Fluent.Expression, Fluent.Placeable]) -> Express
     elif isinstance(exp, Fluent.VariableReference):
         return VariableRef(exp.id.name)
     elif isinstance(exp, Fluent.FunctionReference):
-        args = [expressionToPart(exp) for exp in exp.arguments.positional]
+        args = [expression_part(exp) for exp in exp.arguments.positional]
         if len(args) > 1:
             raise ParseError("More than one positional argument is not supported.")
         name = exp.id.name
@@ -90,8 +90,8 @@ def expressionToPart(exp: Union[Fluent.Expression, Fluent.Placeable]) -> Express
         operand = args[0]
         if isinstance(operand, FunctionRef):
             raise ParseError("A Fluent function is not supported here.")
-        options = getOptions(exp.arguments)
-        return FunctionRef(name, operand, options)
+        options_ = options(exp.arguments)
+        return FunctionRef(name, operand, options_)
     elif isinstance(exp, Fluent.MessageReference):
         msgId = (
             f"${exp.id.name}.${exp.attribute.name}" if exp.attribute else exp.id.name
@@ -104,21 +104,21 @@ def expressionToPart(exp: Union[Fluent.Expression, Fluent.Placeable]) -> Express
             else f"-${exp.id.name}"
         )
         operand = Literal(False, msgId)
-        options = getOptions(exp.arguments)
-        return FunctionRef("message", operand, options)
+        options_ = options(exp.arguments)
+        return FunctionRef("message", operand, options_)
     elif isinstance(exp, Fluent.Placeable):
-        return expressionToPart(exp.expression)
+        return expression_part(exp.expression)
     raise ParseError(f"${exp.__class__.__name__} not supported here")
 
 
-def elementToPart(el: Union[Fluent.TextElement, Fluent.Placeable]) -> Expression | Text:
+def element_part(el: Union[Fluent.TextElement, Fluent.Placeable]) -> Expression | Text:
     if isinstance(el, Fluent.TextElement):
         return Text(el.value)
     else:
-        return expressionToPart(el.expression)
+        return expression_part(el.expression)
 
 
-def asFluentSelect(
+def fluent_select(
     el: Union[Fluent.TextElement, Fluent.Placeable]
 ) -> Optional[Fluent.SelectExpression]:
     if isinstance(el, Fluent.TextElement):
@@ -126,21 +126,19 @@ def asFluentSelect(
     elif isinstance(el.expression, Fluent.SelectExpression):
         return el.expression
     elif isinstance(el.expression, Fluent.Placeable):
-        return asFluentSelect(el.expression)
+        return fluent_select(el.expression)
     else:
         return None
 
 
-def messageFromFluentPattern(
-    ast: Fluent.Pattern,
-) -> Union[PatternMessage, SelectMessage]:
+def message(ast: Fluent.Pattern) -> Union[PatternMessage, SelectMessage]:
     """
     Compile a Fluent.Pattern (i.e. the value of a Fluent message or an attribute)
     into a Message data object.
     """
-    args = findSelectArgs(ast)
+    args = select_args(ast)
     if len(args) == 0:
-        return PatternMessage([elementToPart(el) for el in ast.elements])
+        return PatternMessage([element_part(el) for el in ast.elements])
 
     # First determine the keys for all variants, with empty values.
     # Fluent supports selectors within a message,
@@ -187,7 +185,7 @@ def messageFromFluentPattern(
         @param filter - Selects which cases we're adding to
         """
         for el in pattern.elements:
-            sel = asFluentSelect(el)
+            sel = fluent_select(el)
             if sel:
                 idx = next(
                     (i for (i, a) in enumerate(args) if a.selector.equals(sel.selector))
@@ -210,7 +208,7 @@ def messageFromFluentPattern(
                         for key, value in map(lambda f: (vk[f[0]], f[1]), filter)
                     ):
                         last = vp[-1] if len(vp) else None
-                        part = elementToPart(el)
+                        part = element_part(el)
                         if isinstance(last, Text) and isinstance(part, Text):
                             last.value += part.value
                         else:
@@ -218,12 +216,10 @@ def messageFromFluentPattern(
 
     addParts(ast, [])
 
-    return SelectMessage([expressionToPart(arg.selector) for arg in args], variants)
+    return SelectMessage([expression_part(arg.selector) for arg in args], variants)
 
 
-def messagesFromFluent(
-    fe: Fluent.EntryType, groupcomments: List[str]
-) -> Iterator[Message]:
+def messages(fe: Fluent.EntryType, groupcomments: List[str]) -> Iterator[Message]:
     if not fe.span:
         raise ParseError("Fluent parser must include spans in output")
     if isinstance(fe, Fluent.Message):
@@ -232,21 +228,21 @@ def messagesFromFluent(
             fe.comment.content.split("\n") if fe.comment and fe.comment.content else []
         )
         if fe.value:
-            value = messageFromFluentPattern(fe.value)
+            value = message(fe.value)
             ispan = fe.id.span or fe.span
             vspan = fe.value.span or fe.span
             yield Message((id,), value, (ispan.start, vspan.end), comments)
             if comments:
                 comments = None
         for attr in fe.attributes:
-            value = messageFromFluentPattern(attr.value)
+            value = message(attr.value)
             span = attr.span or fe.span
             yield Message((id, attr.id.name), value, (span.start, span.end), comments)
             if comments:
                 comments = None
     elif isinstance(fe, Fluent.Term):
         id = "-" + fe.id.name
-        value = messageFromFluentPattern(fe.value)
+        value = message(fe.value)
         ispan = fe.id.span or fe.span
         vspan = fe.value.span or fe.span
         comments = groupcomments + (
@@ -254,7 +250,7 @@ def messagesFromFluent(
         )
         yield Message((id,), value, (ispan.start, vspan.end), comments)
         for attr in fe.attributes:
-            value = messageFromFluentPattern(attr.value)
+            value = message(attr.value)
             span = attr.span or fe.span
             yield Message((id, attr.id.name), value, (span.start, span.end))
     elif isinstance(fe, Fluent.GroupComment):
@@ -268,9 +264,9 @@ def messagesFromFluent(
         )
 
 
-def resourceFromFluent(ast: Fluent.Resource) -> List[Message]:
+def from_fluent(ast: Fluent.Resource) -> List[Message]:
     """
     Compile a Fluent resource into a message resource.
     """
     groupcomments = []
-    return [entry for fe in ast.body for entry in messagesFromFluent(fe, groupcomments)]
+    return [entry for fe in ast.body for entry in messages(fe, groupcomments)]

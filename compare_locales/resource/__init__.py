@@ -15,8 +15,8 @@ from .elements import (
     SelectMessage,
 )
 from .errors import ParseError
-from .from_fluent import resourceFromFluent
-from .from_properties import resourceFromProperties
+from .from_fluent import from_fluent
+from .from_properties import from_properties
 
 __all__ = [
     "CatchallKey",
@@ -34,6 +34,6 @@ __all__ = [
     "Text",
     "VariableRef",
     "VariantKey",
-    "resourceFromFluent",
-    "resourceFromProperties",
+    "from_fluent",
+    "from_properties",
 ]
