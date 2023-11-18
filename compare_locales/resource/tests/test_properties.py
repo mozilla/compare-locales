@@ -5,7 +5,14 @@
 import unittest
 
 from ...parsers import PropertiesParser
-from .. import Comment, Junk, Message, PatternMessage, Text, resourceFromProperties
+from .. import (
+    Message,
+    ParseError,
+    PatternMessage,
+    Text,
+    VariableRef,
+    resourceFromProperties,
+)
 
 
 class TestPropertiesResource(unittest.TestCase):
@@ -14,7 +21,6 @@ class TestPropertiesResource(unittest.TestCase):
 two_line = This is the first \
 of two lines
 one_line_trailing = This line ends in \\
-and has junk
 two_lines_triple = This line is one of two and ends in \\\
 and still has another line coming
 """
@@ -37,7 +43,6 @@ and still has another line coming
                     PatternMessage([Text("This line ends in \\")]),
                     (72, 112),
                 ),
-                Junk((113, 126)),
                 Message(
                     ("two_lines_triple",),
                     PatternMessage(
@@ -48,6 +53,46 @@ and still has another line coming
                         ]
                     ),
                     (126, 218),
+                ),
+            ],
+        )
+
+    def test_printf_variables(self):
+        src = r"""one = This %s is a string
+two = This %(foo)d is a number
+three = This %1$s and %2$d
+"""
+        parser = PropertiesParser()
+        parser.readUnicode(src)
+        res = resourceFromProperties(parser.walk())
+        self.assertEqual(
+            res,
+            [
+                Message(
+                    ("one",),
+                    PatternMessage(
+                        [Text("This "), VariableRef("%s"), Text(" is a string")]
+                    ),
+                    (0, 0),
+                ),
+                Message(
+                    ("two",),
+                    PatternMessage(
+                        [Text("This "), VariableRef("%(foo)d"), Text(" is a number")]
+                    ),
+                    (0, 0),
+                ),
+                Message(
+                    ("three",),
+                    PatternMessage(
+                        [
+                            Text("This "),
+                            VariableRef("%1$s"),
+                            Text(" and "),
+                            VariableRef("%2$d"),
+                        ]
+                    ),
+                    (0, 0),
                 ),
             ],
         )
@@ -66,7 +111,6 @@ foo=value
         self.assertEqual(
             res,
             [
-                Comment((0, 198)),
                 Message(("foo",), PatternMessage([Text("value")]), (200, 209)),
             ],
         )
@@ -92,20 +136,17 @@ seven = \n\r\t\\
                 Message(
                     ("zero",),
                     PatternMessage([Text("some unicode")]),
-                    span=(19, 39),
-                    comment=(1, 18),
+                    comments=["unicode escapes"],
                 ),
-                Message(("one",), PatternMessage([Text(chr(0))]), res[1].span),
-                Message(("two",), PatternMessage([Text("A")]), res[2].span),
-                Message(("three",), PatternMessage([Text("B")]), res[3].span),
-                Message(("four",), PatternMessage([Text("C")]), res[4].span),
-                Message(("five",), PatternMessage([Text("Da")]), res[5].span),
-                Message(("six",), PatternMessage([Text("a")]), res[6].span),
-                Message(("seven",), PatternMessage([Text("\n\r\t\\")]), res[7].span),
+                Message(("one",), PatternMessage([Text(chr(0))])),
+                Message(("two",), PatternMessage([Text("A")])),
+                Message(("three",), PatternMessage([Text("B")])),
+                Message(("four",), PatternMessage([Text("C")])),
+                Message(("five",), PatternMessage([Text("Da")])),
+                Message(("six",), PatternMessage([Text("a")])),
+                Message(("seven",), PatternMessage([Text("\n\r\t\\")])),
             ],
         )
-        start, end = res[0].comment
-        self.assertEqual(src[start:end], b"# unicode escapes")
 
     def test_trailing_comment(self):
         src = """first = string
@@ -120,13 +161,10 @@ second = string
         self.assertEqual(
             res,
             [
-                Message(("first",), PatternMessage([Text("string")]), res[0].span),
-                Message(("second",), PatternMessage([Text("string")]), res[1].span),
-                Comment(res[2].span),
+                Message(("first",), PatternMessage([Text("string")])),
+                Message(("second",), PatternMessage([Text("string")])),
             ],
         )
-        start, end = res[2].span
-        self.assertEqual(src[start:end], "#\n#commented out")
 
     def test_empty(self):
         parser = PropertiesParser()
@@ -143,6 +181,7 @@ one = string
 # standalone
 
 # glued
+# lines
 second = string
 """
         parser = PropertiesParser()
@@ -154,21 +193,24 @@ second = string
                 Message(
                     ("one",),
                     PatternMessage([Text("string")]),
-                    span=(10, 22),
-                    comment=(0, 9),
+                    comments=["comment"],
                 ),
-                Comment(res[1].span),
                 Message(
                     ("second",),
                     PatternMessage([Text("string")]),
-                    res[2].span,
-                    comment=res[2].comment,
+                    comments=["glued", "lines"],
                 ),
             ],
         )
-        c0 = res[0].comment
-        self.assertEqual(src[c0[0] : c0[1]], "# comment")
-        c1 = res[1].span
-        self.assertEqual(src[c1[0] : c1[1]], "# standalone")
-        c2 = res[2].comment
-        self.assertEqual(src[c2[0] : c2[1]], "# glued")
+
+    def test_junk(self):
+        src = r"""key = This is valid
+and this is junk
+"""
+        parser = PropertiesParser()
+        parser.readUnicode(src)
+        try:
+            resourceFromProperties(parser.walk())
+            raise AssertionError("Expected parse error")
+        except ParseError:
+            pass

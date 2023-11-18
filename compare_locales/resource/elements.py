@@ -11,7 +11,7 @@ from typing import List, Optional, OrderedDict, Tuple, Union
 class CatchallKey:
     "The catch-all variant key matches all values."
 
-    value: Optional[str] = None
+    value: Optional[str] = field(compare=False, default=None)
 
 
 @dataclass
@@ -130,27 +130,16 @@ class Message:
     For example, Fluent attributes use a `(str, str)` key.
     The shape of the `value` is an implementation detail,
     and may vary for the same message in different languages.
+
+    The `span` position in the source is not used in comparisons,
+    and defaults to `(-1, -1)`.
     """
 
     key: Tuple[str, ...]
     value: Union[PatternMessage, SelectMessage]
-    span: Span
-    comment: Optional[Span] = None
-
-
-@dataclass
-class Comment:
-    "Standalone comment"
-    span: Span
-
-
-@dataclass
-class Junk:
-    "Invalid content"
-    span: Span
+    span: Span = field(compare=False, default=(-1, -1))
+    comments: List[str] = field(default_factory=list)
 
 
 Span = Tuple[int, int]
 "The 0-indexed `[start, end)` character range of a resource item."
-
-Entry = Union[Comment, Message, Junk]

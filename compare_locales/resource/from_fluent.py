@@ -7,11 +7,8 @@ from fluent.syntax import ast as Fluent
 
 from .elements import (
     CatchallKey,
-    Comment,
-    Entry,
     Expression,
     FunctionRef,
-    Junk,
     Literal,
     Message,
     OptionValue,
@@ -22,6 +19,7 @@ from .elements import (
     VariableRef,
     VariantKey,
 )
+from .errors import ParseError
 
 
 class SelectArg:
@@ -75,7 +73,7 @@ def getOptions(args: Optional[Fluent.CallArguments]) -> OrderedDict[str, OptionV
 
 def expressionToPart(exp: Union[Fluent.Expression, Fluent.Placeable]) -> Expression:
     if isinstance(exp, Fluent.NumberLiteral):
-        return FunctionRef("NUMBER", Literal(False, exp.value))
+        return FunctionRef("number", Literal(False, exp.value))
     elif isinstance(exp, Fluent.StringLiteral):
         return Literal(True, exp.parse()["value"])
     elif isinstance(exp, Fluent.VariableReference):
@@ -83,17 +81,22 @@ def expressionToPart(exp: Union[Fluent.Expression, Fluent.Placeable]) -> Express
     elif isinstance(exp, Fluent.FunctionReference):
         args = [expressionToPart(exp) for exp in exp.arguments.positional]
         if len(args) > 1:
-            raise Exception("More than one positional argument is not supported.")
+            raise ParseError("More than one positional argument is not supported.")
+        name = exp.id.name
+        if name == "NUMBER":
+            name = "number"
+        elif name == "DATETIME":
+            name = "datetime"
         operand = args[0]
         if isinstance(operand, FunctionRef):
-            raise Exception("A Fluent function is not supported here.")
+            raise ParseError("A Fluent function is not supported here.")
         options = getOptions(exp.arguments)
-        return FunctionRef(exp.id.name, operand, options)
+        return FunctionRef(name, operand, options)
     elif isinstance(exp, Fluent.MessageReference):
         msgId = (
             f"${exp.id.name}.${exp.attribute.name}" if exp.attribute else exp.id.name
         )
-        return FunctionRef("MESSAGE", Literal(False, msgId))
+        return FunctionRef("message", Literal(False, msgId))
     elif isinstance(exp, Fluent.TermReference):
         msgId = (
             "-${exp.id.name}.${exp.attribute.name}"
@@ -102,10 +105,10 @@ def expressionToPart(exp: Union[Fluent.Expression, Fluent.Placeable]) -> Express
         )
         operand = Literal(False, msgId)
         options = getOptions(exp.arguments)
-        return FunctionRef("MESSAGE", operand, options)
+        return FunctionRef("message", operand, options)
     elif isinstance(exp, Fluent.Placeable):
         return expressionToPart(exp.expression)
-    raise Exception(f"${exp.__class__.__name__} not supported here")
+    raise ParseError(f"${exp.__class__.__name__} not supported here")
 
 
 def elementToPart(el: Union[Fluent.TextElement, Fluent.Placeable]) -> Expression | Text:
@@ -144,7 +147,7 @@ def messageFromFluentPattern(
     # while our data model supports top-level selectors only.
     # Mapping between these approaches gets a bit complicated
     # when a message contains more than one selector.
-    keys: List[List[Union[str, int, None]]]
+    keys: List[List[Union[str, int, None]]] = []
     for i, arg in enumerate(args):
         kk: List[Union[str, int, None]] = []
         for key in arg.keys:
@@ -218,45 +221,56 @@ def messageFromFluentPattern(
     return SelectMessage([expressionToPart(arg.selector) for arg in args], variants)
 
 
-def entriesFromFluent(fe: Fluent.EntryType) -> Iterator[Entry]:
+def messagesFromFluent(
+    fe: Fluent.EntryType, groupcomments: List[str]
+) -> Iterator[Message]:
     if not fe.span:
-        raise Exception("Fluent parser must include spans in output")
+        raise ParseError("Fluent parser must include spans in output")
     if isinstance(fe, Fluent.Message):
         id = fe.id.name
-        cspan = fe.comment.span if fe.comment else None
-        comment = (cspan.start, cspan.end) if cspan else None
+        comments = groupcomments + (
+            fe.comment.content.split("\n") if fe.comment and fe.comment.content else []
+        )
         if fe.value:
             value = messageFromFluentPattern(fe.value)
             ispan = fe.id.span or fe.span
             vspan = fe.value.span or fe.span
-            yield Message((id,), value, (ispan.start, vspan.end), comment)
-            if comment:
-                comment = None
+            yield Message((id,), value, (ispan.start, vspan.end), comments)
+            if comments:
+                comments = None
         for attr in fe.attributes:
             value = messageFromFluentPattern(attr.value)
             span = attr.span or fe.span
-            yield Message((id, attr.id.name), value, (span.start, span.end), comment)
-            if comment:
-                comment = None
+            yield Message((id, attr.id.name), value, (span.start, span.end), comments)
+            if comments:
+                comments = None
     elif isinstance(fe, Fluent.Term):
         id = "-" + fe.id.name
         value = messageFromFluentPattern(fe.value)
         ispan = fe.id.span or fe.span
         vspan = fe.value.span or fe.span
-        cspan = fe.comment.span if fe.comment else None
-        comment = (cspan.start, cspan.end) if cspan else None
-        yield Message((id,), value, (ispan.start, vspan.end), comment)
+        comments = groupcomments + (
+            fe.comment.content.split("\n") if fe.comment and fe.comment.content else []
+        )
+        yield Message((id,), value, (ispan.start, vspan.end), comments)
         for attr in fe.attributes:
             value = messageFromFluentPattern(attr.value)
-            span = attr.span or span
+            span = attr.span or fe.span
             yield Message((id, attr.id.name), value, (span.start, span.end))
-    else:
-        span_ = (fe.span.start, fe.span.end)
-        yield Comment(span_) if isinstance(fe, Fluent.BaseComment) else Junk(span_)
+    elif isinstance(fe, Fluent.GroupComment):
+        if fe.content:
+            groupcomments[:] = fe.content.split("\n")
+        else:
+            groupcomments.clear()
+    elif isinstance(fe, Fluent.Junk):
+        raise ParseError(
+            f"Fluent parse error at position {fe.span.start}:\n{fe.content}"
+        )
 
 
-def resourceFromFluent(ast: Fluent.Resource) -> List[Entry]:
+def resourceFromFluent(ast: Fluent.Resource) -> List[Message]:
     """
     Compile a Fluent resource into a message resource.
     """
-    return [entry for fe in ast.body for entry in entriesFromFluent(fe)]
+    groupcomments = []
+    return [entry for fe in ast.body for entry in messagesFromFluent(fe, groupcomments)]

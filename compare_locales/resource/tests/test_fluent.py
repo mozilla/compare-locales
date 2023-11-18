@@ -8,11 +8,10 @@ from fluent.syntax import FluentParser
 
 from .. import (
     CatchallKey,
-    Comment,
     FunctionRef,
-    Junk,
     Literal,
     Message,
+    ParseError,
     PatternMessage,
     SelectMessage,
     Text,
@@ -28,7 +27,7 @@ class TestFluentParser(unittest.TestCase):
         res = resourceFromFluent(ast)
         self.assertEqual(
             res,
-            [Message(("a",), PatternMessage([Text("A")]), (0, 5))],
+            [Message(("a",), PatternMessage([Text("A")]))],
         )
 
     def test_complex_message(self):
@@ -45,11 +44,10 @@ class TestFluentParser(unittest.TestCase):
                             Text("A "),
                             VariableRef("arg"),
                             Text(" B "),
-                            FunctionRef("MESSAGE", Literal(False, "msg")),
+                            FunctionRef("message", Literal(False, "msg")),
                             Text(" C"),
                         ]
                     ),
-                    res[0].span,
                 )
             ],
         )
@@ -65,7 +63,7 @@ abc =
         res = resourceFromFluent(ast)
         self.assertEqual(
             res,
-            [Message(("abc",), PatternMessage([Text("A\nB\nC")]), res[0].span)],
+            [Message(("abc",), PatternMessage([Text("A\nB\nC")]))],
         )
 
     def test_message_with_attribute(self):
@@ -80,8 +78,8 @@ abc = ABC
         self.assertEqual(
             res,
             [
-                Message(("abc",), PatternMessage([Text("ABC")]), (2, 11)),
-                Message(("abc", "attr"), PatternMessage([Text("Attr")]), (16, 28)),
+                Message(("abc",), PatternMessage([Text("ABC")])),
+                Message(("abc", "attr"), PatternMessage([Text("Attr")])),
             ],
         )
 
@@ -95,7 +93,7 @@ abc =
         self.assertEqual(
             res,
             [
-                Message(("abc", "attr"), PatternMessage([Text("Attr")]), (10, 22)),
+                Message(("abc", "attr"), PatternMessage([Text("Attr")])),
             ],
         )
 
@@ -109,8 +107,6 @@ foo = Foo
 
 -bar = Bar
 
-##
-
 # Standalone Comment
 
 # Baz Comment
@@ -121,30 +117,17 @@ baz = Baz
         self.assertEqual(
             res,
             [
-                Comment(res[0].span),
-                Message(("foo",), PatternMessage([Text("Foo")]), res[1].span),
-                Comment(res[2].span),
-                Message(("-bar",), PatternMessage([Text("Bar")]), res[3].span),
-                Comment(res[4].span),
-                Comment(res[5].span),
+                Message(("foo",), PatternMessage([Text("Foo")])),
+                Message(
+                    ("-bar",), PatternMessage([Text("Bar")]), comments=["Group Comment"]
+                ),
                 Message(
                     ("baz",),
                     PatternMessage([Text("Baz")]),
-                    res[6].span,
-                    comment=res[6].comment,
+                    comments=["Group Comment", "Baz Comment"],
                 ),
             ],
         )
-        c = res[0].span
-        self.assertEqual(src[c[0] : c[1]], "### Resource Comment")
-        c = res[2].span
-        self.assertEqual(src[c[0] : c[1]], "## Group Comment")
-        c = res[4].span
-        self.assertEqual(src[c[0] : c[1]], "##")
-        c = res[5].span
-        self.assertEqual(src[c[0] : c[1]], "# Standalone Comment")
-        c = res[6].comment
-        self.assertEqual(src[c[0] : c[1]], "# Baz Comment")
 
     def test_junk(self):
         src = """\
@@ -156,26 +139,11 @@ Line of junk
 msg = value
 """
         ast = FluentParser().parse(src)
-        res = resourceFromFluent(ast)
-        self.assertEqual(
-            res,
-            [
-                Comment(res[0].span),
-                Junk(res[1].span),
-                Message(
-                    ("msg",),
-                    PatternMessage([Text("value")]),
-                    res[2].span,
-                    comment=res[2].comment,
-                ),
-            ],
-        )
-        c = res[0].span
-        self.assertEqual(src[c[0] : c[1]], "# Comment")
-        c = res[1].span
-        self.assertEqual(src[c[0] : c[1]], "Line of junk\n\n")
-        c = res[2].comment
-        self.assertEqual(src[c[0] : c[1]], "# Comment")
+        try:
+            resourceFromFluent(ast)
+            raise AssertionError("Expected parse error")
+        except ParseError:
+            pass
 
     def test_multiple_selectors(self):
         src = """
@@ -221,7 +189,6 @@ abc =
                             ),
                         ],
                     ),
-                    res[0].span,
                 )
             ],
         )

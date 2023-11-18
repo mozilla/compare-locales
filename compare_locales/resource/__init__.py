@@ -10,27 +10,23 @@ from .elements import (
     VariantKey,
     Declarations,
     Message,
-    Comment,
-    Junk,
-    Entry,
     Span,
     PatternMessage,
     SelectMessage,
 )
+from .errors import ParseError
 from .from_fluent import resourceFromFluent
 from .from_properties import resourceFromProperties
 
 __all__ = [
     "CatchallKey",
-    "Comment",
     "Declarations",
-    "Entry",
     "Expression",
     "FunctionRef",
-    "Junk",
     "Literal",
     "Message",
     "OptionValue",
+    "ParseError",
     "Pattern",
     "PatternMessage",
     "SelectMessage",
