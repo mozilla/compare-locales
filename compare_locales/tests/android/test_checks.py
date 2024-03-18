@@ -166,7 +166,7 @@ class PrintfCapSTest(BaseHelper):
         )
 
 
-class PrintfDTest(BaseHelper):
+class PrintfIntegerTest(BaseHelper):
     file = File("values/strings.xml", "values/strings.xml")
     refContent = ANDROID_WRAPPER % b"%d"
 
@@ -199,6 +199,59 @@ class PrintfDTest(BaseHelper):
         self._test(
             ANDROID_WRAPPER % b'"% 1 $ d"',
             (("warning", 0, "Formatter %1$d not found in translation", "android"),),
+        )
+
+
+class PrintfFloatTest(BaseHelper):
+    file = File("values/strings.xml", "values/strings.xml")
+    refContent = ANDROID_WRAPPER % b"%f"
+
+    def test_match(self):
+        self._test(ANDROID_WRAPPER % b'"%f"', tuple())
+        self._test(ANDROID_WRAPPER % b'"%1$f"', tuple())
+        self._test(ANDROID_WRAPPER % b'"$f %1$f"', tuple())
+        self._test(ANDROID_WRAPPER % b'"$1$f %1$f"', tuple())
+
+    def test_mismatch(self):
+        self._test(
+            ANDROID_WRAPPER % b'"%s"',
+            (("error", 0, "Mismatching formatter", "android"),),
+        )
+        self._test(
+            ANDROID_WRAPPER % b'"%S"',
+            (("error", 0, "Mismatching formatter", "android"),),
+        )
+
+    def test_off_position(self):
+        self._test(
+            ANDROID_WRAPPER % b"%2$f",
+            (
+                ("error", 0, "Formatter %2$f not found in reference", "android"),
+                ("warning", 0, "Formatter %1$f not found in translation", "android"),
+            ),
+        )
+
+    def test_missing_placeholder(self):
+        self._test(
+            ANDROID_WRAPPER % b'"% 1 $ f"',
+            (("warning", 0, "Formatter %1$f not found in translation", "android"),),
+        )
+
+
+class PrintfFloatPrecisionTest(BaseHelper):
+    file = File("values/strings.xml", "values/strings.xml")
+    refContent = ANDROID_WRAPPER % b"%.02f"
+
+    def test_match(self):
+        self._test(ANDROID_WRAPPER % b'"%.02f"', tuple())
+        self._test(ANDROID_WRAPPER % b'"%1$.02f"', tuple())
+        self._test(ANDROID_WRAPPER % b'"$f %1$.02f"', tuple())
+        self._test(ANDROID_WRAPPER % b'"$1$.02f %1$.02f"', tuple())
+
+    def test_missing_placeholder(self):
+        self._test(
+            ANDROID_WRAPPER % b'"% 1 $ .02f"',
+            (("warning", 0, "Formatter %1$.02f not found in translation", "android"),),
         )
 
 

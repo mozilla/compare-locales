@@ -164,9 +164,11 @@ def messageFromFluentPattern(
     variants: List[Tuple[List[VariantKey], Pattern]] = [
         (
             [
-                CatchallKey(args[i].defaultName)
-                if k is None
-                else Literal(False, str(k))
+                (
+                    CatchallKey(args[i].defaultName)
+                    if k is None
+                    else Literal(False, str(k))
+                )
                 for i, k in enumerate(key)
             ],
             [],
@@ -193,17 +195,21 @@ def messageFromFluentPattern(
                     value = (
                         None
                         if v.default
-                        else v.key.name
-                        if isinstance(v.key, Fluent.Identifier)
-                        else v.key.value
+                        else (
+                            v.key.name
+                            if isinstance(v.key, Fluent.Identifier)
+                            else v.key.value
+                        )
                     )
                     addParts(v.value, filter + [(idx, value)])
             else:
                 for vk, vp in variants:
                     if all(
-                        value is None
-                        if isinstance(key, CatchallKey)
-                        else value == key.value
+                        (
+                            value is None
+                            if isinstance(key, CatchallKey)
+                            else value == key.value
+                        )
                         for key, value in map(lambda f: (vk[f[0]], f[1]), filter)
                     ):
                         last = vp[-1] if len(vp) else None
