@@ -4,7 +4,7 @@
 
 import unittest
 
-from fluent.syntax import FluentParser
+from fluent.syntax import FluentParser, serialize
 
 from .. import (
     CatchallKey,
@@ -17,21 +17,24 @@ from .. import (
     Text,
     VariableRef,
     from_fluent,
+    to_fluent,
 )
 
 
 class TestFluentParser(unittest.TestCase):
     def test_simple_message(self):
-        src = "a = A"
+        src = "a = A\n"
         ast = FluentParser().parse(src)
         res = from_fluent(ast)
         self.assertEqual(
             res,
             [Message(("a",), PatternMessage([Text("A")]))],
         )
+        str = serialize(to_fluent(res))
+        self.assertEqual(str, src)
 
     def test_complex_message(self):
-        src = "abc = A { $arg } B { msg } C"
+        src = "abc = A { $arg } B { msg } C\n"
         ast = FluentParser().parse(src)
         res = from_fluent(ast)
         self.assertEqual(
@@ -51,6 +54,8 @@ class TestFluentParser(unittest.TestCase):
                 )
             ],
         )
+        str = serialize(to_fluent(res))
+        self.assertEqual(str, src)
 
     def test_multiline_message(self):
         src = """\
@@ -65,6 +70,8 @@ abc =
             res,
             [Message(("abc",), PatternMessage([Text("A\nB\nC")]))],
         )
+        str = serialize(to_fluent(res))
+        self.assertEqual(str, src)
 
     def test_message_with_attribute(self):
         src = """\
@@ -82,6 +89,8 @@ abc = ABC
                 Message(("abc", "attr"), PatternMessage([Text("Attr")])),
             ],
         )
+        str = serialize(to_fluent(res))
+        self.assertEqual(str, src.lstrip())
 
     def test_message_with_attribute_and_no_value(self):
         src = """\
@@ -96,6 +105,8 @@ abc =
                 Message(("abc", "attr"), PatternMessage([Text("Attr")])),
             ],
         )
+        str = serialize(to_fluent(res))
+        self.assertEqual(str, src)
 
     def test_non_localizable(self):
         src = """\
@@ -128,6 +139,18 @@ baz = Baz
                 ),
             ],
         )
+        str = serialize(to_fluent(res))
+        self.assertEqual(
+            str,
+            """\
+foo = Foo
+# Group Comment
+-bar = Bar
+# Group Comment
+# Baz Comment
+baz = Baz
+""",
+        )
 
     def test_junk(self):
         src = """\
@@ -146,20 +169,20 @@ msg = value
             pass
 
     def test_multiple_selectors(self):
-        src = """
+        src = """\
 abc =
-  { $a ->
-     [one]
-       { $b ->
-          [two] one-two
-         *[other] one-other
-       }
-    *[other]
-       { $b ->
-          [two] other-two
-         *[other] other-other
-       }
-  }
+    { $a ->
+        [one]
+            { $b ->
+                [two] one-two
+               *[other] one-other
+            }
+       *[other]
+            { $b ->
+                [two] other-two
+               *[other] other-other
+            }
+    }
 """
         ast = FluentParser().parse(src)
         res = from_fluent(ast)
@@ -192,3 +215,5 @@ abc =
                 )
             ],
         )
+        str = serialize(to_fluent(res))
+        self.assertEqual(str, src)

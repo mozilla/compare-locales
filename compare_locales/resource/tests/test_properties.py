@@ -12,12 +12,14 @@ from .. import (
     Text,
     VariableRef,
     from_properties,
+    to_properties,
 )
 
 
 class TestPropertiesResource(unittest.TestCase):
     def test_backslashes(self):
-        src = r"""one_line = This is one line
+        src = r"""
+one_line = This is one line
 two_line = This is the first \
 of two lines
 one_line_trailing = This line ends in \\
@@ -56,9 +58,19 @@ and still has another line coming
                 ),
             ],
         )
+        str = to_properties(res)
+        self.assertEqual(
+            str,
+            r"""one_line = This is one line
+two_line = This is the first of two lines
+one_line_trailing = This line ends in \\
+two_lines_triple = This line is one of two and ends in \\and still has another line coming
+""",
+        )
 
     def test_printf_variables(self):
-        src = r"""one = This %s is a string
+        src = """\
+one = This %s is a string
 two = This %(foo)d is a number
 three = This %1$s and %2$d
 """
@@ -96,6 +108,8 @@ three = This %1$s and %2$d
                 ),
             ],
         )
+        str = to_properties(res)
+        self.assertEqual(str, src)
 
     def test_license_header(self):
         src = """\
@@ -114,6 +128,8 @@ foo=value
                 Message(("foo",), PatternMessage([Text("value")]), (200, 209)),
             ],
         )
+        str = to_properties(res)
+        self.assertEqual(str, "foo = value\n")
 
     def test_escapes(self):
         src = rb"""
@@ -147,9 +163,26 @@ seven = \n\r\t\\
                 Message(("seven",), PatternMessage([Text("\n\r\t\\")])),
             ],
         )
+        str = to_properties(res)
+        self.assertEqual(
+            str,
+            r"""# unicode escapes
+zero = some unicode
+one = \u0000
+two = A
+three = B
+four = C
+five = Da
+six = a
+seven = \
+  \n\
+  \r\t\\
+""",
+        )
 
     def test_trailing_comment(self):
-        src = """first = string
+        src = """\
+first = string
 second = string
 
 #
@@ -164,6 +197,14 @@ second = string
                 Message(("first",), PatternMessage([Text("string")])),
                 Message(("second",), PatternMessage([Text("string")])),
             ],
+        )
+        str = to_properties(res)
+        self.assertEqual(
+            str,
+            """\
+first = string
+second = string
+""",
         )
 
     def test_empty(self):
@@ -201,6 +242,17 @@ second = string
                     comments=["glued", "lines"],
                 ),
             ],
+        )
+        str = to_properties(res)
+        self.assertEqual(
+            str,
+            """\
+# comment
+one = string
+# glued
+# lines
+second = string
+""",
         )
 
     def test_junk(self):

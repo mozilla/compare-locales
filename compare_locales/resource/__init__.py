@@ -17,6 +17,8 @@ from .elements import (
 from .errors import ParseError
 from .from_fluent import from_fluent
 from .from_properties import from_properties
+from .to_fluent import to_fluent
+from .to_properties import to_properties
 
 __all__ = [
     "CatchallKey",
@@ -36,4 +38,6 @@ __all__ = [
     "VariantKey",
     "from_fluent",
     "from_properties",
+    "to_fluent",
+    "to_properties",
 ]
