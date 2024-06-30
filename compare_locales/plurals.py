@@ -180,7 +180,6 @@ CATEGORIES_BY_LOCALE = {
     "sw": 1,
     "szl": 9,
     "ta": 1,
-    "ta": 1,
     "te": 1,
     "tg": 1,
     "th": 0,
