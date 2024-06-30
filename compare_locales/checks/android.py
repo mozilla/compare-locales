@@ -61,8 +61,8 @@ class AndroidChecker(Checker):
         params, count, errors = get_params(refs)
         for error, pos in errors:
             yield ("warning", pos, error, "android")
-        if params:
-            yield from check_params(params, count, l10nEnt.val)
+        # Always check parameters, as the translation might have additional ones
+        yield from check_params(params, count, l10nEnt.val)
 
     def not_translatable(self, *nodes):
         return any(
