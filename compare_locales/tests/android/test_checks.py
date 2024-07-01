@@ -148,6 +148,26 @@ class PrintfSTest(BaseHelper):
         )
 
 
+class PrintfSTestNoParamsRef(BaseHelper):
+    # Check with a reference that is completely missing parameters
+    file = File("values/strings.xml", "values/strings.xml")
+    refContent = ANDROID_WRAPPER % b""
+
+    def test_extra_param(self):
+        self._test(
+            ANDROID_WRAPPER % b"%1$s",
+            (("error", 0, "Formatter %1$s not found in reference", "android"),),
+        )
+        self._test(
+            ANDROID_WRAPPER % b"%s",
+            (("error", 0, "Formatter %1$s not found in reference", "android"),),
+        )
+        self._test(
+            ANDROID_WRAPPER % b"%2$S",
+            (("error", 0, "Formatter %2$S not found in reference", "android"),),
+        )
+
+
 class PrintfCapSTest(BaseHelper):
     file = File("values/strings.xml", "values/strings.xml")
     refContent = ANDROID_WRAPPER % b"%S"
