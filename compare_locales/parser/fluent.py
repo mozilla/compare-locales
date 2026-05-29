@@ -111,12 +111,11 @@ class FluentEntity(Entity):
         # linter warnings.
         return self.ctx.linecol(self.key_span[0])
 
-    def report_range(self):
-        # Report 0, i.e. single line for value-only messages. When the message
-        # has attributes, extend the range to the last line of the
-        # entity, so the warning is associated with all parts of the message.
-        if not self.entry.attributes:
-            return 0
+    def line_offset(self):
+        # 0 (single line) for messages whose value fits on the ID line. For
+        # messages spanning several lines (multi-line value and/or attributes)
+        # extend the range to the last line of the entity, so the warning is
+        # associated with all parts of the message.
         end_lineno, _ = self.position(-1)
         id_lineno, _ = self.id_position()
         return end_lineno - id_lineno

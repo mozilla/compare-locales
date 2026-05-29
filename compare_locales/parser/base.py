@@ -85,7 +85,7 @@ class Entry:
         """
         return self.position()
 
-    def report_range(self):
+    def line_offset(self):
         """Return how many additional lines a full-entity warning should
         cover beyond 'id_position'.
 
@@ -95,7 +95,7 @@ class Entry:
 
         Defaults to 0, meaning the warning applies to a single line.
         Override for entities that can extend across several lines,
-        e.g. a Fluent message with attributes.
+        e.g. a multi-line Fluent message, or a message with attributes.
         """
         return 0
 

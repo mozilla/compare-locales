@@ -83,9 +83,9 @@ class EntityLinter:
                     "level": "warning",
                     "message": f"Changes to an existing string require a new ID: {current_entity.key}",
                 }
-                line_range = current_entity.report_range()
-                if line_range:
-                    res["lineoffset"] = line_range
+                line_offset = current_entity.line_offset()
+                if line_offset:
+                    res["lineoffset"] = line_offset
                 yield res
 
     def lint_value(self, current_entity):
