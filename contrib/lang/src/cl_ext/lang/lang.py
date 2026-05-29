@@ -10,7 +10,6 @@ from parsimonious.nodes import NodeVisitor
 from compare_locales.parser.base import Comment, LiteralEntity, Junk, Parser
 from compare_locales.paths import File
 
-
 BLANK_LINE = "blank_line"
 TAG_REGEX = re.compile(r"\{(ok)\}", re.I)
 
@@ -50,8 +49,7 @@ class LangEntity(LiteralEntity):
 
 
 class LangVisitor(NodeVisitor):
-    grammar = Grammar(
-        r"""
+    grammar = Grammar(r"""
         lang_file = (comment / entity / blank_line)*
 
         comment = "#"+ line_content line_ending
@@ -63,8 +61,7 @@ class LangVisitor(NodeVisitor):
         entity = string translation
         string = ";" line_content line_ending
         translation = line_content line_ending
-    """
-    )
+    """)
 
     def __init__(self, ctx):
         super().__init__()

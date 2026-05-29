@@ -8,7 +8,6 @@ import unittest
 
 from compare_locales.keyedtuple import KeyedTuple
 
-
 KeyedThing = namedtuple("KeyedThing", ["key", "val"])
 
 

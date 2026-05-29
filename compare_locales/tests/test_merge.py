@@ -116,26 +116,22 @@ class TestDefines(unittest.TestCase, ContentMixin):
 
     def testGood(self):
         self.assertTrue(os.path.isdir(self.tmp))
-        self.reference(
-            """#filter emptyLines
+        self.reference("""#filter emptyLines
 
 #define MOZ_LANGPACK_CREATOR mozilla.org
 
 #define MOZ_LANGPACK_CONTRIBUTORS <em:contributor>Suzy Solon</em:contributor>
 
 #unfilter emptyLines
-"""
-        )
-        self.localized(
-            """#filter emptyLines
+""")
+        self.localized("""#filter emptyLines
 
 #define MOZ_LANGPACK_CREATOR mozilla.org
 
 #define MOZ_LANGPACK_CONTRIBUTORS <em:contributor>Jane Doe</em:contributor>
 
 #unfilter emptyLines
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -170,24 +166,20 @@ class TestDefines(unittest.TestCase, ContentMixin):
 
     def testMissing(self):
         self.assertTrue(os.path.isdir(self.tmp))
-        self.reference(
-            """#filter emptyLines
+        self.reference("""#filter emptyLines
 
 #define MOZ_LANGPACK_CREATOR mozilla.org
 
 #define MOZ_LANGPACK_CONTRIBUTORS <em:contributor>Suzy Solon</em:contributor>
 
 #unfilter emptyLines
-"""
-        )
-        self.localized(
-            """#filter emptyLines
+""")
+        self.localized("""#filter emptyLines
 
 #define MOZ_LANGPACK_CREATOR mozilla.org
 
 #unfilter emptyLines
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -237,17 +229,13 @@ class TestProperties(unittest.TestCase, ContentMixin):
 
     def testGood(self):
         self.assertTrue(os.path.isdir(self.tmp))
-        self.reference(
-            """foo = fooVal word
+        self.reference("""foo = fooVal word
 bar = barVal word
-eff = effVal"""
-        )
-        self.localized(
-            """foo = lFoo
+eff = effVal""")
+        self.localized("""foo = lFoo
 bar = lBar
 eff = lEff word
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -282,15 +270,11 @@ eff = lEff word
 
     def testMissing(self):
         self.assertTrue(os.path.isdir(self.tmp))
-        self.reference(
-            """foo = fooVal
+        self.reference("""foo = fooVal
 bar = barVal
-eff = effVal"""
-        )
-        self.localized(
-            """bar = lBar
-"""
-        )
+eff = effVal""")
+        self.localized("""bar = lBar
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -333,11 +317,9 @@ eff = effVal"""
 
     def test_missing_file(self):
         self.assertTrue(os.path.isdir(self.tmp))
-        self.reference(
-            """foo = fooVal
+        self.reference("""foo = fooVal
 bar = barVal
-eff = effVal"""
-        )
+eff = effVal""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.add(
@@ -371,17 +353,13 @@ eff = effVal"""
 
     def testError(self):
         self.assertTrue(os.path.isdir(self.tmp))
-        self.reference(
-            """foo = fooVal
+        self.reference("""foo = fooVal
 bar = %d barVal
-eff = effVal"""
-        )
-        self.localized(
-            """\
+eff = effVal""")
+        self.localized("""\
 bar = %S lBar
 eff = leffVal
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -428,16 +406,12 @@ eff = leffVal
 
     def testObsolete(self):
         self.assertTrue(os.path.isdir(self.tmp))
-        self.reference(
-            """foo = fooVal
-eff = effVal"""
-        )
-        self.localized(
-            """foo = fooVal
+        self.reference("""foo = fooVal
+eff = effVal""")
+        self.localized("""foo = fooVal
 other = obsolete
 eff = leffVal
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -471,11 +445,9 @@ eff = leffVal
 
     def test_obsolete_file(self):
         self.assertTrue(os.path.isdir(self.tmp))
-        self.localized(
-            """foo = fooVal
+        self.localized("""foo = fooVal
 eff = leffVal
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.remove(
@@ -495,19 +467,15 @@ eff = leffVal
 
     def test_duplicate(self):
         self.assertTrue(os.path.isdir(self.tmp))
-        self.reference(
-            """foo = fooVal
+        self.reference("""foo = fooVal
 bar = barVal
 eff = effVal
-foo = other val for foo"""
-        )
-        self.localized(
-            """foo = localized
+foo = other val for foo""")
+        self.localized("""foo = localized
 bar = lBar
 eff = localized eff
 bar = duplicated bar
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -559,17 +527,13 @@ class TestDTD(unittest.TestCase, ContentMixin):
 
     def testGood(self):
         self.assertTrue(os.path.isdir(self.tmp))
-        self.reference(
-            """<!ENTITY foo 'fooVal'>
+        self.reference("""<!ENTITY foo 'fooVal'>
 <!ENTITY bar 'barVal'>
-<!ENTITY eff 'effVal'>"""
-        )
-        self.localized(
-            """<!ENTITY foo 'lFoo'>
+<!ENTITY eff 'effVal'>""")
+        self.localized("""<!ENTITY foo 'lFoo'>
 <!ENTITY bar 'lBar'>
 <!ENTITY eff 'lEff'>
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -604,15 +568,11 @@ class TestDTD(unittest.TestCase, ContentMixin):
 
     def testMissing(self):
         self.assertTrue(os.path.isdir(self.tmp))
-        self.reference(
-            """<!ENTITY foo 'fooVal'>
+        self.reference("""<!ENTITY foo 'fooVal'>
 <!ENTITY bar 'barVal'>
-<!ENTITY eff 'effVal'>"""
-        )
-        self.localized(
-            """<!ENTITY bar 'lBar'>
-"""
-        )
+<!ENTITY eff 'effVal'>""")
+        self.localized("""<!ENTITY bar 'lBar'>
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -652,17 +612,13 @@ class TestDTD(unittest.TestCase, ContentMixin):
 
     def testJunk(self):
         self.assertTrue(os.path.isdir(self.tmp))
-        self.reference(
-            """<!ENTITY foo 'fooVal'>
+        self.reference("""<!ENTITY foo 'fooVal'>
 <!ENTITY bar 'barVal'>
-<!ENTITY eff 'effVal'>"""
-        )
-        self.localized(
-            """<!ENTITY foo 'fooVal'>
+<!ENTITY eff 'effVal'>""")
+        self.localized("""<!ENTITY foo 'fooVal'>
 <!ENTY bar 'gimmick'>
 <!ENTITY eff 'effVal'>
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -710,16 +666,12 @@ class TestDTD(unittest.TestCase, ContentMixin):
 
     def test_reference_junk(self):
         self.assertTrue(os.path.isdir(self.tmp))
-        self.reference(
-            """<!ENTITY foo 'fooVal'>
+        self.reference("""<!ENTITY foo 'fooVal'>
 <!ENT bar 'bad val'>
-<!ENTITY eff 'effVal'>"""
-        )
-        self.localized(
-            """<!ENTITY foo 'fooVal'>
+<!ENTITY eff 'effVal'>""")
+        self.localized("""<!ENTITY foo 'fooVal'>
 <!ENTITY eff 'effVal'>
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -753,17 +705,13 @@ class TestDTD(unittest.TestCase, ContentMixin):
 
     def test_reference_xml_error(self):
         self.assertTrue(os.path.isdir(self.tmp))
-        self.reference(
-            """<!ENTITY foo 'fooVal'>
+        self.reference("""<!ENTITY foo 'fooVal'>
 <!ENTITY bar 'bad &val'>
-<!ENTITY eff 'effVal'>"""
-        )
-        self.localized(
-            """<!ENTITY foo 'fooVal'>
+<!ENTITY eff 'effVal'>""")
+        self.localized("""<!ENTITY foo 'fooVal'>
 <!ENTITY bar 'good val'>
 <!ENTITY eff 'effVal'>
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -828,20 +776,16 @@ class TestFluent(unittest.TestCase):
         del self.l10n
 
     def testGood(self):
-        self.reference(
-            """\
+        self.reference("""\
 foo = fooVal
 bar = barVal
 -eff = effVal
-"""
-        )
-        self.localized(
-            """\
+""")
+        self.localized("""\
 foo = lFoo
 bar = lBar
 -eff = lEff
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -877,20 +821,16 @@ bar = lBar
         self.assertTrue(filecmp.cmp(self.l10n, mergepath))
 
     def testMissing(self):
-        self.reference(
-            """\
+        self.reference("""\
 foo = fooVal
 bar = barVal
 -baz = bazVal
 eff = effVal
-"""
-        )
-        self.localized(
-            """\
+""")
+        self.localized("""\
 foo = lFoo
 eff = lEff
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -931,21 +871,17 @@ eff = lEff
         self.assertTrue(filecmp.cmp(self.l10n, mergepath))
 
     def testBroken(self):
-        self.reference(
-            """\
+        self.reference("""\
 foo = fooVal
 bar = barVal
 eff = effVal
-"""
-        )
-        self.localized(
-            """\
+""")
+        self.localized("""\
 -- Invalid Comment
 foo = lFoo
 bar lBar
 eff = lEff {
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -1013,16 +949,12 @@ eff = lEff {
         self.assertTrue(merged_foo.equals(l10n_foo))
 
     def testMatchingReferences(self):
-        self.reference(
-            """\
+        self.reference("""\
 foo = Reference { bar }
-"""
-        )
-        self.localized(
-            """\
+""")
+        self.localized("""\
 foo = Localized { bar }
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -1058,20 +990,16 @@ foo = Localized { bar }
         self.assertTrue(filecmp.cmp(self.l10n, mergepath))
 
     def testMismatchingReferences(self):
-        self.reference(
-            """\
+        self.reference("""\
 foo = Reference { bar }
 bar = Reference { baz }
 baz = Reference
-"""
-        )
-        self.localized(
-            """\
+""")
+        self.localized("""\
 foo = Localized { qux }
 bar = Localized
 baz = Localized { qux }
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -1126,22 +1054,18 @@ baz = Localized { qux }
         self.assertTrue(filecmp.cmp(self.l10n, mergepath))
 
     def testMismatchingAttributes(self):
-        self.reference(
-            """
+        self.reference("""
 foo = Foo
 bar = Bar
   .tender = Attribute value
 eff = Eff
-"""
-        )
-        self.localized(
-            """\
+""")
+        self.localized("""\
 foo = lFoo
   .obsolete = attr
 bar = lBar
 eff = lEff
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -1200,8 +1124,7 @@ eff = lEff
         self.assertTrue(merged_eff.equals(l10n_eff))
 
     def test_term_attributes(self):
-        self.reference(
-            """
+        self.reference("""
 -foo = Foo
 -bar = Bar
 -baz = Baz
@@ -1210,18 +1133,15 @@ eff = lEff
     .attr = Qux Attribute
 -missing = Missing
     .attr = An Attribute
-"""
-        )
-        self.localized(
-            """\
+""")
+        self.localized("""\
 -foo = Localized Foo
 -bar = Localized Bar
     .attr = Locale-specific Bar Attribute
 -baz = Localized Baz
 -qux = Localized Qux
     .other = Locale-specific Qux Attribute
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -1261,22 +1181,18 @@ eff = lEff
         self.assertTrue(filecmp.cmp(self.l10n, mergepath))
 
     def testMismatchingValues(self):
-        self.reference(
-            """
+        self.reference("""
 foo = Foo
   .foottr = something
 bar =
   .tender = Attribute value
-"""
-        )
-        self.localized(
-            """\
+""")
+        self.localized("""\
 foo =
   .foottr = attr
 bar = lBar
   .tender = localized
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -1324,20 +1240,16 @@ bar = lBar
         self.assertEqual(merged_entities, tuple())
 
     def testMissingGroupComment(self):
-        self.reference(
-            """\
+        self.reference("""\
 foo = fooVal
 
 ## Group Comment
 bar = barVal
-"""
-        )
-        self.localized(
-            """\
+""")
+        self.localized("""\
 foo = lFoo
 bar = lBar
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -1373,20 +1285,16 @@ bar = lBar
         self.assertTrue(filecmp.cmp(self.l10n, mergepath))
 
     def testMissingAttachedComment(self):
-        self.reference(
-            """\
+        self.reference("""\
 foo = fooVal
 
 # Attached Comment
 bar = barVal
-"""
-        )
-        self.localized(
-            """\
+""")
+        self.localized("""\
 foo = lFoo
 bar = barVal
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -1422,21 +1330,17 @@ bar = barVal
         self.assertTrue(filecmp.cmp(self.l10n, mergepath))
 
     def testObsoleteStandaloneComment(self):
-        self.reference(
-            """\
+        self.reference("""\
 foo = fooVal
 bar = barVal
-"""
-        )
-        self.localized(
-            """\
+""")
+        self.localized("""\
 foo = lFoo
 
 # Standalone Comment
 
 bar = lBar
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -1473,19 +1377,15 @@ bar = lBar
 
     def test_duplicate(self):
         self.assertTrue(os.path.isdir(self.tmp))
-        self.reference(
-            """foo = fooVal
+        self.reference("""foo = fooVal
 bar = barVal
 eff = effVal
-foo = other val for foo"""
-        )
-        self.localized(
-            """foo = localized
+foo = other val for foo""")
+        self.localized("""foo = localized
 bar = lBar
 eff = localized eff
 bar = duplicated bar
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(
@@ -1524,17 +1424,13 @@ bar = duplicated bar
 
     def test_duplicate_attributes(self):
         self.assertTrue(os.path.isdir(self.tmp))
-        self.reference(
-            """foo = fooVal
-    .attr = good"""
-        )
-        self.localized(
-            """foo = localized
+        self.reference("""foo = fooVal
+    .attr = good""")
+        self.localized("""foo = localized
     .attr = not
     .attr = so
     .attr = good
-"""
-        )
+""")
         cc = ContentComparer()
         cc.observers.append(Observer())
         cc.compare(

@@ -9,7 +9,6 @@ from urllib.request import urlopen
 
 from compare_locales import plurals
 
-
 TRANSVISION_URL = (
     "https://transvision.mozfr.org/"
     "api/v1/entity/gecko_strings/"

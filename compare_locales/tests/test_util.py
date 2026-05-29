@@ -13,32 +13,26 @@ class ParseLocalesTest(unittest.TestCase):
 
     def test_all(self):
         self.assertEqual(
-            util.parseLocales(
-                """af
-de"""
-            ),
+            util.parseLocales("""af
+de"""),
             ["af", "de"],
         )
 
     def test_shipped(self):
         self.assertEqual(
-            util.parseLocales(
-                """af
+            util.parseLocales("""af
 ja win mac
-de"""
-            ),
+de"""),
             ["af", "de", "ja"],
         )
 
     def test_sparse(self):
         self.assertEqual(
-            util.parseLocales(
-                """
+            util.parseLocales("""
 af
 
 de
 
-"""
-            ),
+"""),
             ["af", "de"],
         )

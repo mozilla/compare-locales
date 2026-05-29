@@ -56,13 +56,11 @@ class TestAndroidSerializer(Helper, unittest.TestCase):
     def test_new_cdata(self):
         self._test(
             "",
-            {
-                "message": """
+            {"message": """
 <ul>
   <li>Something else</li>
 </ul>
-"""
-            },
+"""},
             """\
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
@@ -78,13 +76,11 @@ class TestAndroidSerializer(Helper, unittest.TestCase):
     def test_new_cdata_wrapped(self):
         self._test(
             "",
-            {
-                "wrapped_message": """
+            {"wrapped_message": """
 <ul>
   <li>Something else</li>
 </ul>
-"""
-            },
+"""},
             """\
 <?xml version="1.0" encoding="utf-8"?>
 <resources>

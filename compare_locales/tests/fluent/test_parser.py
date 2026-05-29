@@ -37,8 +37,7 @@ class TestFluentParser(ParserTestMixin, unittest.TestCase):
         self.assertTrue(ent1.equals(ent2))
 
     def test_word_count(self):
-        self.parser.readContents(
-            b"""\
+        self.parser.readContents(b"""\
 a = One
 b = One two three
 c = One { $arg } two
@@ -66,8 +65,7 @@ h =
         } ten.
 -i = One
   .prop = Do not count
-"""
-        )
+""")
 
         a, b, c, d, e, f, g, h, i = list(self.parser)
         self.assertEqual(a.count_words(), 1)
@@ -99,14 +97,12 @@ h =
         self.assertEqual(abc.all, "abc = A { $arg } B { msg } C")
 
     def test_multiline_message(self):
-        self.parser.readContents(
-            b"""\
+        self.parser.readContents(b"""\
 abc =
     A
     B
     C
-"""
-        )
+""")
 
         [abc] = list(self.parser)
         self.assertEqual(abc.key, "abc")
@@ -114,14 +110,12 @@ abc =
         self.assertEqual(abc.all, "abc =\n    A\n    B\n    C")
 
     def test_message_with_attribute(self):
-        self.parser.readContents(
-            b"""\
+        self.parser.readContents(b"""\
 
 
 abc = ABC
     .attr = Attr
-"""
-        )
+""")
 
         [abc] = list(self.parser)
         self.assertEqual(abc.key, "abc")
@@ -133,12 +127,10 @@ abc = ABC
         self.assertEqual(attr.value_position(), (4, 13))
 
     def test_message_with_attribute_and_no_value(self):
-        self.parser.readContents(
-            b"""\
+        self.parser.readContents(b"""\
 abc =
     .attr = Attr
-"""
-        )
+""")
 
         [abc] = list(self.parser)
         self.assertEqual(abc.key, "abc")
@@ -153,8 +145,7 @@ abc =
         self.assertEqual(attr.value_position(), (2, 13))
 
     def test_non_localizable(self):
-        self.parser.readContents(
-            b"""\
+        self.parser.readContents(b"""\
 ### Resource Comment
 
 foo = Foo
@@ -169,8 +160,7 @@ foo = Foo
 
 # Baz Comment
 baz = Baz
-"""
-        )
+""")
         entities = self.parser.walk()
 
         entity = next(entities)
@@ -234,8 +224,7 @@ baz = Baz
             next(entities)
 
     def test_comments_val(self):
-        self.parser.readContents(
-            b"""\
+        self.parser.readContents(b"""\
 // Legacy Comment
 
 ### Resource Comment
@@ -243,8 +232,7 @@ baz = Baz
 ## Section Comment
 
 # Standalone Comment
-"""
-        )
+""")
         entities = self.parser.walk()
 
         entity = next(entities)
@@ -281,16 +269,14 @@ baz = Baz
             next(entities)
 
     def test_junk(self):
-        self.parser.readUnicode(
-            """\
+        self.parser.readUnicode("""\
 # Comment
 
 Line of junk
 
 # Comment
 msg = value
-"""
-        )
+""")
         entities = self.parser.walk()
 
         entity = next(entities)

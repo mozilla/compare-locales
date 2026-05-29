@@ -29,13 +29,11 @@ class EntityTest(unittest.TestCase):
         self.assertIsNone(el.handle_junk(ent))
 
     def test_full_entity(self):
-        ctx = parser.Parser.Context(
-            """\
+        ctx = parser.Parser.Context("""\
 one = two
 two = three
 one = four
-"""
-        )
+""")
         entities = [
             parser.Entity(ctx, None, None, (0, 10), (0, 3), (6, 9)),
             parser.Entity(ctx, None, None, (10, 22), (10, 13), (16, 21)),
@@ -72,11 +70,9 @@ one = four
         self.assertEqual(result["column"], 1)
 
     def test_in_value(self):
-        ctx = parser.Parser.Context(
-            """\
+        ctx = parser.Parser.Context("""\
 one = two
-"""
-        )
+""")
         entities = [
             parser.Entity(ctx, None, None, (0, 10), (0, 3), (6, 9)),
         ]

@@ -67,15 +67,15 @@ and still has another line coming
         ref = [
             "abc",
             "xy",
-            "\u1234\t\r\n\u00AB\u0001\n",
+            "\u1234\t\r\n\u00ab\u0001\n",
             "this is multiline property",
             "this is another multiline property",
             "test\u0036",
             "yet another multiline propery",
             "\ttest5\u0020",
             " test6\t",
-            "c\uCDEFd",
-            "\uABCD",
+            "c\ucdefd",
+            "\uabcd",
         ]
         i = iter(self.parser)
         for r, e in zip(ref, i):
@@ -112,8 +112,7 @@ foo=value
         )
 
     def test_escapes(self):
-        self.parser.readContents(
-            rb"""
+        self.parser.readContents(rb"""
 # unicode escapes
 zero = some \unicode
 one = \u0
@@ -123,8 +122,7 @@ four = \u0043
 five = \u0044a
 six = \a
 seven = \n\r\t\\
-"""
-        )
+""")
         ref = ["some unicode", chr(0), "A", "B", "C", "Da", "a", "\n\r\t\\"]
         for r, e in zip(ref, self.parser):
             self.assertEqual(e.val, r)
@@ -222,13 +220,11 @@ foo = value
         self._test(" \n\n", ((Whitespace, "\n\n"),))
 
     def test_positions(self):
-        self.parser.readContents(
-            b"""\
+        self.parser.readContents(b"""\
 one = value
 two = other \\
 escaped value
-"""
-        )
+""")
         one, two = list(self.parser)
         self.assertEqual(one.position(), (1, 1))
         self.assertEqual(one.value_position(), (1, 7))
@@ -239,11 +235,9 @@ escaped value
 
     # Bug 1399059 comment 18
     def test_z(self):
-        self.parser.readContents(
-            b"""\
+        self.parser.readContents(b"""\
 one = XYZ ABC
-"""
-        )
+""")
         (one,) = list(self.parser)
         self.assertEqual(one.val, "XYZ ABC")
 

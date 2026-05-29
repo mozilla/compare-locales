@@ -2,11 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import pkg_resources
+from importlib.metadata import EntryPoint
 import shutil
 import tempfile
 import textwrap
 import unittest
+from unittest import mock
 
 from compare_locales import parser, mozpath
 
@@ -14,12 +15,10 @@ from compare_locales import parser, mozpath
 class TestParserContext(unittest.TestCase):
     def test_linecol(self):
         "Should return 1-based line and column numbers."
-        ctx = parser.Parser.Context(
-            """first line
+        ctx = parser.Parser.Context("""first line
 second line
 third line
-"""
-        )
+""")
         self.assertEqual(ctx.linecol(0), (1, 1))
         self.assertEqual(ctx.linecol(1), (1, 2))
         self.assertEqual(ctx.linecol(len("first line")), (1, len("first line") + 1))
@@ -34,25 +33,19 @@ third line
 
 class TestOffsetComment(unittest.TestCase):
     def test_offset(self):
-        ctx = parser.Parser.Context(
-            textwrap.dedent(
-                """\
+        ctx = parser.Parser.Context(textwrap.dedent("""\
             #foo
             #bar
             # baz
-            """
-            )
-        )  # noqa
+            """))  # noqa
         offset_comment = parser.OffsetComment(ctx, (0, len(ctx.contents)))
         self.assertEqual(
             offset_comment.val,
-            textwrap.dedent(
-                """\
+            textwrap.dedent("""\
                 foo
                 bar
                  baz
-            """
-            ),
+            """),
         )
 
 
@@ -77,17 +70,21 @@ class TestUniversalNewlines(unittest.TestCase):
 
 class TestPlugins(unittest.TestCase):
     def setUp(self):
-        self.old_working_set_state = pkg_resources.working_set.__getstate__()
-        distribution = pkg_resources.Distribution(__file__)
-        entry_point = pkg_resources.EntryPoint.parse(
-            "test_parser = compare_locales.tests.test_parser:DummyParser",
-            dist=distribution,
+        entry_point = EntryPoint(
+            name="test_parser",
+            value="compare_locales.tests.test_parser:DummyParser",
+            group="compare_locales.parsers",
         )
-        distribution._ep_map = {"compare_locales.parsers": {"test_parser": entry_point}}
-        pkg_resources.working_set.add(distribution)
+        # Returning a dict exercises the non-selectable code path in
+        # getParser, which works regardless of the Python version.
+        self.patcher = mock.patch(
+            "importlib.metadata.entry_points",
+            return_value={"compare_locales.parsers": [entry_point]},
+        )
+        self.patcher.start()
 
     def tearDown(self):
-        pkg_resources.working_set.__setstate__(self.old_working_set_state)
+        self.patcher.stop()
 
     def test_dummy_parser(self):
         p = parser.getParser("some/weird/file.ext")
