@@ -6,8 +6,8 @@
 """
 
 
+from importlib.resources import files
 from itertools import zip_longest
-from pkg_resources import resource_string
 import re
 import unittest
 
@@ -29,7 +29,7 @@ class ParserTestMixin:
         del self.parser
 
     def resource(self, name):
-        testcontent = resource_string(__name__, "data/" + name)
+        testcontent = files(__name__).joinpath("data", name).read_bytes()
         # fake universal line endings
         testcontent = re.sub(b"\r\n?", lambda m: b"\n", testcontent)
         return testcontent
