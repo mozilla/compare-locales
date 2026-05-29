@@ -92,3 +92,104 @@ one = two
         self.assertEqual(result["level"], "error")
         self.assertEqual(result["lineno"], 1)
         self.assertEqual(result["column"], 9)
+
+
+class FluentEntityTest(unittest.TestCase):
+    """Lint reporting behavior for Fluent messages."""
+
+    def _parse(self, source):
+        from compare_locales import parser as cl_parser
+
+        file_parser = cl_parser.getParser("foo.ftl")
+        file_parser.readUnicode(source)
+        return list(file_parser.parse())
+
+    def _ref(self, source):
+        return {e.key: e for e in self._parse(source)}
+
+    def test_value_only_change(self):
+        # Single-line value: report on the ID line (line 2, not the comment
+        # above) with no lineoffset.
+        current = self._parse("# Comment\nmsg = new value\n")
+        reference = self._ref("# Comment\nmsg = old value\n")
+        el = linter.EntityLinter(current, None, reference)
+        results = list(el.lint_full_entity(current[0]))
+        self.assertEqual(
+            results,
+            [
+                {
+                    "lineno": 2,
+                    "column": 1,
+                    "level": "warning",
+                    "message": "Changes to an existing string require a new ID: msg",
+                }
+            ],
+        )
+
+    def test_multiline_value_change(self):
+        # Multi-line value without attributes still spans several lines, so the
+        # warning must cover them via lineoffset (value ends on line 4).
+        current = self._parse("# Comment\nmsg =\n    line one\n    new two\n")
+        reference = self._ref("# Comment\nmsg =\n    line one\n    old two\n")
+        el = linter.EntityLinter(current, None, reference)
+        results = list(el.lint_full_entity(current[0]))
+        self.assertEqual(
+            results,
+            [
+                {
+                    "lineno": 2,
+                    "column": 1,
+                    "level": "warning",
+                    "message": "Changes to an existing string require a new ID: msg",
+                    "lineoffset": 2,
+                }
+            ],
+        )
+
+    def test_attribute_change(self):
+        # ID line is 2, the last attribute is on line 4, so the warning spans
+        # both attribute lines via lineoffset.
+        current = self._parse(
+            "# Comment\nmsg = value\n    .label = new\n    .title = also new\n"
+        )
+        reference = self._ref(
+            "# Comment\nmsg = value\n    .label = old\n    .title = also old\n"
+        )
+        el = linter.EntityLinter(current, None, reference)
+        results = list(el.lint_full_entity(current[0]))
+        self.assertEqual(
+            results,
+            [
+                {
+                    "lineno": 2,
+                    "column": 1,
+                    "level": "warning",
+                    "message": "Changes to an existing string require a new ID: msg",
+                    "lineoffset": 2,
+                }
+            ],
+        )
+
+    def test_comment_only_change_no_warning(self):
+        current = self._parse("# New comment\nmsg = value\n")
+        reference = self._ref("# Old comment\nmsg = value\n")
+        el = linter.EntityLinter(current, None, reference)
+        results = list(el.lint_full_entity(current[0]))
+        self.assertEqual(results, [])
+
+    def test_duplicate_id_reports_at_id_line(self):
+        # Second definition is on line 3.
+        current = self._parse("# Comment\nmsg = one\nmsg = two\n")
+        el = linter.EntityLinter(current, None, {})
+        results = list(el.lint_full_entity(current[1]))
+        self.assertEqual(
+            results,
+            [
+                {
+                    "lineno": 3,
+                    "column": 1,
+                    "level": "error",
+                    "message": "Duplicate string with ID: msg",
+                }
+            ],
+        )
