@@ -13,7 +13,6 @@ from compare_locales.parser import (
     Whitespace,
 )
 
-
 mpl2 = """\
 ; This Source Code Form is subject to the terms of the Mozilla Public
 ; License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -41,8 +40,7 @@ TitleText=Some Title
 
     def testMPL2_Space_UTF(self):
         self._test(
-            mpl2
-            + """
+            mpl2 + """
 
 ; This file is in the UTF-8 encoding
 [Strings]
@@ -62,8 +60,7 @@ TitleText=Some Title
 
     def testMPL2_Space(self):
         self._test(
-            mpl2
-            + """
+            mpl2 + """
 
 [Strings]
 TitleText=Some Title
@@ -80,8 +77,7 @@ TitleText=Some Title
 
     def testMPL2_no_space(self):
         self._test(
-            mpl2
-            + """
+            mpl2 + """
 [Strings]
 TitleText=Some Title
 """,
@@ -97,8 +93,7 @@ TitleText=Some Title
 
     def testMPL2_MultiSpace(self):
         self._test(
-            mpl2
-            + """
+            mpl2 + """
 
 ; more comments
 
@@ -119,8 +114,7 @@ TitleText=Some Title
 
     def testMPL2_JunkBeforeCategory(self):
         self._test(
-            mpl2
-            + """
+            mpl2 + """
 Junk
 [Strings]
 TitleText=Some Title
@@ -138,8 +132,7 @@ TitleText=Some Title
 
     def test_TrailingComment(self):
         self._test(
-            mpl2
-            + """
+            mpl2 + """
 
 [Strings]
 TitleText=Some Title
@@ -159,8 +152,7 @@ TitleText=Some Title
 
     def test_SpacedTrailingComments(self):
         self._test(
-            mpl2
-            + """
+            mpl2 + """
 
 [Strings]
 TitleText=Some Title
@@ -183,8 +175,7 @@ TitleText=Some Title
 
     def test_TrailingCommentsAndJunk(self):
         self._test(
-            mpl2
-            + """
+            mpl2 + """
 
 [Strings]
 TitleText=Some Title
@@ -211,8 +202,7 @@ Junk
 
     def test_JunkInbetweenEntries(self):
         self._test(
-            mpl2
-            + """
+            mpl2 + """
 
 [Strings]
 TitleText=Some Title

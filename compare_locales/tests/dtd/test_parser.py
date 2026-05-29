@@ -2,8 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-"""Tests for the DTD parser.
-"""
+"""Tests for the DTD parser."""
 
 import unittest
 import re
@@ -106,15 +105,13 @@ class TestDTD(ParserTestMixin, unittest.TestCase):
         self.assertEqual(e.key, "foo")
         self.assertEqual(e.val, "value")
         self.assertEqual(len(entities), 4)
-        p.readContents(
-            b"""\
+        p.readContents(b"""\
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
 
 <!ENTITY foo "value">
-"""
-        )
+""")
         entities = list(p.walk())
         self.assertIsInstance(entities[0], parser.Comment)
         self.assertIn("MPL", entities[0].all)
@@ -124,14 +121,12 @@ class TestDTD(ParserTestMixin, unittest.TestCase):
         self.assertEqual(e.val, "value")
         self.assertEqual(len(entities), 4)
         # Test again without empty line after licence header, and with BOM.
-        p.readContents(
-            b"""\xEF\xBB\xBF\
+        p.readContents(b"""\xef\xbb\xbf\
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
 <!ENTITY foo "value">
-"""
-        )
+""")
         entities = list(p.walk())
         self.assertIsInstance(entities[0], parser.Comment)
         self.assertIn("MPL", entities[0].all)
@@ -160,13 +155,11 @@ class TestDTD(ParserTestMixin, unittest.TestCase):
         self._test(" \n\n", ((Whitespace, " \n\n"),))
 
     def test_positions(self):
-        self.parser.readContents(
-            b"""\
+        self.parser.readContents(b"""\
 <!ENTITY one  "value">
 <!ENTITY  two "other
 escaped value">
-"""
-        )
+""")
         one, two = list(self.parser)
         self.assertEqual(one.position(), (1, 1))
         self.assertEqual(one.value_position(), (1, 16))
@@ -177,14 +170,12 @@ escaped value">
         self.assertEqual(two.value_position(10), (3, 5))
 
     def test_word_count(self):
-        self.parser.readContents(
-            b"""\
+        self.parser.readContents(b"""\
 <!ENTITY a "one">
 <!ENTITY b "one<br>two">
 <!ENTITY c "one<span>word</span>">
 <!ENTITY d "one <a href='foo'>two</a> three">
-"""
-        )
+""")
         a, b, c, d = list(self.parser)
         self.assertEqual(a.count_words(), 1)
         self.assertEqual(b.count_words(), 2)
@@ -192,15 +183,13 @@ escaped value">
         self.assertEqual(d.count_words(), 3)
 
     def test_html_entities(self):
-        self.parser.readContents(
-            b"""\
+        self.parser.readContents(b"""\
 <!ENTITY named "&amp;">
 <!ENTITY numcode "&#38;">
 <!ENTITY shorthexcode "&#x26;">
 <!ENTITY longhexcode "&#x0026;">
 <!ENTITY unknown "&unknownEntity;">
-"""
-        )
+""")
         entities = iter(self.parser)
 
         entity = next(entities)
@@ -224,14 +213,12 @@ escaped value">
         self.assertEqual(entity.val, "&unknownEntity;")
 
     def test_comment_val(self):
-        self.parser.readContents(
-            b"""\
+        self.parser.readContents(b"""\
 <!-- comment
 spanning lines -->  <!--
 -->
 <!-- last line -->
-"""
-        )
+""")
         entities = self.parser.walk()
 
         entity = next(entities)
@@ -253,16 +240,14 @@ spanning lines -->  <!--
         self.assertIsInstance(entity, parser.Whitespace)
 
     def test_pre_comment(self):
-        self.parser.readContents(
-            b"""\
+        self.parser.readContents(b"""\
 <!-- comment -->
 <!ENTITY one "string">
 
 <!-- standalone -->
 
 <!-- glued --><!ENTITY second "string">
-"""
-        )
+""")
         entities = self.parser.walk()
 
         entity = next(entities)

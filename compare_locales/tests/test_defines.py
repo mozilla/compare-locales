@@ -13,7 +13,6 @@ from compare_locales.parser import (
     Whitespace,
 )
 
-
 mpl2 = """\
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -25,8 +24,7 @@ class TestDefinesParser(ParserTestMixin, unittest.TestCase):
 
     def testBrowser(self):
         self._test(
-            mpl2
-            + """
+            mpl2 + """
 #filter emptyLines
 
 #define MOZ_LANGPACK_CREATOR mozilla.org
@@ -54,8 +52,7 @@ class TestDefinesParser(ParserTestMixin, unittest.TestCase):
 
     def testBrowserWithContributors(self):
         self._test(
-            mpl2
-            + """
+            mpl2 + """
 #filter emptyLines
 
 #define MOZ_LANGPACK_CREATOR mozilla.org
@@ -87,8 +84,7 @@ class TestDefinesParser(ParserTestMixin, unittest.TestCase):
 
     def testCommentWithNonAsciiCharacters(self):
         self._test(
-            mpl2
-            + """
+            mpl2 + """
 #filter emptyLines
 
 # e.g. #define seamonkey_l10n <DT><A HREF="urn:foo">SeaMonkey v češtině</a>

@@ -15,12 +15,10 @@ from compare_locales import parser, mozpath
 class TestParserContext(unittest.TestCase):
     def test_linecol(self):
         "Should return 1-based line and column numbers."
-        ctx = parser.Parser.Context(
-            """first line
+        ctx = parser.Parser.Context("""first line
 second line
 third line
-"""
-        )
+""")
         self.assertEqual(ctx.linecol(0), (1, 1))
         self.assertEqual(ctx.linecol(1), (1, 2))
         self.assertEqual(ctx.linecol(len("first line")), (1, len("first line") + 1))
@@ -35,25 +33,19 @@ third line
 
 class TestOffsetComment(unittest.TestCase):
     def test_offset(self):
-        ctx = parser.Parser.Context(
-            textwrap.dedent(
-                """\
+        ctx = parser.Parser.Context(textwrap.dedent("""\
             #foo
             #bar
             # baz
-            """
-            )
-        )  # noqa
+            """))  # noqa
         offset_comment = parser.OffsetComment(ctx, (0, len(ctx.contents)))
         self.assertEqual(
             offset_comment.val,
-            textwrap.dedent(
-                """\
+            textwrap.dedent("""\
                 foo
                 bar
                  baz
-            """
-            ),
+            """),
         )
 
 

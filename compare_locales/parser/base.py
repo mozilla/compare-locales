@@ -339,7 +339,7 @@ class Parser:
 
         contents are in native encoding, but with normalized line endings.
         """
-        (contents, _) = codecs.getdecoder(self.encoding)(contents, "replace")
+        contents, _ = codecs.getdecoder(self.encoding)(contents, "replace")
         self.readUnicode(contents)
 
     def readUnicode(self, contents):

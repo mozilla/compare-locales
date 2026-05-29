@@ -6,7 +6,6 @@
 from compare_locales.tests import BaseHelper
 from compare_locales.paths import File
 
-
 ANDROID_WRAPPER = b"""<?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string name="foo">%s</string>
